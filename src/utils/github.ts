@@ -44,7 +44,7 @@ export async function githubGet(location: keyof typeof apiUrlsV2): Promise<Githu
 
    // if content is empty it means file is over 1MB in size and it has to be downloaded as raw
    if (respJson.content.trim() === '') {
-      const rawResp = await persistentFetch(url, 5, {
+      const rawResp = await persistentFetch(url + '&cache=buster', 5, {
          method: 'GET',
          mode: 'cors',
          headers: {
