@@ -20,9 +20,13 @@ jobs:
         with:
           node-version: 18.x
 
-      - name: Install and Build 🔧
+      - name: Install 🔧
         run: |
           npm ci
+          npm i @icemourne/tool-box @icemourne/description-converter
+
+      - name: Build 🏗️
+        run: |
           npm run build
 
       - name: Upload Artifacts 🔺
