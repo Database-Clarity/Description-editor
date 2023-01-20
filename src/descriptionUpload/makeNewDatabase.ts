@@ -1,4 +1,4 @@
-import { Database, IntermediatePerk } from '@icemourne/description-converter'
+import { Database, Editor, IntermediatePerk, languageKeys } from '@icemourne/description-converter'
 
 import _ from 'lodash'
 import { getLoginDetails } from 'src/utils/getLogin'
@@ -6,12 +6,12 @@ import { store } from 'src/redux/store'
 
 export const makeNewDatabase = (
    saveDatabaseType: 'intermediate' | 'live',
-   currentlyLiveDatabase: Database,
+   liveDatabase: Database,
    uploadingToLive: boolean = false
 ) => {
-   const globalState = store.getState().global
-   const originalDatabase = globalState.originalDatabase[saveDatabaseType]
-   const modifiedDatabase = globalState.database
+   const { database, originalDatabase } = store.getState().global
+   const savedDatabase = originalDatabase[saveDatabaseType]
+   const modifiedDatabase = database
 
    const uploadInfo = {
       uploadedBy: getLoginDetails()?.username || '',
@@ -19,67 +19,79 @@ export const makeNewDatabase = (
    }
 
    return _.transform(modifiedDatabase, (acc: Database, modifiedPerk, modifiedPerkHash) => {
-      // if perk was deleted it will not be added to new database
+      const savedPerk = savedDatabase[modifiedPerkHash]
+      const livePerk = liveDatabase[modifiedPerkHash]
 
-      // if where are no changes made return perk from live database
-      if (_.isEqual(modifiedPerk, originalDatabase[modifiedPerkHash])) {
-         acc[modifiedPerkHash] = currentlyLiveDatabase[modifiedPerkHash]
+      // If where are no local changes return perk from live database
+      const propertiesToCompare = ['editor', 'stats', 'uploadToLive', 'importStatsFrom', 'linkedWith']
+      if (_.isEqual(_.pick(modifiedPerk, propertiesToCompare), _.pick(savedPerk, propertiesToCompare))) {
+         acc[modifiedPerkHash] = livePerk
          return
       }
 
-      // if data is going to be uploaded to live database check if perk should be updated
-      if (
-         saveDatabaseType === 'live' &&
-         modifiedPerk.uploadToLive === false &&
-         currentlyLiveDatabase[modifiedPerkHash]
-      ) {
-         acc[modifiedPerkHash] = currentlyLiveDatabase[modifiedPerkHash]
+      // If data is going to be uploaded to live database check if perk should be updated
+      if (saveDatabaseType === 'live' && modifiedPerk.uploadToLive === false && livePerk) {
+         acc[modifiedPerkHash] = livePerk
          return
       }
 
       // add new perk
-      if (originalDatabase[modifiedPerkHash] === undefined) {
+      if (livePerk === undefined) {
          acc[modifiedPerkHash] = { ...modifiedPerk, ...uploadInfo }
          return
       }
 
-      acc[modifiedPerkHash] = _.transform(modifiedPerk, (acc: IntermediatePerk, valueInPerk, keyInPerk) => {
-         // if value was deleted it will not be added to new perk
-
-         // if where are no changes made return perk from live database
-         if (_.isEqual(valueInPerk, originalDatabase[modifiedPerkHash][keyInPerk])) {
-            // @ts-ignore
-            acc[keyInPerk] = currentlyLiveDatabase[modifiedPerkHash][keyInPerk]
-            return
-         }
-
-         if (!_.isObject(valueInPerk)) {
-            // @ts-ignore
-            acc[keyInPerk] = valueInPerk
-            return
-         }
-
-         // @ts-ignore
-         acc[keyInPerk] = _.transform(valueInPerk, (acc: IntermediatePerk, value, key) => {
-            // if value was deleted it will not be added to new perk
-
-            // if where are no changes made return perk info from live database
-            if (_.isEqual(value, originalDatabase[modifiedPerkHash][keyInPerk]?.[key])) {
-               // @ts-ignore
-               acc[key] = currentlyLiveDatabase[modifiedPerkHash][keyInPerk][key]
-               return
-            }
-
-            acc[key] = value
-         })
-      })
-      if (uploadingToLive) {
-         acc[modifiedPerkHash] = {
-            ...acc[modifiedPerkHash],
-            uploadToLive: false,
-            inLiveDatabase: true
-         }
+      const propertiesUserCantChange = {
+         hash: modifiedPerk.hash,
+         itemHash: modifiedPerk.itemHash,
+         name: modifiedPerk.name,
+         itemName: modifiedPerk.itemName,
+         type: modifiedPerk.type,
+         linkedWith: modifiedPerk.linkedWith // as long as this is automated it should be fine
       }
-      acc[modifiedPerkHash] = { ...acc[modifiedPerkHash], ...uploadInfo }
+
+      const importStatsFrom =
+         modifiedPerk.importStatsFrom === savedPerk.importStatsFrom
+            ? livePerk.importStatsFrom
+            : modifiedPerk.importStatsFrom
+
+      const didStatsChange = !_.isEqual(modifiedPerk.stats, savedPerk.stats)
+
+      const stats = didStatsChange ? livePerk.stats : modifiedPerk.stats
+      const inLiveDatabase = uploadingToLive ? true : livePerk.inLiveDatabase
+      const uploadToLive = uploadingToLive ? false : livePerk.uploadToLive
+
+      // do same thing as in changesInEditor but with reduce and use language as key
+      const changesInEditor = languageKeys.reduce((acc, language) => {
+         acc[language] = !_.isEqual(modifiedPerk.editor[language], savedPerk.editor[language])
+         return acc
+      }, {} as { [language: string]: boolean })
+
+      const modifiedTracker = modifiedPerk.updateTracker.descriptions
+      const liveTracker = livePerk.updateTracker.descriptions
+      const updateTracker = {
+         stats: didStatsChange ? modifiedPerk.updateTracker.stats : livePerk.updateTracker.stats,
+         descriptions: languageKeys.reduce((acc, language) => {
+            acc[language] = changesInEditor[language] ? modifiedTracker[language] : liveTracker[language]
+            return acc
+         }, {} as IntermediatePerk['updateTracker']['descriptions'])
+      }
+
+      const editor = languageKeys.reduce((acc, language) => {
+         acc[language] = changesInEditor[language] ? modifiedPerk.editor[language] : livePerk.editor[language]
+         return acc
+      }, {} as Editor)
+
+      acc[modifiedPerkHash] = {
+         ...modifiedPerk,
+         ...propertiesUserCantChange,
+         importStatsFrom,
+         updateTracker,
+         editor,
+         stats,
+         inLiveDatabase,
+         uploadToLive,
+         ...uploadInfo
+      }
    })
 }
