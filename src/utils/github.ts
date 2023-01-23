@@ -1,10 +1,10 @@
+import { Database, Stat, StatNames, Stats } from '@icemourne/description-converter'
+import { TypedObject, persistentFetch } from '@icemourne/tool-box'
 import { decode, encode } from 'js-base64'
 
-import { Database } from '@icemourne/description-converter'
 import { apiUrlsV2 } from 'src/data/urls'
 import { defaultPerk } from 'src/data/randomData'
 import { getLoginDetails } from './getLogin'
-import { persistentFetch } from '@icemourne/tool-box'
 
 export interface DataToSend {
    sha: string
@@ -106,6 +106,70 @@ const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<Database>
    return resp
 }
 
+// TODO: remove this when the data is fixed
+const fixStatNames = (data: Database) => {
+   const fixStatName = (stats: Stats | undefined) => {
+      if (stats === undefined) return undefined
+      return Object.entries(stats).reduce((acc, value) => {
+         const name = value?.[0]
+         const stat = value?.[1]
+         if (!stat || !name) return acc
+         switch (name) {
+            case 'handling':
+               acc['Handling'] = stat
+               break
+            case 'damage':
+               acc['Damage'] = stat
+               break
+            case 'aimAssist':
+               acc['Aim Assist'] = stat
+               break
+            case 'range':
+               acc['Range'] = stat
+               break
+            case 'reload':
+               acc['Reload'] = stat
+               break
+            case 'airborne':
+               acc['Airborne'] = stat
+               break
+            case 'stability':
+               acc['Stability'] = stat
+               break
+            case 'ready':
+               acc['Ready'] = stat
+               break
+            case 'stow':
+               acc['Stow'] = stat
+               break
+            case 'chargeDraw':
+               acc['Charge Draw'] = stat
+               break
+            case 'rateOfFire':
+               acc['RPM'] = stat
+               break
+            case 'zoom':
+               acc['Zoom'] = stat
+               break
+            default:
+               // @ts-ignore
+               acc[name] = stat
+               break
+         }
+         return acc
+      }, {} as { [key in StatNames]: Stat[] })
+   }
+
+   return Object.entries(data).reduce((acc, [key, value]) => {
+      acc[key] = {
+         ...value,
+         stats: fixStatName(value?.stats)
+      }
+
+      return acc
+   }, {} as Database)
+}
+
 export async function getStartUpDescriptions() {
    const intermediateResp = unauthorized('intermediate'),
       dataGeneratorResp = unauthorized('dataGenerator'),
@@ -124,7 +188,7 @@ export async function getStartUpDescriptions() {
    }, intermediate)
 
    return {
-      intermediate: updatedIntermediate,
+      intermediate: fixStatNames(updatedIntermediate),
       live
    }
 }

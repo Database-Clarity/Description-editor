@@ -1,7 +1,7 @@
 {
    "name": "editor",
    "private": true,
-   "version": "0.0.0",
+   "version": "2.3.5",
    "scripts": {
       "dev": "vite",
       "build": "tsc && vite build",
@@ -11,6 +11,7 @@
       "@icemourne/description-converter": "^1.0.26",
       "@icemourne/tool-box": "^1.0.23",
       "@reduxjs/toolkit": "^1.9.1",
+      "clsx": "^1.2.1",
       "immer": "^9.0.18",
       "js-base64": "^3.7.4",
       "lodash": "^4.17.21",

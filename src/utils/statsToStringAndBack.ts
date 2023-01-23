@@ -1,15 +1,5 @@
-import { Stat, StatNames, Stats, WeaponTypes, weaponTypes } from '@icemourne/description-converter'
-
-import { TypedObject } from '@icemourne/tool-box'
-
-export function statsStringToArray(str: string): number[] {
-   const statsArr = str.split(',')
-   return statsArr.flatMap((stat) => {
-      const cleanStat = stat.trim().match(/\d+\.\d+|\d+/)?.[0]
-      if (cleanStat) return Number(stat)
-      return []
-   })
-}
+import { Stat, StatNames, Stats, WeaponTypes } from '@icemourne/description-converter'
+import { TypedObject, cleanObject } from '@icemourne/tool-box'
 
 export type StringStat = {
    passive: {
@@ -23,23 +13,57 @@ export type StringStat = {
    /**
     * [weaponType, isUsed]
     */
-   weaponTypes: [WeaponTypes, boolean][]
+   weaponTypes?: WeaponTypes[]
 }
 
 export type StringStats = {
    [key in StatNames]: StringStat[]
 }
 
+export function statsStringToArray(stringStats: StringStats): Stats {
+   const stringToArray = (value: string | undefined) => {
+      if (value === undefined) return []
+      return value.split(',').flatMap((value) => {
+         const statNumber = Number(value)
+         if (value === '' || Number.isNaN(statNumber)) return []
+         return statNumber
+      })
+   }
+   const newStats = TypedObject.entries(stringStats).reduce((acc, [key, stat]) => {
+      const newStat = stat.map((value) => ({
+         passive: {
+            stat: stringToArray(value?.passive?.stat),
+            multiplier: stringToArray(value?.passive?.multiplier)
+         },
+         active: {
+            stat: stringToArray(value?.active?.stat),
+            multiplier: stringToArray(value?.active?.multiplier)
+         },
+         weaponTypes: value?.weaponTypes || []
+      }))
+
+      const filteredStat = newStat.flatMap((value) => {
+         if (
+            value.passive.stat.length === 0 &&
+            value.passive.multiplier.length === 0 &&
+            value.active.stat.length === 0 &&
+            value.active.multiplier.length === 0
+         )
+            return []
+         return value
+      })
+
+      acc[key] = cleanObject(filteredStat)
+
+      return acc
+   }, {} as Stats)
+
+   return cleanObject(newStats)
+}
+
 export function statsToString(stats: Stats = {}) {
    return Object.entries(stats).reduce((acc, [key, stat]: [string, Stat[]]) => {
-      const weaponTypesState = weaponTypes.map((weaponType) => [weaponType, false]) as [WeaponTypes, boolean][]
-
       acc[key as StatNames] = stat.map((value) => {
-         value?.weaponTypes?.forEach((weaponType) => {
-            const index = weaponTypesState.findIndex(([type]) => type === weaponType)
-            weaponTypesState[index][1] = true
-         })
-
          return {
             passive: {
                stat: value?.passive?.stat?.join(', ') || '',
@@ -49,7 +73,7 @@ export function statsToString(stats: Stats = {}) {
                stat: value?.active?.stat?.join(', ') || '',
                multiplier: value?.active?.multiplier?.join(', ') || ''
             },
-            weaponTypes: weaponTypesState
+            weaponTypes: value?.weaponTypes || []
          }
       })
       return acc

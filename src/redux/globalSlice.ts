@@ -1,5 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit'
 import { GlobalState } from './interfaces'
+import { createSlice } from '@reduxjs/toolkit'
 import { databaseReducers } from './reducers/dataBase'
 import { settingsReducers } from './reducers/settings'
 
@@ -30,8 +30,7 @@ export const {
    // database
    togglePerkStuff,
    updateEditorValue,
-   addStat,
-   removeStat,
+   updateStats,
    setStatImport,
    addPerk,
    resetPerk,

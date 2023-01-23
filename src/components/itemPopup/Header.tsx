@@ -1,6 +1,4 @@
 import {
-   IntermediatePerk,
-   PerkTypes,
    PossiblePerkLinks,
    WeaponTypes,
    weaponTypes
@@ -9,7 +7,6 @@ import { changePerkType, changeSelectedPerk, changeWeaponType } from 'src/redux/
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { useEffect, useState } from 'react'
 
-import _ from 'lodash'
 import { cnc } from 'src/utils/classNameCombiner'
 import specialAmmo from 'src/assets/specialAmmo.png'
 import styles from './Header.module.scss'
@@ -27,7 +24,7 @@ const itemPreview = {
       img: 'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_530c4c3e7981dc2aefd24fd3293482bf.png',
       type: 'special'
    },
-   power: 69420,
+   power: __APP_VERSION__,
    name: `STARDUST'S BURDEN`
 }
 const WeaponSelection = () => {
