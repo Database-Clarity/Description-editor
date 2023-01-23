@@ -2,20 +2,59 @@
 <html lang="en">
    <head>
       <meta charset="UTF-8" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa">
+      <link
+         rel="stylesheet"
+         href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa"
+      />
       <link rel="icon" type="image/svg+xml" href="./assets/clarityLogo-4d0d7661.png" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Clarity description builder</title>
-     <script type="module" crossorigin src="./assets/index-6d81b63d.js"></script>
-     <link rel="stylesheet" href="./assets/index-64c777d6.css">
+      <style>
+         .clarityLogo {
+            width: 300px;
+            height: 300px;
+            animation-name: spin;
+            animation-duration: 10000ms;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+         }
+
+         @keyframes spin {
+            from {
+               transform: rotate(0deg);
+            }
+            to {
+               transform: rotate(360deg);
+            }
+         }
+         .clarityLogoContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 95%;
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+         }
+         body {
+            background: radial-gradient(circle, hsl(240, 21%, 16%) 0%, hsl(240, 30%, 4%) 100%);
+            color: white;
+            font-family: 'Open Sans', sans-serif, 'Destiny Symbols';
+            font-size: 12px;
+            line-height: calc(16 / 12);
+            -webkit-user-drag: none;
+            margin: 8px;
+         }
+      </style>
+     <script type="module" crossorigin src="./assets/index-e657bd00.js"></script>
+     <link rel="stylesheet" href="./assets/index-5d846647.css">
    </head>
    <body>
-      <div id="app"></div>
+      <div id="app">
+         <div class="clarityLogoContainer"><img src="./assets/clarityLogo-4d0d7661.png" class="clarityLogo" /></div>
+      </div>
       
-      <script>
-         if (window.location.pathname === '/description_editor/') {
-            window.location.href = 'https://ice-mourne.github.io/description_editor/dist/'
-         }
-      </script>
    </body>
 </html>
