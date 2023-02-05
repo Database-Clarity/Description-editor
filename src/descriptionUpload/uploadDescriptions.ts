@@ -1,10 +1,10 @@
 import { cleanObject, customJsonStringify } from '@icemourne/tool-box'
+import { updateDatabase } from 'src/redux/globalSlice'
+import { store } from 'src/redux/store'
 import { githubGet, githubPut } from 'src/utils/github'
+import { sendMessage } from 'src/utils/sendMessage'
 
 import { makeNewDatabase } from './makeNewDatabase'
-import { sendMessage } from 'src/utils/sendMessage'
-import { store } from 'src/redux/store'
-import { updateDatabase } from 'src/redux/globalSlice'
 
 const DATABASE_PROPERTIES = ['stat', 'multiplier', 'weaponTypes', 'classNames']
 
@@ -19,7 +19,10 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       return
    }
 
-   const newDatabase = makeNewDatabase(location, oldDatabase.content.perks, uploadingToLive)
+   const newDatabase = {
+      perks: makeNewDatabase(location, oldDatabase.content.perks, uploadingToLive),
+      folders: oldDatabase.content.databaseSettings
+   }
 
    const message = await githubPut(location, {
       content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),
@@ -31,7 +34,7 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       return
    }
    sendMessage(`Uploaded => ${location}`, 'success')
-   store.dispatch(updateDatabase({ databaseType: location, newDatabase }))
+   store.dispatch(updateDatabase({ databaseType: location, newDatabase: newDatabase.perks }))
 
    if (location === 'intermediate') return
    uploadDescriptions('intermediate', uploadingToLive)
