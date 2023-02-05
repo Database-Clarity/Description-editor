@@ -3,7 +3,7 @@ const descriptionApiUrlBase = 'https://api.github.com/repos/Database-Clarity/Liv
    dataGeneratorApiUrlBase = 'https://api.github.com/repos/Database-Clarity/Description-data-generator/contents/',
    dataGeneratorRawUrlBase = 'https://raw.githubusercontent.com/Database-Clarity/Description-data-generator/'
 
-const useTestData = true
+const useTestData = false
 
 export const apiUrlsV2 = {
    live: {
