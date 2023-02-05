@@ -1,3 +1,4 @@
+import { Database } from '@icemourne/description-converter'
 import { cleanObject, customJsonStringify } from '@icemourne/tool-box'
 import { updateDatabase } from 'src/redux/globalSlice'
 import { store } from 'src/redux/store'
@@ -19,9 +20,9 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       return
    }
 
-   const newDatabase = {
+   const newDatabase: Database = {
       perks: makeNewDatabase(location, oldDatabase.content.perks, uploadingToLive),
-      folders: oldDatabase.content.databaseSettings
+      databaseSettings: oldDatabase.content.databaseSettings
    }
 
    const message = await githubPut(location, {
