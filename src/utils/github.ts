@@ -165,7 +165,9 @@ const fixData = (data: Database['perks']) => {
          ...value,
          stats: fixStatName(value?.stats),
          // @ts-ignore
-         linkedWith: undefined
+         optional: undefined,
+         linkedWith: undefined,
+         hidden: undefined,
       }
       return acc
    }, {} as Database['perks'])
