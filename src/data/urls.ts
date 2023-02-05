@@ -3,16 +3,22 @@ const descriptionApiUrlBase = 'https://api.github.com/repos/Database-Clarity/Liv
    dataGeneratorApiUrlBase = 'https://api.github.com/repos/Database-Clarity/Description-data-generator/contents/',
    dataGeneratorRawUrlBase = 'https://raw.githubusercontent.com/Database-Clarity/Description-data-generator/'
 
+const useTestData = true
+
 export const apiUrlsV2 = {
    live: {
       url: descriptionApiUrlBase + 'liveDescriptions.json',
-      branch: 'converter',
-      raw: descriptionRawUrlBase + 'converter/' + 'liveDescriptions.json'
+      branch: useTestData ? 'testConverter' : 'converter',
+      raw: useTestData
+         ? descriptionRawUrlBase + 'testConverter/' + 'liveDescriptions.json'
+         : descriptionRawUrlBase + 'converter/' + 'liveDescriptions.json'
    },
    intermediate: {
       url: descriptionApiUrlBase + 'intermediateDescriptions.json',
-      branch: 'intermediate',
-      raw: descriptionRawUrlBase + 'intermediate/' + 'intermediateDescriptions.json'
+      branch: useTestData ? 'test' : 'intermediate',
+      raw: useTestData
+         ? descriptionRawUrlBase + 'test/' + 'intermediateDescriptions.json'
+         : descriptionRawUrlBase + 'intermediate/' + 'intermediateDescriptions.json'
    },
    dataGenerator: {
       url: dataGeneratorApiUrlBase + '/templates/descriptions.json',

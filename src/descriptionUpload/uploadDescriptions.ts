@@ -19,7 +19,7 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       return
    }
 
-   const newDatabase = makeNewDatabase(location, oldDatabase.content, uploadingToLive)
+   const newDatabase = makeNewDatabase(location, oldDatabase.content.perks, uploadingToLive)
 
    const message = await githubPut(location, {
       content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),

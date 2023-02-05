@@ -1,12 +1,11 @@
-import { ButtonActions, getPerk } from 'src/redux/reducers/dataBase'
-import { changeEditorType, resetPerk, toggleHiddenPerkDisplay, togglePerkStuff, toggleUploadToLiveOnEdit } from 'src/redux/globalSlice'
-import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-
-import { IntermediatePerk } from '@icemourne/description-converter'
-import { cnc } from 'src/utils/classNameCombiner'
-import styles from './Buttons.module.scss'
-import { uploadDescriptions } from 'src/descriptionUpload/uploadDescriptions'
 import { useState } from 'react'
+import { uploadDescriptions } from 'src/descriptionUpload/uploadDescriptions'
+import { changeEditorType, resetPerk, togglePerkStuff, toggleUploadToLiveOnEdit } from 'src/redux/globalSlice'
+import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+import { ButtonActions, getPerk } from 'src/redux/reducers/dataBase'
+import { cnc } from 'src/utils/classNameCombiner'
+
+import styles from './Buttons.module.scss'
 
 export function MultiButton({ action }: { action: ButtonActions }) {
    const dispatch = useAppDispatch()
@@ -89,21 +88,6 @@ export function ButtonUploadLive({ labelText }: { labelText: string }) {
 export function ButtonUploadIntermediate({ labelText }: { labelText: string }) {
    return (
       <button className={styles.button} onClick={() => uploadDescriptions('intermediate', false)}>
-         {labelText}
-      </button>
-   )
-}
-
-export function ButtonToggleHiddenPerks() {
-   const dispatch = useAppDispatch()
-   const displayHiddenPerks = useAppSelector((state) => state.global.settings.displayHiddenPerks)
-   const labelText = displayHiddenPerks ? 'Hide Hidden Perks' : 'Show Hidden Perks'
-
-   return (
-      <button
-         className={cnc(styles.button, displayHiddenPerks, styles.active)}
-         onClick={() => dispatch(toggleHiddenPerkDisplay())}
-      >
          {labelText}
       </button>
    )

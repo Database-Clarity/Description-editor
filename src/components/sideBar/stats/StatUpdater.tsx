@@ -1,15 +1,15 @@
-import { ChangeEvent, useEffect } from 'react'
 import { StatNames, WeaponTypes, statNames, weaponTypes } from '@icemourne/description-converter'
+import { TypedObject } from '@icemourne/tool-box'
+import clsx from 'clsx'
+import _ from 'lodash'
+import { ChangeEvent, useEffect } from 'react'
+import { Button } from 'src/components/universal/Button'
+import { updateStats } from 'src/redux/globalSlice'
+import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { StringStat, StringStats, statsStringToArray, statsToString } from 'src/utils/statsToStringAndBack'
 import { Updater, useImmer } from 'use-immer'
-import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
-import { Button } from 'src/components/universal/Button'
-import { TypedObject } from '@icemourne/tool-box'
-import _ from 'lodash'
-import clsx from 'clsx'
 import styles from './StatUpdater.module.scss'
-import { updateStats } from 'src/redux/globalSlice'
 
 const StatValues = ({
    stat,
@@ -158,7 +158,7 @@ export const StatUpdater = () => {
    const { database, settings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const { linkedWith, stats } = database[currentlySelected]
+   const { stats } = database[currentlySelected]
 
    const [displayStats, setDisplayStats] = useImmer(statsToString(stats))
    useEffect(() => setDisplayStats(statsToString(stats)), [stats])

@@ -1,8 +1,9 @@
-import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { PerkTypes } from '@icemourne/description-converter'
-import { Select } from 'src/components/universal/Select'
 import _ from 'lodash'
+import { Select } from 'src/components/universal/Select'
 import { setStatImport } from 'src/redux/globalSlice'
+import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+
 import styles from './NewStatSelection.module.scss'
 
 type PerkWithStatsList = {
@@ -23,7 +24,7 @@ export const ImportStats = () => {
 
    const perksWithStats = Object.values(database).reduce((acc, perk) => {
       // don't include perks with out stats, custom stuff (hash 0 - 10), or hidden perks
-      if (!perk.stats || perk.hash < 10 || perk.hidden) return acc
+      if (!perk.stats || perk.hash < 10) return acc
       if (!acc[perk.type]) acc[perk.type] = []
 
       acc[perk.type].push({

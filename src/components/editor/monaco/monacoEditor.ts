@@ -1,9 +1,11 @@
-import { weaponTypes } from '@icemourne/description-converter'
 import * as monaco from 'monaco-editor'
-import { selfContainedArr } from 'src/data/randomData'
+
 import { createConditionalSuggestions, createNormalSuggestions, createWrapperSuggestions, imports, titleSuggestions, variableSuggestions } from './autoCompletion'
 
-export interface ConditionalSuggestions {
+import { selfContainedArr } from 'src/data/randomData'
+import { weaponTypes } from '@icemourne/description-converter'
+
+export type ConditionalSuggestions = {
    range: {
       startLineNumber: number
       endLineNumber: number

@@ -1,8 +1,8 @@
 import { DescriptionLine, LinesContent, RowContent } from '@icemourne/description-converter'
-
 import { store } from 'src/redux/store'
-import styles from './Description.module.scss'
 import { useImmer } from 'use-immer'
+
+import styles from './Description.module.scss'
 
 const calculateStat = (formula?: string) => {
    if (formula) {
@@ -40,10 +40,11 @@ export function DescriptionBuilder({
    description: DescriptionLine[] | string
    addInvStats: boolean
 }): JSX.Element {
-   const { bungie, database, settings } = store.getState().global
+   const { bungie, database, settings, databaseSettings } = store.getState().global
    const selectedWeaponType = settings.weaponType
    const currentlySelected = settings.currentlySelected
    const selectedPerk = database[currentlySelected]
+   const folders = databaseSettings.folders
 
    const bungieStatNames = bungie.stat
 
@@ -132,19 +133,15 @@ export function DescriptionBuilder({
 
    const investmentStats = () => {
       if (selectedPerk.type !== 'Weapon Perk' && selectedPerk.type !== 'Weapon Frame Exotic') return
-      const linkedPerks = selectedPerk.linkedWith
 
-      const perkHash = selectedPerk.hash,
-         catalystHash = linkedPerks?.['Weapon Catalyst Exotic'],
-         frameHash = linkedPerks?.['Weapon Frame Exotic'],
-         enhancedHash = linkedPerks?.['Weapon Perk Enhanced'],
-         exoticHash = linkedPerks?.['Weapon Perk Exotic']
+      const folder = folders.enhancedTraitLinking.find((folder) => folder.has.some((hash) => hash === selectedPerk.hash))
+      if (!folder) return
+
+      const perkHash = database[folder.has[0]].type === 'Weapon Perk' ? folder.has[0] : folder.has[1],
+         enhancedHash = database[folder.has[0]].type === 'Weapon Frame Exotic' ? folder.has[0] : folder.has[1]
 
       const perkStats = perkHash ? bungie.inventoryItem?.[perkHash]?.investmentStats : undefined,
-         catalystStats = catalystHash ? bungie.inventoryItem?.[catalystHash]?.investmentStats : undefined,
-         frameStats = frameHash ? bungie.inventoryItem?.[frameHash]?.investmentStats : undefined,
-         enhancedStats = enhancedHash ? bungie.inventoryItem?.[enhancedHash]?.investmentStats : undefined,
-         exoticStats = exoticHash ? bungie.inventoryItem?.[exoticHash]?.investmentStats : undefined
+         enhancedStats = enhancedHash ? bungie.inventoryItem?.[enhancedHash]?.investmentStats : undefined
 
       return (
          <>
@@ -159,44 +156,11 @@ export function DescriptionBuilder({
                   ))}
                </div>
             )}
-            {catalystStats && catalystStats.length !== 0 && (
-               <div className={styles.investmentStats}>
-                  Catalyst stats:
-                  {catalystStats?.map((stat, i) => (
-                     <div key={i}>
-                        {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
-                        {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
-                     </div>
-                  ))}
-               </div>
-            )}
-            {frameStats && frameStats.length !== 0 && (
-               <div className={styles.investmentStats}>
-                  Frame stats:
-                  {frameStats?.map((stat, i) => (
-                     <div key={i}>
-                        {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
-                        {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
-                     </div>
-                  ))}
-               </div>
-            )}
 
             {enhancedStats && enhancedStats.length !== 0 && (
                <div className={styles.investmentStats}>
                   Enhanced stats:
                   {enhancedStats?.map((stat, i) => (
-                     <div key={i}>
-                        {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
-                        {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
-                     </div>
-                  ))}
-               </div>
-            )}
-            {exoticStats && exoticStats.length !== 0 && (
-               <div className={styles.investmentStats}>
-                  Exotic stats:
-                  {exoticStats?.map((stat, i) => (
                      <div key={i}>
                         {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
                         {bungieStatNames?.[stat.statTypeHash].displayProperties.name}

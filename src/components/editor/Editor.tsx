@@ -7,7 +7,7 @@ import { editorUpdater } from './editorUpdater'
 import { store } from 'src/redux/store'
 import { updateStateOnEdit } from './stateUpdater'
 
-export interface EditorInstances {
+export type EditorInstances = {
    main: monaco.editor.IStandaloneCodeEditor | monaco.editor.IStandaloneDiffEditor
    secondary: monaco.editor.IStandaloneCodeEditor | monaco.editor.IStandaloneDiffEditor
 }
@@ -41,15 +41,11 @@ export default function Editor({ onMount }: { onMount: () => typeof monaco.edito
             setEditorInstances(editorInstances!)
 
             if (newSettings.editorType === 'multilanguage') {
-               // @ts-ignore
-               document.querySelector(':root').style.setProperty('--highlightColorDelete', 'unset')
-               // @ts-ignore
-               document.querySelector(':root').style.setProperty('--highlightColorInsert', 'unset')
+               document.documentElement.style.setProperty('--highlightColorDelete', 'unset')
+               document.documentElement.style.setProperty('--highlightColorInsert', 'unset')
             } else {
-               // @ts-ignore
-               document.querySelector(':root').style.setProperty('--highlightColorDelete', 'rgba(255, 0, 0, 0.44)')
-               // @ts-ignore
-               document.querySelector(':root').style.setProperty('--highlightColorInsert', 'rgba(160, 191, 86, 0.32)')
+               document.documentElement.style.setProperty('--highlightColorDelete', 'rgba(255, 0, 0, 0.44)')
+               document.documentElement.style.setProperty('--highlightColorInsert', 'rgba(160, 191, 86, 0.32)')
             }
          }
 
@@ -78,8 +74,8 @@ export default function Editor({ onMount }: { onMount: () => typeof monaco.edito
             <div id="main-editor" style={{ height: `${editorSize}%` }}></div>
             <div id="secondary-editor" style={{ height: `${100 - Number(editorSize)}%` }}></div>
          </div>
-         <div className='slider'>
-         <input type="range" value={editorSize} min="2" max="98" onChange={(e) => setEditorSize(e.target.value)} />
+         <div className="slider">
+            <input type="range" value={editorSize} min="2" max="98" onChange={(e) => setEditorSize(e.target.value)} />
          </div>
       </div>
    )

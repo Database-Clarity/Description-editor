@@ -1,21 +1,21 @@
 import { Database, Stat, StatNames, Stats } from '@icemourne/description-converter'
-import { TypedObject, persistentFetch } from '@icemourne/tool-box'
+import { persistentFetch } from '@icemourne/tool-box'
 import { decode, encode } from 'js-base64'
-
-import { apiUrlsV2 } from 'src/data/urls'
 import { defaultPerk } from 'src/data/randomData'
+import { apiUrlsV2 } from 'src/data/urls'
+
 import { getLoginDetails } from './getLogin'
 
-export interface DataToSend {
+export type DataToSend = {
    sha: string
    content: string
 }
-export interface GithubJsonResponse {
+export type GithubJsonResponse = {
    content: string
    sha: string
 }
 
-export interface GithubGetResponse {
+export type GithubGetResponse = {
    content: Database
    sha: string
 }
@@ -97,7 +97,7 @@ export async function githubPut(location: keyof typeof apiUrlsV2, data: DataToSe
    return true
 }
 
-const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<Database> => {
+const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<any> => {
    const { raw } = apiUrlsV2[location]
    const resp = await persistentFetch(raw, 3)
    if (resp === Error) {
@@ -107,7 +107,7 @@ const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<Database>
 }
 
 // TODO: remove this when the data is fixed
-const fixStatNames = (data: Database) => {
+const fixData = (data: Database['perks']) => {
    const fixStatName = (stats: Stats | undefined) => {
       if (stats === undefined) return undefined
       return Object.entries(stats).reduce((acc, value) => {
@@ -163,11 +163,12 @@ const fixStatNames = (data: Database) => {
    return Object.entries(data).reduce((acc, [key, value]) => {
       acc[key] = {
          ...value,
-         stats: fixStatName(value?.stats)
+         stats: fixStatName(value?.stats),
+         // @ts-ignore
+         linkedWith: undefined
       }
-
       return acc
-   }, {} as Database)
+   }, {} as Database['perks'])
 }
 
 export async function getStartUpDescriptions() {
@@ -175,20 +176,31 @@ export async function getStartUpDescriptions() {
       dataGeneratorResp = unauthorized('dataGenerator'),
       liveResp = unauthorized('live')
 
-   const intermediate = await intermediateResp,
-      dataGenerator = await dataGeneratorResp,
-      live = await liveResp
+   const intermediate: Database = await intermediateResp,
+      dataGenerator: Database = await dataGeneratorResp
 
-   const updatedIntermediate = Object.entries(dataGenerator).reduce((acc, [key, value]) => {
+   const updatedIntermediate = Object.entries(dataGenerator.perks).reduce((acc, [key, value]) => {
       acc[key] = {
-         ...(intermediate[key] || defaultPerk),
-         ...value
+         ...(intermediate.perks[key] || defaultPerk),
+         ...{
+            hash: value.hash,
+            name: value.name,
+            itemHash: value.itemHash,
+            itemName: value.itemName,
+            type: value.type,
+         }
       }
       return acc
-   }, intermediate)
+   }, intermediate.perks)
 
    return {
-      intermediate: fixStatNames(updatedIntermediate),
-      live
+      intermediate: {
+         perks: fixData(updatedIntermediate),
+         databaseSettings: {
+            ...intermediate.databaseSettings,
+            folders: dataGenerator.databaseSettings.folders
+         }
+      },
+      live: (await liveResp) as Database
    }
 }

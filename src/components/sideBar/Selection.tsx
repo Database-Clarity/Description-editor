@@ -1,13 +1,12 @@
+import { PerkTypes } from '@icemourne/description-converter'
+import { TypedObject } from '@icemourne/tool-box'
+import { useEffect, useState } from 'react'
 import { changePerkType, changeSelectedPerk } from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { useEffect, useState } from 'react'
-
-import { PerkTypes } from '@icemourne/description-converter'
-import { Select } from '../universal/Select'
-import { cnc } from 'src/utils/classNameCombiner'
 import { store } from 'src/redux/store'
-import styles from './Selection.module.scss'
 import { useImmer } from 'use-immer'
+
+import { Select } from '../universal/Select'
 
 export function DescriptionTypeSelection({
    value,
@@ -16,11 +15,50 @@ export function DescriptionTypeSelection({
    value: PerkTypes
    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
 }) {
+   const options: { [key: string]: { [key in PerkTypes]?: string } } = {
+      'Exotics': {
+         'Armor Trait Exotic': 'Armor',
+         'Weapon Frame Exotic': 'Weapon'
+      },
+      'Weapon': {
+         'Weapon Trait': 'Perk',
+         'Weapon Trait Origin': 'Origin Trait',
+         'Weapon Trait Frame': 'Frame'
+      },
+      'Abilities / Subclass Options': {
+         'Subclass Fragment': 'Fragment',
+         'Subclass Aspect': 'Aspect',
+         'Subclass Super': 'Super',
+         'Subclass Grenade': 'Grenade',
+         'Subclass Melee': 'Melee',
+         'Subclass Class': 'Class',
+         'Subclass Movement': 'Movement'
+      },
+      'Mods': {
+         'Armor Mod General': 'Armor General',
+         'Armor Mod Combat': 'Armor Combat',
+         'Armor Mod Activity': 'Armor Activity',
+         'Armor Mod Seasonal': 'Armor Seasonal',
+         'Weapon Mod': 'Weapon',
+         'Ghost Mod': 'Ghost'
+      }
+   }
+
    return (
       <Select value={value} onChange={onChange}>
          <option value="none">Select description type</option>
 
-         <optgroup label="Exotics">
+         {Object.keys(options).map((group, i) => (
+            <optgroup label={group} key={i}>
+               {TypedObject.keys(options[group]).map((option, key) => (
+                  <option value={option} key={key}>
+                     {options[group][option]}
+                  </option>
+               ))}
+            </optgroup>
+         ))}
+
+         {/* <optgroup label="Exotics">
             <option value="Armor Perk Exotic">Armor</option>
             <option value="Weapon Perk Exotic">Weapon Perk</option>
             <option value="Weapon Frame Exotic">Weapon Frame</option>
@@ -51,7 +89,7 @@ export function DescriptionTypeSelection({
             <option value="Armor Mod Seasonal">Armor Seasonal</option>
             <option value="Weapon Mod">Weapon</option>
             <option value="Ghost Mod">Ghost</option>
-         </optgroup>
+         </optgroup> */}
       </Select>
    )
 }
@@ -75,8 +113,17 @@ export function PerkSelection() {
          return database[a].name.localeCompare(database[b].name)
       })
 
-      setDisplayedPerkList(sortedPerkHashes)
-      dispatch(changeSelectedPerk(Number(sortedPerkHashes[0]) || 0))
+      // filter out duplicates exotic weapons
+      const filteredPerkHashes =
+         settings.selectedType === 'Weapon Frame Exotic'
+            ? sortedPerkHashes.filter((hash, index) => {
+                 if (index === 0) return true
+                 return database[hash].itemName !== database[sortedPerkHashes[index - 1]].itemName
+              })
+            : sortedPerkHashes
+
+      setDisplayedPerkList(filteredPerkHashes)
+      dispatch(changeSelectedPerk(Number(filteredPerkHashes[0]) || 0))
    }, [settings.selectedType])
 
    // change selected perk with shift mouse wheel
@@ -121,16 +168,11 @@ export function PerkSelection() {
                {displayedPerkList.map((perkHash, i) => {
                   if (database[perkHash] === undefined) return
                   return (
-                     <option
-                        key={i}
-                        value={perkHash}
-                        className={cnc(database[perkHash].hidden && !settings.displayHiddenPerks, styles.hidden)}
-                     >
+                     <option key={i} value={perkHash}>
                         {database[perkHash].itemName || database[perkHash].name}
                         {Number(perkHash) > 10 && (
                            <>
                               {database[perkHash].inLiveDatabase ? '' : `❌`}
-                              {database[perkHash].hidden ? ' 😴' : ''}
                               {settings.language !== 'en' &&
                               database[perkHash].updateTracker.descriptions[settings.language]?.lastUpdate! <
                                  database[perkHash].updateTracker.descriptions.en?.lastUpdate!

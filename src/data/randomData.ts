@@ -85,9 +85,7 @@ export const defaultPerk: IntermediatePerk = {
       }
    },
    uploadToLive: false,
-   hidden: false,
    inLiveDatabase: false,
-   optional: false
 }
 
 export const defaultDescription = `

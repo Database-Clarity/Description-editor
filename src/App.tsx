@@ -1,35 +1,34 @@
 import './App.scss'
 
+import { StrictMode, useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import { ErrorBoundary } from 'react-error-boundary'
+import { Provider } from 'react-redux'
+
+import Editor from './components/editor/Editor'
+import { createEditor } from './components/editor/monaco/monacoEditor'
+import { Header } from './components/itemPopup/Header'
+import { Perks } from './components/itemPopup/Perks'
+import { BasicInfo } from './components/sideBar/BasicItemInfo'
 import {
    ButtonChangeEditor,
-   ButtonToggleHiddenPerks,
    ButtonUploadIntermediate,
    ButtonUploadLive,
    MultiButton,
    ResetDescription,
    ToggleGlobalUploadToLive
 } from './components/sideBar/Buttons'
-import { StrictMode, useState } from 'react'
-import { changePerkType, changeSelectedPerk } from './redux/globalSlice'
-
-import { BasicInfo } from './components/sideBar/BasicItemInfo'
-import { Button } from './components/universal/Button'
-import Editor from './components/editor/Editor'
-import { ErrorBoundary } from 'react-error-boundary'
-import { Header } from './components/itemPopup/Header'
 import { LanguageSelection } from './components/sideBar/LanguageSelection'
 import { Login } from './components/sideBar/Login'
 import { Message } from './components/sideBar/Message'
-import { NewStatSelection } from './components/sideBar/stats/StatDisplay'
 import { PerkSelection } from './components/sideBar/Selection'
-import { Perks } from './components/itemPopup/Perks'
-import { Provider } from 'react-redux'
-import ReactDOM from 'react-dom/client'
+import { NewStatSelection } from './components/sideBar/stats/StatDisplay'
 import { UpdateTracker } from './components/sideBar/UpdateTracker'
+import { Button } from './components/universal/Button'
 import { VerticalDivider } from './components/universal/VerticalDivider'
-import { createEditor } from './components/editor/monaco/monacoEditor'
-import { store } from './redux/store'
+import { changePerkType, changeSelectedPerk } from './redux/globalSlice'
 import { useAppDispatch } from './redux/hooks'
+import { store } from './redux/store'
 
 function ErrorFallback(setExplode: React.Dispatch<React.SetStateAction<boolean>>) {
    const dispatch = useAppDispatch()
@@ -78,10 +77,6 @@ function App() {
                   <LanguageSelection />
                   <BasicInfo />
 
-                  <VerticalDivider />
-                  <MultiButton action="optional" />
-                  <MultiButton action="hidden" />
-                  <ButtonToggleHiddenPerks />
                   <VerticalDivider />
 
                   <ButtonChangeEditor />

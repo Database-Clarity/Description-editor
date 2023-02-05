@@ -1,13 +1,13 @@
-import { StringStat, statsToString } from 'src/utils/statsToStringAndBack'
-
-import { Button } from 'src/components/universal/Button'
-import { StatUpdater } from './StatUpdater'
 import { TypedObject } from '@icemourne/tool-box'
 import _ from 'lodash'
-import styles from './StatDisplay.module.scss'
-import { useAppSelector } from 'src/redux/hooks'
 import { useEffect } from 'react'
+import { Button } from 'src/components/universal/Button'
+import { useAppSelector } from 'src/redux/hooks'
+import { StringStat, statsToString } from 'src/utils/statsToStringAndBack'
 import { useImmer } from 'use-immer'
+
+import styles from './StatDisplay.module.scss'
+import { StatUpdater } from './StatUpdater'
 
 const StatValues = ({ stat, statType }: { stat: StringStat; statType: 'active' | 'passive' }) => {
    return (
@@ -55,7 +55,7 @@ export function NewStatSelection() {
    const { database, settings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const { linkedWith, stats } = database[currentlySelected]
+   const { stats } = database[currentlySelected]
    const [statEditStatus, setStatEditStatus] = useImmer(false)
 
    const [displayStats, setDisplayStats] = useImmer(statsToString(stats))

@@ -1,14 +1,10 @@
-import {
-   PossiblePerkLinks,
-   WeaponTypes,
-   weaponTypes
-} from '@icemourne/description-converter'
+import { WeaponTypes, weaponTypes } from '@icemourne/description-converter'
+import { useEffect, useState } from 'react'
+import specialAmmo from 'src/assets/specialAmmo.png'
 import { changePerkType, changeSelectedPerk, changeWeaponType } from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { useEffect, useState } from 'react'
-
 import { cnc } from 'src/utils/classNameCombiner'
-import specialAmmo from 'src/assets/specialAmmo.png'
+
 import styles from './Header.module.scss'
 
 const itemPreview = {
@@ -61,35 +57,21 @@ const WeaponSelection = () => {
 
 export function Header() {
    const dispatch = useAppDispatch()
-   const globalState = useAppSelector((state) => state.global)
-   const database = globalState.database
-   const currentlySelectedPerk = database[globalState.settings.currentlySelected]
-
-   const possibleLinks: PossiblePerkLinks[] = [
-      'Weapon Perk Exotic',
-      'Weapon Frame Exotic',
-      'Weapon Catalyst Exotic',
-      'Weapon Perk Enhanced'
-   ]
+   const { database, settings, databaseSettings } = useAppSelector((state) => state.global)
+   const folders = databaseSettings.folders
+   const currentlySelectedPerk = database[settings.currentlySelected]
 
    const onPerksTypeSwitch = () => {
-      // reorders the possibleLinks array so that the currently selected perk is first in array with out changing arrays order
-      const selected = currentlySelectedPerk.type
-      if (!possibleLinks.some((p) => p === selected)) return
-      const index = possibleLinks.indexOf(selected as PossiblePerkLinks),
-         removed = possibleLinks.splice(index, 9),
-         newArr = removed.concat(possibleLinks)
+      const folder = folders.enhancedTraitLinking.find((folder) => folder.has.some((hash) => hash === currentlySelectedPerk.hash))
+      if (!folder) return
+      const currentPerkIndexInFolder = folder.has.findIndex((hash) => hash === currentlySelectedPerk.hash)
+      const nextPerkHash = folder.has[currentPerkIndexInFolder + 1] || folder.has[0]
 
-      const linkedPerks = currentlySelectedPerk.linkedWith
-      if (!linkedPerks) return
-      const linkedPerkHash = linkedPerks[newArr[1]] || linkedPerks[newArr[2]] || linkedPerks[newArr[3]]
+      const nextPerk = database[nextPerkHash]
 
-      if (!linkedPerkHash) return
-      const linkedPerk = database[linkedPerkHash]
-
-      dispatch(changePerkType(linkedPerk.type))
+      dispatch(changePerkType(nextPerk.type))
       setTimeout(() => {
-         dispatch(changeSelectedPerk(linkedPerk.hash))
+         dispatch(changeSelectedPerk(nextPerk.hash))
       })
    }
 
@@ -110,7 +92,7 @@ export function Header() {
    return (
       <div className={styles.header}>
          <a
-            className={cnc(styles.name, currentlySelectedPerk.type === 'Weapon Perk Enhanced', styles.enhancedName)}
+            className={cnc(styles.name, currentlySelectedPerk.type === 'Weapon Trait Enhanced', styles.enhancedName)}
             onClick={onPerksTypeSwitch}
          >
             {itemPreview.name}

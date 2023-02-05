@@ -1,12 +1,12 @@
-import { Database, IntermediatePerk, Stats } from '@icemourne/description-converter'
+import { Database, Stats } from '@icemourne/description-converter'
 
-import { GlobalState } from '../interfaces'
+import { GlobalState } from '../types'
 import { PayloadAction } from '@reduxjs/toolkit'
 import { WritableDraft } from 'immer/dist/internal'
 import { getLoginDetails } from 'src/utils/getLogin'
 import { useAppSelector } from '../hooks'
 
-export type ButtonActions = 'uploadToLive' | 'hidden' | 'optional'
+export type ButtonActions = 'uploadToLive'
 type State = WritableDraft<GlobalState>
 
 export const databaseReducers = {
@@ -50,16 +50,10 @@ export const databaseReducers = {
          updatedBy: getLoginDetails()?.username || ''
       }
    },
-   addPerk: (state: State, action: PayloadAction<{ hash: number; perk: IntermediatePerk }>) => {
-      state.database = {
-         ...state.database,
-         [action.payload.hash]: action.payload.perk
-      }
-   },
    resetPerk: (state: State, action: PayloadAction<number>) => {
       state.database[action.payload] = state.originalDatabase.live[action.payload]
    },
-   updateDatabase: (state: State, action: PayloadAction<{databaseType: 'live' | 'intermediate', newDatabase: Database}>) => {
+   updateDatabase: (state: State, action: PayloadAction<{databaseType: 'live' | 'intermediate', newDatabase: Database['perks']}>) => {
       const {databaseType, newDatabase} = action.payload
       state.originalDatabase[databaseType] = newDatabase
    },

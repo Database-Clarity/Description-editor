@@ -1,7 +1,8 @@
+import { GlobalState, SettingsState } from "../types"
 import { PerkTypes, WeaponTypes } from "@icemourne/description-converter"
+
 import { PayloadAction } from "@reduxjs/toolkit"
 import { WritableDraft } from "immer/dist/internal"
-import { GlobalState, SettingsState } from "../interfaces"
 
 type State = WritableDraft<GlobalState>
 
@@ -12,17 +13,11 @@ export const settingsReducers = {
    changeSelectedPerk: (state: State, action: PayloadAction<number>) => {
       state.settings.currentlySelected = action.payload
    },
-   toggleHiddenPerkDisplay: (state: State) => {
-      state.settings.displayHiddenPerks = !state.settings.displayHiddenPerks
-   },
    changeEditorType: (state: State, action: PayloadAction<SettingsState['editorType']>) => {
       state.settings.editorType = action.payload
    },
    changeLanguage: (state: State, action: PayloadAction<SettingsState['language']>) => {
       state.settings.language = action.payload
-   },
-   toggleNewPerkWindow: (state: State) => {
-      state.settings.newPerkWindow = !state.settings.newPerkWindow
    },
    addMessage: (state: State, action: PayloadAction<{message: string, type?: 'error' | 'success'}>) => {
       state.settings.messages = [

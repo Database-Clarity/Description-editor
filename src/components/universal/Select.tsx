@@ -1,4 +1,6 @@
+import { PerkTypes } from '@icemourne/description-converter'
 import { cnc } from 'src/utils/classNameCombiner'
+
 import styles from './Select.module.scss'
 
 export function Select({
@@ -19,3 +21,17 @@ export function Select({
       </select>
    )
 }
+
+interface Props {
+   value: PerkTypes;
+}
+
+const ReactComponent: React.FC<Props> = ({ value }) => {
+   return (
+
+      <option value={value}>{value}</option>
+
+   )
+};
+
+export default ReactComponent;

@@ -1,12 +1,12 @@
 import { DescriptionData, descriptionConverter, descriptionFilter } from '@icemourne/description-converter'
+import { useAppSelector } from 'src/redux/hooks'
+import { getPerk } from 'src/redux/reducers/dataBase'
+import { cnc } from 'src/utils/classNameCombiner'
 
-import { DescriptionBuilder } from './Description'
 import betaDimLogo from '../../assets/betaDimLogo.png'
 import clarityLogo from '../../assets/clarityLogo.png'
-import { cnc } from 'src/utils/classNameCombiner'
-import { getPerk } from 'src/redux/reducers/dataBase'
+import { DescriptionBuilder } from './Description'
 import styles from './Perks.module.scss'
-import { useAppSelector } from 'src/redux/hooks'
 
 export function Perks() {
    const globalState = useAppSelector((state) => state.global)
@@ -37,7 +37,7 @@ export function Perks() {
       <div className={styles.perk_box}>
          <div className={styles.perk_list}>
             <div className={styles.description}>
-               <DescriptionBuilder description={mainDescription || [] } addInvStats={true}/>
+               <DescriptionBuilder description={mainDescription || []} addInvStats={true} />
             </div>
             <div className={cnc(styles.perk, styles.perk_active)}>
                <div className={cnc(styles.icon_container_borderless)}>
@@ -48,7 +48,7 @@ export function Perks() {
          </div>
          <div className={styles.perk_list}>
             <div className={styles.description}>
-               <DescriptionBuilder description={secondaryDescription || [] } addInvStats={false} />
+               <DescriptionBuilder description={secondaryDescription || []} addInvStats={false} />
             </div>
             <div className={cnc(styles.perk, styles.perk_active)}>
                <div className={cnc(styles.icon_container_borderless)}>

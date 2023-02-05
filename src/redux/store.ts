@@ -1,19 +1,19 @@
 import { defaultDescription, defaultPerk } from 'src/data/randomData'
 
-import { GlobalState } from './interfaces'
+import { GlobalState } from './types'
 import _ from 'lodash'
 import { configureStore } from '@reduxjs/toolkit'
 import { fetchBungieManifest } from '@icemourne/tool-box'
 import { getStartUpDescriptions } from 'src/utils/github'
 import globalReducer from './globalSlice'
 
+const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'], 'en', true)
 const { live, intermediate } = await getStartUpDescriptions()
-const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'])
 
 const preloadedState: { global: GlobalState } = {
    global: {
       database: {
-         ...intermediate,
+         ...intermediate.perks,
          0: {
             ...defaultPerk,
             editor: {
@@ -24,20 +24,25 @@ const preloadedState: { global: GlobalState } = {
             }
          }
       },
+      databaseSettings: intermediate.databaseSettings || {
+         folders: {
+            testFolder: {
+               name: 'Test Folder'
+            }
+         }
+      },
       settings: {
          currentlySelected: 0,
          language: 'en' as const,
          selectedType: 'none' as const,
-         displayHiddenPerks: false,
          editorType: 'normal' as const,
-         newPerkWindow: false,
          messages: [],
          weaponType: 'AR' as const,
          globalUploadToLive: false
       },
       originalDatabase: {
-         live,
-         intermediate
+         live: live.perks,
+         intermediate: intermediate.perks
       },
       bungie: {
          inventoryItem,

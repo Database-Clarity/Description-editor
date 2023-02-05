@@ -1,4 +1,4 @@
-import { GlobalState } from './interfaces'
+import { GlobalState } from './types'
 import { createSlice } from '@reduxjs/toolkit'
 import { databaseReducers } from './reducers/dataBase'
 import { settingsReducers } from './reducers/settings'
@@ -18,10 +18,8 @@ export const {
    // settings
    changePerkType,
    changeSelectedPerk,
-   toggleHiddenPerkDisplay,
    changeEditorType,
    changeLanguage,
-   toggleNewPerkWindow,
    addMessage,
    removeLastMessage,
    changeWeaponType,
@@ -32,7 +30,6 @@ export const {
    updateEditorValue,
    updateStats,
    setStatImport,
-   addPerk,
    resetPerk,
    updateDatabase
 } = globalSlice.actions

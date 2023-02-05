@@ -25,7 +25,7 @@ export function statsStringToArray(stringStats: StringStats): Stats {
       if (value === undefined) return []
       return value.split(',').flatMap((value) => {
          const statNumber = Number(value)
-         if (value === '' || Number.isNaN(statNumber)) return []
+         if (value === '' || Number.isNaN(statNumber) || statNumber === 0) return []
          return statNumber
       })
    }

@@ -1,12 +1,11 @@
 import { Database, Editor, IntermediatePerk, languageKeys } from '@icemourne/description-converter'
-
 import _ from 'lodash'
-import { getLoginDetails } from 'src/utils/getLogin'
 import { store } from 'src/redux/store'
+import { getLoginDetails } from 'src/utils/getLogin'
 
 export const makeNewDatabase = (
    saveDatabaseType: 'intermediate' | 'live',
-   liveDatabase: Database,
+   liveDatabase: Database['perks'],
    uploadingToLive: boolean = false
 ) => {
    const { database, originalDatabase } = store.getState().global
@@ -18,7 +17,7 @@ export const makeNewDatabase = (
       lastUpload: Date.now()
    }
 
-   return _.transform(modifiedDatabase, (acc: Database, modifiedPerk, modifiedPerkHash) => {
+   return Object.entries(modifiedDatabase).reduce<Database['perks']>((acc, [modifiedPerkHash, modifiedPerk]) => {
       const savedPerk = savedDatabase[modifiedPerkHash]
       const livePerk = liveDatabase[modifiedPerkHash]
 
@@ -26,28 +25,27 @@ export const makeNewDatabase = (
       const propertiesToCompare = ['editor', 'stats', 'uploadToLive', 'importStatsFrom', 'linkedWith']
       if (_.isEqual(_.pick(modifiedPerk, propertiesToCompare), _.pick(savedPerk, propertiesToCompare))) {
          acc[modifiedPerkHash] = livePerk
-         return
+         return acc
       }
 
       // If data is going to be uploaded to live database check if perk should be updated
       if (saveDatabaseType === 'live' && modifiedPerk.uploadToLive === false && livePerk) {
          acc[modifiedPerkHash] = livePerk
-         return
+         return acc
       }
 
       // add new perk
       if (livePerk === undefined) {
          acc[modifiedPerkHash] = { ...modifiedPerk, ...uploadInfo }
-         return
+         return acc
       }
 
       const propertiesUserCantChange = {
-         hash: modifiedPerk.hash,
-         itemHash: modifiedPerk.itemHash,
+         hash: Number(modifiedPerk.hash),
+         itemHash: Number(modifiedPerk.itemHash),
          name: modifiedPerk.name,
          itemName: modifiedPerk.itemName,
          type: modifiedPerk.type,
-         linkedWith: modifiedPerk.linkedWith // as long as this is automated it should be fine
       }
 
       const importStatsFrom =
@@ -93,5 +91,6 @@ export const makeNewDatabase = (
          uploadToLive,
          ...uploadInfo
       }
-   })
+      return acc
+   }, {})
 }
