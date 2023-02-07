@@ -62,7 +62,7 @@ export function Header() {
    const currentlySelectedPerk = database[settings.currentlySelected]
 
    const onPerksTypeSwitch = () => {
-      const folder = folders.enhancedTraitLinking.find((folder) => folder.has.some((hash) => hash === currentlySelectedPerk.hash))
+      const folder = folders[currentlySelectedPerk.hash]
       if (!folder) return
       const currentPerkIndexInFolder = folder.has.findIndex((hash) => hash === currentlySelectedPerk.hash)
       const nextPerkHash = folder.has[currentPerkIndexInFolder + 1] || folder.has[0]

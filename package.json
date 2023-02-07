@@ -8,7 +8,7 @@
       "preview": "vite preview"
    },
    "dependencies": {
-      "@icemourne/description-converter": "^1.0.29",
+      "@icemourne/description-converter": "^1.0.31",
       "@icemourne/tool-box": "^1.0.36",
       "@reduxjs/toolkit": "^1.9.1",
       "clsx": "^1.2.1",

@@ -22,7 +22,7 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
 
    const newDatabase: Database = {
       perks: makeNewDatabase(location, oldDatabase.content.perks, uploadingToLive),
-      databaseSettings: oldDatabase.content.databaseSettings
+      databaseSettings: store.getState().global.databaseSettings
    }
 
    const message = await githubPut(location, {

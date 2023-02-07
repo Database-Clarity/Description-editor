@@ -21,7 +21,7 @@ import {
 import { LanguageSelection } from './components/sideBar/LanguageSelection'
 import { Login } from './components/sideBar/Login'
 import { Message } from './components/sideBar/Message'
-import { PerkSelection } from './components/sideBar/Selection'
+import { DescriptionTypeSelection, PerkSelection } from './components/sideBar/Selection'
 import { NewStatSelection } from './components/sideBar/stats/StatDisplay'
 import { UpdateTracker } from './components/sideBar/UpdateTracker'
 import { Button } from './components/universal/Button'
@@ -73,6 +73,7 @@ function App() {
             <Editor onMount={createEditor} />
             <div className="side_bar">
                <>
+                  <DescriptionTypeSelection />
                   <PerkSelection />
                   <LanguageSelection />
                   <BasicInfo />

@@ -134,7 +134,7 @@ export function DescriptionBuilder({
    const investmentStats = () => {
       if (selectedPerk.type !== 'Weapon Perk' && selectedPerk.type !== 'Weapon Frame Exotic') return
 
-      const folder = folders.enhancedTraitLinking.find((folder) => folder.has.some((hash) => hash === selectedPerk.hash))
+      const folder = folders[currentlySelected]
       if (!folder) return
 
       const perkHash = database[folder.has[0]].type === 'Weapon Perk' ? folder.has[0] : folder.has[1],

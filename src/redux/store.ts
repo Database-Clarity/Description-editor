@@ -1,11 +1,11 @@
-import { defaultDescription, defaultPerk } from 'src/data/randomData'
-
-import { GlobalState } from './types'
-import _ from 'lodash'
-import { configureStore } from '@reduxjs/toolkit'
 import { fetchBungieManifest } from '@icemourne/tool-box'
+import { configureStore } from '@reduxjs/toolkit'
+import _ from 'lodash'
+import { defaultDescription, defaultPerk } from 'src/data/randomData'
 import { getStartUpDescriptions } from 'src/utils/github'
+
 import globalReducer from './globalSlice'
+import { GlobalState } from './types'
 
 const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'], 'en', true)
 const { live, intermediate } = await getStartUpDescriptions()
@@ -24,13 +24,7 @@ const preloadedState: { global: GlobalState } = {
             }
          }
       },
-      databaseSettings: intermediate.databaseSettings || {
-         folders: {
-            testFolder: {
-               name: 'Test Folder'
-            }
-         }
-      },
+      databaseSettings: intermediate.databaseSettings,
       settings: {
          currentlySelected: 0,
          language: 'en' as const,

@@ -1,4 +1,4 @@
-import { Database, Stat, StatNames, Stats } from '@icemourne/description-converter'
+import { Database } from '@icemourne/description-converter'
 import { persistentFetch } from '@icemourne/tool-box'
 import { decode, encode } from 'js-base64'
 import { defaultPerk } from 'src/data/randomData'
@@ -106,80 +106,14 @@ const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<any> => {
    return resp
 }
 
-// TODO: remove this when the data is fixed
-const fixData = (data: Database['perks']) => {
-   const fixStatName = (stats: Stats | undefined) => {
-      if (stats === undefined) return undefined
-      return Object.entries(stats).reduce((acc, value) => {
-         const name = value?.[0]
-         const stat = value?.[1]
-         if (!stat || !name) return acc
-         switch (name) {
-            case 'handling':
-               acc['Handling'] = stat
-               break
-            case 'damage':
-               acc['Damage'] = stat
-               break
-            case 'aimAssist':
-               acc['Aim Assist'] = stat
-               break
-            case 'range':
-               acc['Range'] = stat
-               break
-            case 'reload':
-               acc['Reload'] = stat
-               break
-            case 'airborne':
-               acc['Airborne'] = stat
-               break
-            case 'stability':
-               acc['Stability'] = stat
-               break
-            case 'ready':
-               acc['Ready'] = stat
-               break
-            case 'stow':
-               acc['Stow'] = stat
-               break
-            case 'chargeDraw':
-               acc['Charge Draw'] = stat
-               break
-            case 'rateOfFire':
-               acc['RPM'] = stat
-               break
-            case 'zoom':
-               acc['Zoom'] = stat
-               break
-            default:
-               // @ts-ignore
-               acc[name] = stat
-               break
-         }
-         return acc
-      }, {} as { [key in StatNames]: Stat[] })
-   }
-
-   return Object.entries(data).reduce((acc, [key, value]) => {
-      acc[key] = {
-         ...value,
-         stats: fixStatName(value?.stats),
-         // @ts-ignore
-         optional: undefined,
-         linkedWith: undefined,
-         hidden: undefined,
-      }
-      return acc
-   }, {} as Database['perks'])
-}
-
 export async function getStartUpDescriptions() {
    const intermediateResp = unauthorized('intermediate'),
       dataGeneratorResp = unauthorized('dataGenerator'),
       liveResp = unauthorized('live')
 
    const intermediate: Database = await intermediateResp,
-      dataGenerator: Database = await dataGeneratorResp
+      dataGenerator: Database = await dataGeneratorResp,
+      live: Database = await liveResp
 
    const updatedIntermediate = Object.entries(dataGenerator.perks).reduce((acc, [key, value]) => {
       acc[key] = {
@@ -197,12 +131,18 @@ export async function getStartUpDescriptions() {
 
    return {
       intermediate: {
-         perks: fixData(updatedIntermediate),
+         perks: updatedIntermediate,
          databaseSettings: {
             ...intermediate.databaseSettings,
             folders: dataGenerator.databaseSettings.folders
          }
       },
-      live: (await liveResp) as Database
+      live: {
+         perks: live.perks,
+         databaseSettings: {
+            ...live.databaseSettings,
+            folders: dataGenerator.databaseSettings.folders
+         }
+      }
    }
 }

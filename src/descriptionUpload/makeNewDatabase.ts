@@ -22,7 +22,7 @@ export const makeNewDatabase = (
       const livePerk = liveDatabase[modifiedPerkHash]
 
       // If where are no local changes return perk from live database
-      const propertiesToCompare = ['editor', 'stats', 'uploadToLive', 'importStatsFrom', 'linkedWith']
+      const propertiesToCompare = ['editor', 'stats', 'uploadToLive', 'importStatsFrom']
       if (_.isEqual(_.pick(modifiedPerk, propertiesToCompare), _.pick(savedPerk, propertiesToCompare))) {
          acc[modifiedPerkHash] = livePerk
          return acc
