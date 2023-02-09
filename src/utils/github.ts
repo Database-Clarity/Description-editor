@@ -134,14 +134,16 @@ export async function getStartUpDescriptions() {
          perks: updatedIntermediate,
          databaseSettings: {
             ...intermediate.databaseSettings,
-            folders: dataGenerator.databaseSettings.folders
+            folders: dataGenerator.databaseSettings.folders,
+            enhancedPerks: dataGenerator.databaseSettings.enhancedPerks
          }
       },
       live: {
          perks: live.perks,
          databaseSettings: {
             ...live.databaseSettings,
-            folders: dataGenerator.databaseSettings.folders
+            folders: dataGenerator.databaseSettings.folders,
+            enhancedPerks: dataGenerator.databaseSettings.enhancedPerks
          }
       }
    }

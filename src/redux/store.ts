@@ -7,7 +7,7 @@ import { getStartUpDescriptions } from 'src/utils/github'
 import globalReducer from './globalSlice'
 import { GlobalState } from './types'
 
-const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'], 'en', true)
+const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'], 'en', false)
 const { live, intermediate } = await getStartUpDescriptions()
 
 const preloadedState: { global: GlobalState } = {

@@ -1,14 +1,14 @@
 {
    "name": "editor",
    "private": true,
-   "version": "2.3.5",
+   "version": "2.4.5",
    "scripts": {
       "dev": "vite",
       "build": "tsc && vite build",
       "preview": "vite preview"
    },
    "dependencies": {
-      "@icemourne/description-converter": "^1.0.31",
+      "@icemourne/description-converter": "^1.0.34",
       "@icemourne/tool-box": "^1.0.36",
       "@reduxjs/toolkit": "^1.9.1",
       "clsx": "^1.2.1",

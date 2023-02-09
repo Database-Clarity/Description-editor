@@ -1,4 +1,5 @@
 import { DescriptionLine, LinesContent, RowContent } from '@icemourne/description-converter'
+import { InvestmentStat } from '@icemourne/tool-box/bungieTypes/inventoryItem'
 import { store } from 'src/redux/store'
 import { useImmer } from 'use-immer'
 
@@ -33,6 +34,31 @@ const joinClassNames = (classNames: (string | null | undefined)[] | undefined) =
       .join(' ')
 }
 
+const InvestmentStats = ({
+   statTypeName,
+   perkStats
+}: {
+   statTypeName: string
+   perkStats: InvestmentStat[] | undefined
+}) => {
+   const { bungie } = store.getState().global
+   const bungieStatNames = bungie.stat
+   return (
+      <div className={styles.investmentStats}>
+         {statTypeName}
+         {perkStats?.map((stat, i) => {
+            if(!bungieStatNames?.[stat.statTypeHash].displayProperties.name || !stat.value) return null
+            return (
+               <div key={i}>
+                  {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
+                  {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
+               </div>
+            )
+         })}
+      </div>
+   )
+}
+
 export function DescriptionBuilder({
    description,
    addInvStats
@@ -44,7 +70,7 @@ export function DescriptionBuilder({
    const selectedWeaponType = settings.weaponType
    const currentlySelected = settings.currentlySelected
    const selectedPerk = database[currentlySelected]
-   const folders = databaseSettings.folders
+   const enhancedPerks = databaseSettings.enhancedPerks
 
    const bungieStatNames = bungie.stat
 
@@ -132,41 +158,28 @@ export function DescriptionBuilder({
    }
 
    const investmentStats = () => {
-      if (selectedPerk.type !== 'Weapon Perk' && selectedPerk.type !== 'Weapon Frame Exotic') return
+      const folder = enhancedPerks[currentlySelected]
 
-      const folder = folders[currentlySelected]
-      if (!folder) return
+      const normalTraitHash = selectedPerk.type === 'Weapon Trait' ? currentlySelected : folder?.linkedWith,
+         enhancedHash = selectedPerk.type === 'Weapon Trait Enhanced' ? currentlySelected : folder?.linkedWith
 
-      const perkHash = database[folder.has[0]].type === 'Weapon Perk' ? folder.has[0] : folder.has[1],
-         enhancedHash = database[folder.has[0]].type === 'Weapon Frame Exotic' ? folder.has[0] : folder.has[1]
-
-      const perkStats = perkHash ? bungie.inventoryItem?.[perkHash]?.investmentStats : undefined,
+      const perkStats = normalTraitHash ? bungie.inventoryItem?.[normalTraitHash]?.investmentStats : undefined,
          enhancedStats = enhancedHash ? bungie.inventoryItem?.[enhancedHash]?.investmentStats : undefined
+
+      const otherTraitStats = bungie.inventoryItem?.[currentlySelected]?.investmentStats
 
       return (
          <>
             {perkStats && perkStats.length !== 0 && (
-               <div className={styles.investmentStats}>
-                  Perk stats:
-                  {perkStats?.map((stat, i) => (
-                     <div key={i}>
-                        {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
-                        {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
-                     </div>
-                  ))}
-               </div>
+               <InvestmentStats statTypeName="Perk stats:" perkStats={perkStats} />
             )}
 
             {enhancedStats && enhancedStats.length !== 0 && (
-               <div className={styles.investmentStats}>
-                  Enhanced stats:
-                  {enhancedStats?.map((stat, i) => (
-                     <div key={i}>
-                        {stat.value > 0 ? `+${stat.value}` : `${stat.value}`}{' '}
-                        {bungieStatNames?.[stat.statTypeHash].displayProperties.name}
-                     </div>
-                  ))}
-               </div>
+               <InvestmentStats statTypeName="Enhanced stats:" perkStats={enhancedStats} />
+            )}
+
+            {!perkStats && !enhancedStats && otherTraitStats && otherTraitStats.length !== 0 && (
+               <InvestmentStats statTypeName={`${selectedPerk.type} stats:`} perkStats={otherTraitStats} />
             )}
          </>
       )

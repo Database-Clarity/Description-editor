@@ -58,16 +58,14 @@ const WeaponSelection = () => {
 export function Header() {
    const dispatch = useAppDispatch()
    const { database, settings, databaseSettings } = useAppSelector((state) => state.global)
-   const folders = databaseSettings.folders
+   const enhancedPerks = databaseSettings.enhancedPerks
    const currentlySelectedPerk = database[settings.currentlySelected]
 
    const onPerksTypeSwitch = () => {
-      const folder = folders[currentlySelectedPerk.hash]
+      const folder = enhancedPerks?.[currentlySelectedPerk.hash]
       if (!folder) return
-      const currentPerkIndexInFolder = folder.has.findIndex((hash) => hash === currentlySelectedPerk.hash)
-      const nextPerkHash = folder.has[currentPerkIndexInFolder + 1] || folder.has[0]
 
-      const nextPerk = database[nextPerkHash]
+      const nextPerk = database[folder.linkedWith]
 
       dispatch(changePerkType(nextPerk.type))
       setTimeout(() => {
