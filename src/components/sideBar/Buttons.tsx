@@ -1,9 +1,17 @@
 import clsx from 'clsx'
 import { useState } from 'react'
 import { uploadDescriptions } from 'src/descriptionUpload/uploadDescriptions'
-import { changeEditorType, resetPerk, togglePerkStuff, toggleUploadToLiveOnEdit } from 'src/redux/globalSlice'
+import {
+   changeEditorType,
+   resetPerk,
+   restoreFromBackup,
+   togglePerkStuff,
+   toggleUploadToLiveOnEdit
+} from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { ButtonActions, getPerk } from 'src/redux/reducers/dataBase'
+import { store } from 'src/redux/store'
+import { Button } from '../universal/Button'
 
 import styles from './Buttons.module.scss'
 
@@ -13,14 +21,10 @@ export function MultiButton({ action }: { action: ButtonActions }) {
 
    const labels = {
       active: {
-         uploadToLive: `Don't upload to Live`,
-         hidden: 'Show Perk',
-         optional: 'Revert to Normal Description'
+         uploadToLive: `Don't upload to Live`
       },
       inactive: {
-         uploadToLive: 'Select for upload to Live',
-         hidden: 'Hide Perk',
-         optional: 'Set as Optional'
+         uploadToLive: 'Select for upload to Live'
       }
    }
 
@@ -106,4 +110,14 @@ export function ToggleGlobalUploadToLive() {
          {labelText}
       </button>
    )
+}
+
+export function RestoreBackup() {
+   const dispatch = useAppDispatch()
+   setInterval(() => {
+      const { database } = store.getState().global
+      localStorage.setItem('backup', JSON.stringify(database))
+   }, 1000 * 60)
+
+   return <Button onClick={() => dispatch(restoreFromBackup())}>Restore Backup</Button>
 }

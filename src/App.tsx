@@ -16,6 +16,7 @@ import {
    ButtonUploadLive,
    MultiButton,
    ResetDescription,
+   RestoreBackup,
    ToggleGlobalUploadToLive
 } from './components/sideBar/Buttons'
 import { LanguageSelection } from './components/sideBar/LanguageSelection'
@@ -77,11 +78,13 @@ function App() {
                   <PerkSelection />
                   <LanguageSelection />
                   <BasicInfo />
-
                   <VerticalDivider />
 
                   <ButtonChangeEditor />
                   <ResetDescription />
+                  <VerticalDivider />
+
+                  <RestoreBackup />
                   <VerticalDivider />
 
                   <ToggleGlobalUploadToLive />

@@ -1,10 +1,10 @@
-import { Database, Stats } from '@icemourne/description-converter'
+import { Stats } from '@icemourne/description-converter'
 
-import { GlobalState } from '../types'
 import { PayloadAction } from '@reduxjs/toolkit'
 import { WritableDraft } from 'immer/dist/internal'
 import { getLoginDetails } from 'src/utils/getLogin'
 import { useAppSelector } from '../hooks'
+import { GlobalState } from '../types'
 
 export type ButtonActions = 'uploadToLive'
 type State = WritableDraft<GlobalState>
@@ -59,6 +59,10 @@ export const databaseReducers = {
    },
    resetPerk: (state: State, action: PayloadAction<number>) => {
       state.database[action.payload] = state.originalDatabase.live[action.payload]
+   },
+   restoreFromBackup: (state: State) => {
+      const backup = localStorage.getItem('backup')
+      if (backup) state.database = JSON.parse(backup)
    }
 }
 /**
