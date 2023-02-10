@@ -40,6 +40,13 @@ export const databaseReducers = {
    updateStats: (state: State, action: PayloadAction<{ hash: number; stats: Stats | undefined }>) => {
       const { hash, stats } = action.payload
       state.database[hash].stats = stats
+      state.database[hash].updateTracker.stats = {
+         lastUpdate: Date.now(),
+         updatedBy: getLoginDetails()?.username || ''
+      }
+      if (state.settings.globalUploadToLive) {
+         state.database[hash].uploadToLive = true
+      }
    },
    setStatImport: (state: State, action: PayloadAction<{ addImportTo: number; importFrom: number }>) => {
       const { addImportTo, importFrom } = action.payload
