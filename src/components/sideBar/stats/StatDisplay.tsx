@@ -56,21 +56,31 @@ export function NewStatSelection() {
    const { database, settings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const { stats, importStatsFrom } = database[currentlySelected]
+   const { stats, importStatsFrom, type } = database[currentlySelected]
    const importedStats = importStatsFrom ? database[importStatsFrom]?.stats : undefined
 
    const [statEditStatus, setStatEditStatus] = useImmer(false)
+   const [enhancedStatEditStatus, setEnhancedStatEditStatus] = useImmer(false)
 
    const [displayStats, setDisplayStats] = useImmer(statsToString(stats))
    useEffect(() => setDisplayStats(statsToString(stats)), [stats])
 
    return (
       <div className={styles.stats}>
-         <Button onClick={() => setStatEditStatus((c) => !c)}>
-            {statEditStatus ? 'Close stat editor' : 'Open stat editor'}
-         </Button>
-         {statEditStatus && <StatUpdater />}
-         {statEditStatus && <ImportStats />}
+         {!enhancedStatEditStatus && (
+            <Button onClick={() => setStatEditStatus((c) => !c)}>
+               {statEditStatus ? 'Close stat editor' : 'Open stat editor'}
+            </Button>
+         )}
+         {!statEditStatus && (
+            <Button onClick={() => setEnhancedStatEditStatus((c) => !c)}>
+               {statEditStatus ? 'Close enhanced stat editor' : 'Open enhanced stat editor'}
+            </Button>
+         )}
+
+         {statEditStatus && <StatUpdater enhanced={false} />}
+         {type === 'Weapon Trait' && enhancedStatEditStatus && <StatUpdater enhanced={true} />}
+         {(statEditStatus || enhancedStatEditStatus) && <ImportStats />}
 
          {TypedObject.entries(displayStats).map(([statName, stat]) => (
             <div key={statName} className={styles.stat}>
@@ -81,7 +91,7 @@ export function NewStatSelection() {
 
          {importedStats && (
             <>
-               <div className={styles.statName}>\/   Imported stats   \/</div>
+               <div className={styles.statName}>\/ Imported stats \/</div>
                {TypedObject.entries(statsToString(importedStats)).map(([statName, stat]) => (
                   <div key={statName} className={styles.stat}>
                      <div className={styles.statName}>{statName}</div>

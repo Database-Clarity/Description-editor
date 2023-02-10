@@ -152,13 +152,16 @@ const StatComponent = ({
    )
 }
 
-export const StatUpdater = () => {
+export const StatUpdater = ({ enhanced }: { enhanced: boolean }) => {
    const dispatch = useAppDispatch()
 
-   const { database, settings } = useAppSelector((state) => state.global)
+   const { database, settings, databaseSettings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const { stats } = database[currentlySelected]
+   const hash = enhanced ? currentlySelected : databaseSettings.enhancedPerks[currentlySelected]?.linkedWith
+   if (!hash) return null
+
+   const { stats } = database[hash]
 
    const [displayStats, setDisplayStats] = useImmer(statsToString(stats))
    useEffect(() => setDisplayStats(statsToString(stats)), [stats])
@@ -177,12 +180,12 @@ export const StatUpdater = () => {
       })
    }
    const saveStatChanges = () => {
-      dispatch(updateStats({ hash: currentlySelected, stats: statsStringToArray(displayStats) }))
+      dispatch(updateStats({ hash: hash, stats: statsStringToArray(displayStats) }))
    }
 
    return (
       <>
-         <Button onClick={saveStatChanges}>Save stat changes</Button>
+         <Button onClick={saveStatChanges}>{`Save ${enhanced ? 'enhanced ' : ''}stat changes`}</Button>
          <div className={styles.statUpdater}>
             {TypedObject.entries(displayStats).map(([statName, stat]) => (
                <div key={statName} className={styles.stat}>

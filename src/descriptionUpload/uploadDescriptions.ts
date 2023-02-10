@@ -24,12 +24,10 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       databaseSettings: store.getState().global.databaseSettings
    }
 
-   // const message = await githubPut(location, {
-   //    content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),
-   //    sha: oldDatabase.sha
-   // })
-
-   const message = undefined
+   const message = await githubPut(location, {
+      content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),
+      sha: oldDatabase.sha
+   })
 
    if (typeof message === 'string') {
       sendMessage(message, 'error')
