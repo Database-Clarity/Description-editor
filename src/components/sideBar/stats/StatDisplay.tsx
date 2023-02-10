@@ -5,6 +5,7 @@ import { Button } from 'src/components/universal/Button'
 import { useAppSelector } from 'src/redux/hooks'
 import { StringStat, statsToString } from 'src/utils/statsToStringAndBack'
 import { useImmer } from 'use-immer'
+import { ImportStats } from './ImportStats'
 
 import styles from './StatDisplay.module.scss'
 import { StatUpdater } from './StatUpdater'
@@ -55,7 +56,9 @@ export function NewStatSelection() {
    const { database, settings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const { stats } = database[currentlySelected]
+   const { stats, importStatsFrom } = database[currentlySelected]
+   const importedStats = importStatsFrom ? database[importStatsFrom]?.stats : undefined
+
    const [statEditStatus, setStatEditStatus] = useImmer(false)
 
    const [displayStats, setDisplayStats] = useImmer(statsToString(stats))
@@ -67,6 +70,7 @@ export function NewStatSelection() {
             {statEditStatus ? 'Close stat editor' : 'Open stat editor'}
          </Button>
          {statEditStatus && <StatUpdater />}
+         {statEditStatus && <ImportStats />}
 
          {TypedObject.entries(displayStats).map(([statName, stat]) => (
             <div key={statName} className={styles.stat}>
@@ -74,6 +78,18 @@ export function NewStatSelection() {
                <StatComponent stats={stat} />
             </div>
          ))}
+
+         {importedStats && (
+            <>
+               <div className={styles.statName}>\/   Imported stats   \/</div>
+               {TypedObject.entries(statsToString(importedStats)).map(([statName, stat]) => (
+                  <div key={statName} className={styles.stat}>
+                     <div className={styles.statName}>{statName}</div>
+                     <StatComponent stats={stat} />
+                  </div>
+               ))}
+            </>
+         )}
       </div>
    )
 }

@@ -119,5 +119,12 @@ export function RestoreBackup() {
       localStorage.setItem('backup', JSON.stringify(database))
    }, 1000 * 60)
 
-   return <Button onClick={() => dispatch(restoreFromBackup())}>Restore Backup</Button>
+   return (
+      <Button
+         onClick={() => dispatch(restoreFromBackup())}
+         title="Descriptions are saved every 1m this will restore saved ones incase of some problems"
+      >
+         Restore Backup
+      </Button>
+   )
 }

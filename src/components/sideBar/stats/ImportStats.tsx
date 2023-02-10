@@ -4,8 +4,6 @@ import { Select } from 'src/components/universal/Select'
 import { setStatImport } from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
-import styles from './NewStatSelection.module.scss'
-
 type PerkWithStatsList = {
    [key in PerkTypes]: {
       hash: number
@@ -60,7 +58,6 @@ export const ImportStats = () => {
    )
    return (
       <Select
-         className={styles.selection}
          value={importFrom}
          onChange={(e) =>
             dispatch(setStatImport({ addImportTo: currentlySelected, importFrom: Number(e.target.value) }))
