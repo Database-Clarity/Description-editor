@@ -1,6 +1,5 @@
 import { Database } from '@icemourne/description-converter'
 import { cleanObject, customJsonStringify } from '@icemourne/tool-box'
-import { updateDatabase } from 'src/redux/globalSlice'
 import { store } from 'src/redux/store'
 import { githubGet, githubPut } from 'src/utils/github'
 import { sendMessage } from 'src/utils/sendMessage'
@@ -25,17 +24,18 @@ export async function uploadDescriptions(location: 'intermediate' | 'live', uplo
       databaseSettings: store.getState().global.databaseSettings
    }
 
-   const message = await githubPut(location, {
-      content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),
-      sha: oldDatabase.sha
-   })
+   // const message = await githubPut(location, {
+   //    content: customJsonStringify(cleanObject(newDatabase), DATABASE_PROPERTIES),
+   //    sha: oldDatabase.sha
+   // })
+
+   const message = undefined
 
    if (typeof message === 'string') {
       sendMessage(message, 'error')
       return
    }
    sendMessage(`Uploaded => ${location}`, 'success')
-   store.dispatch(updateDatabase({ databaseType: location, newDatabase: newDatabase.perks }))
 
    if (location === 'intermediate') return
    uploadDescriptions('intermediate', uploadingToLive)

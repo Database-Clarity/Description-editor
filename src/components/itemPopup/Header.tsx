@@ -1,9 +1,9 @@
 import { WeaponTypes, weaponTypes } from '@icemourne/description-converter'
+import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 import specialAmmo from 'src/assets/specialAmmo.png'
 import { changePerkType, changeSelectedPerk, changeWeaponType } from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { cnc } from 'src/utils/classNameCombiner'
 
 import styles from './Header.module.scss'
 
@@ -90,7 +90,7 @@ export function Header() {
    return (
       <div className={styles.header}>
          <a
-            className={cnc(styles.name, currentlySelectedPerk.type === 'Weapon Trait Enhanced', styles.enhancedName)}
+            className={clsx(styles.name, currentlySelectedPerk.type === 'Weapon Trait Enhanced' && styles.enhancedName)}
             onClick={onPerksTypeSwitch}
          >
             {itemPreview.name}

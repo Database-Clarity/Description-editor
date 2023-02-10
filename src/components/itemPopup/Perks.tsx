@@ -1,7 +1,7 @@
-import { DescriptionData, descriptionConverter, descriptionFilter } from '@icemourne/description-converter'
+import { descriptionConverter, DescriptionData, descriptionFilter } from '@icemourne/description-converter'
+import clsx from 'clsx'
 import { useAppSelector } from 'src/redux/hooks'
 import { getPerk } from 'src/redux/reducers/dataBase'
-import { cnc } from 'src/utils/classNameCombiner'
 
 import betaDimLogo from '../../assets/betaDimLogo.png'
 import clarityLogo from '../../assets/clarityLogo.png'
@@ -39,22 +39,22 @@ export function Perks() {
             <div className={styles.description}>
                <DescriptionBuilder description={mainDescription || []} addInvStats={true} />
             </div>
-            <div className={cnc(styles.perk, styles.perk_active)}>
-               <div className={cnc(styles.icon_container_borderless)}>
+            <div className={clsx(styles.perk, styles.perk_active)}>
+               <div className={styles.icon_container_borderless}>
                   <img src={perkIcon ? `https://bungie.net${perkIcon}` : clarityLogo} />
                </div>
-               <div className={cnc(styles.name, styles.name_active)}>{perk.name}</div>
+               <div className={clsx(styles.name, styles.name_active)}>{perk.name}</div>
             </div>
          </div>
          <div className={styles.perk_list}>
             <div className={styles.description}>
                <DescriptionBuilder description={secondaryDescription || []} addInvStats={false} />
             </div>
-            <div className={cnc(styles.perk, styles.perk_active)}>
-               <div className={cnc(styles.icon_container_borderless)}>
+            <div className={clsx(styles.perk, styles.perk_active)}>
+               <div className={styles.icon_container_borderless}>
                   <img src={betaDimLogo} />
                </div>
-               <div className={cnc(styles.name, styles.name_active)}>{perk.name}</div>
+               <div className={clsx(styles.name, styles.name_active)}>{perk.name}</div>
             </div>
          </div>
       </div>

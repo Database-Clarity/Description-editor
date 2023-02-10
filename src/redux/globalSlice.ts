@@ -30,8 +30,7 @@ export const {
    updateEditorValue,
    updateStats,
    setStatImport,
-   resetPerk,
-   updateDatabase
+   resetPerk
 } = globalSlice.actions
 
 export default globalSlice.reducer

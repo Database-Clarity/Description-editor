@@ -1,30 +1,15 @@
+import clsx from 'clsx'
 import { useState } from 'react'
 import { uploadDescriptions } from 'src/descriptionUpload/uploadDescriptions'
 import { changeEditorType, resetPerk, togglePerkStuff, toggleUploadToLiveOnEdit } from 'src/redux/globalSlice'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { ButtonActions, getPerk } from 'src/redux/reducers/dataBase'
-import { cnc } from 'src/utils/classNameCombiner'
 
 import styles from './Buttons.module.scss'
 
 export function MultiButton({ action }: { action: ButtonActions }) {
    const dispatch = useAppDispatch()
    const buttonStatus = getPerk()[action]
-
-
-   // TODO: remove this
-   // const database = useAppSelector((state) => state.global.database)
-
-   // console.log(
-   //    Object.values(database).flatMap((perk_) => {
-   //       const perk = perk_ as IntermediatePerk
-
-   //       if (perk.stats?.rateOfFire) {
-   //          return perk.name
-   //       }
-   //       return []
-   //    })
-   // )
 
    const labels = {
       active: {
@@ -41,7 +26,7 @@ export function MultiButton({ action }: { action: ButtonActions }) {
 
    return (
       <button
-         className={cnc(styles.button, buttonStatus, styles.active)}
+         className={clsx(styles.button, buttonStatus && styles.active)}
          onClick={() => dispatch(togglePerkStuff(action))}
       >
          {buttonStatus ? labels.active[action] : labels.inactive[action]}
@@ -115,7 +100,7 @@ export function ToggleGlobalUploadToLive() {
 
    return (
       <button
-         className={cnc(styles.button, globalUploadToLive, styles.active)}
+         className={clsx(styles.button, globalUploadToLive && styles.active)}
          onClick={() => dispatch(toggleUploadToLiveOnEdit())}
       >
          {labelText}

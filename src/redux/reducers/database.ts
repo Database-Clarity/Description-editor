@@ -38,11 +38,11 @@ export const databaseReducers = {
       }
    },
    updateStats: (state: State, action: PayloadAction<{ hash: number; stats: Stats | undefined }>) => {
-      const { hash,  stats } = action.payload
+      const { hash, stats } = action.payload
       state.database[hash].stats = stats
    },
-   setStatImport: (state: State, action: PayloadAction<{addImportTo: number, importFrom: number}>) => {
-      const {addImportTo, importFrom} = action.payload
+   setStatImport: (state: State, action: PayloadAction<{ addImportTo: number; importFrom: number }>) => {
+      const { addImportTo, importFrom } = action.payload
 
       state.database[addImportTo].importStatsFrom = importFrom === 0 ? undefined : importFrom
       state.database[addImportTo].updateTracker.stats = {
@@ -52,11 +52,7 @@ export const databaseReducers = {
    },
    resetPerk: (state: State, action: PayloadAction<number>) => {
       state.database[action.payload] = state.originalDatabase.live[action.payload]
-   },
-   updateDatabase: (state: State, action: PayloadAction<{databaseType: 'live' | 'intermediate', newDatabase: Database['perks']}>) => {
-      const {databaseType, newDatabase} = action.payload
-      state.originalDatabase[databaseType] = newDatabase
-   },
+   }
 }
 /**
  * @param hash Optional perk hash

@@ -1,5 +1,5 @@
 import { PerkTypes } from '@icemourne/description-converter'
-import { cnc } from 'src/utils/classNameCombiner'
+import clsx from 'clsx'
 
 import styles from './Select.module.scss'
 
@@ -16,7 +16,7 @@ export function Select({
    name?: string
 }) {
    return (
-      <select className={cnc(styles.select, className)} onChange={(e) => onChange(e)} value={value}>
+      <select className={clsx(styles.select, className)} onChange={(e) => onChange(e)} value={value}>
          {children}
       </select>
    )

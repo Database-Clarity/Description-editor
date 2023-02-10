@@ -1,4 +1,4 @@
-import { cnc } from 'src/utils/classNameCombiner'
+import clsx from 'clsx'
 import styles from './Button.module.scss'
 
 export function Button({
@@ -16,7 +16,7 @@ export function Button({
 }) {
    return (
       <button
-         className={cnc(styles.button, className, buttonStatus, styles.active)}
+         className={clsx(styles.button, className, buttonStatus && styles.active)}
          onClick={(e) => onClick(e)}
          title={title}
       >
