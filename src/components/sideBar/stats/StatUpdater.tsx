@@ -158,8 +158,8 @@ export const StatUpdater = ({ enhanced }: { enhanced: boolean }) => {
    const { database, settings, databaseSettings } = useAppSelector((state) => state.global)
    const { currentlySelected } = settings
 
-   const hash = enhanced ? currentlySelected : databaseSettings.enhancedPerks[currentlySelected]?.linkedWith
-   if (!hash) return null
+   const hash = enhanced ? databaseSettings.enhancedPerks[currentlySelected]?.linkedWith : currentlySelected
+   if (hash === undefined) return null
 
    const { stats } = database[hash]
 
@@ -185,7 +185,7 @@ export const StatUpdater = ({ enhanced }: { enhanced: boolean }) => {
 
    return (
       <>
-         <Button onClick={saveStatChanges}>{`Save ${enhanced ? 'enhanced ' : ''}stat changes`}</Button>
+         <Button onClick={saveStatChanges}>{`Save ${enhanced ? 'linked perk ' : ''}stat changes`}</Button>
          <div className={styles.statUpdater}>
             {TypedObject.entries(displayStats).map(([statName, stat]) => (
                <div key={statName} className={styles.stat}>

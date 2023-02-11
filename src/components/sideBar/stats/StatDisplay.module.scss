@@ -8,6 +8,16 @@
    word-spacing: 3px;
 }
 
+.importLabel {
+   text-align: center;
+   text-transform: uppercase;
+   font-weight: bold;
+   letter-spacing: 0.5px;
+   word-spacing: 3px;
+   white-space: pre-wrap;
+   color: $orange-color;
+}
+
 .stats {
    display: flex;
    flex-direction: column;

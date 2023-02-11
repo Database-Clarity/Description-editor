@@ -12,13 +12,13 @@ type PerkWithStatsList = {
    }[]
 }
 
-export const ImportStats = () => {
-   const globalState = useAppSelector((state) => state.global)
+export const ImportStats = ({ enhanced }: { enhanced: boolean }) => {
+   const { database, settings, databaseSettings } = useAppSelector((state) => state.global)
    const dispatch = useAppDispatch()
 
-   const database = globalState.database
-   const currentlySelected = globalState.settings.currentlySelected
-   const importFrom = database[currentlySelected].importStatsFrom || 0
+   const currentlySelected = settings.currentlySelected
+   const hash = enhanced ? databaseSettings.enhancedPerks[currentlySelected]?.linkedWith : currentlySelected
+   const importFrom = database[hash].importStatsFrom || 0
 
    const perksWithStats = Object.values(database).reduce((acc, perk) => {
       // don't include perks with out stats, custom stuff (hash 0 - 10), or hidden perks
@@ -59,9 +59,7 @@ export const ImportStats = () => {
    return (
       <Select
          value={importFrom}
-         onChange={(e) =>
-            dispatch(setStatImport({ addImportTo: currentlySelected, importFrom: Number(e.target.value) }))
-         }
+         onChange={(e) => dispatch(setStatImport({ addImportTo: hash, importFrom: Number(e.target.value) }))}
       >
          <option value={0}>Import stats (optional)</option>
          <Groups />
