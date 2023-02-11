@@ -28,22 +28,6 @@ export const wrappers = {
 
 export const selfContainedArr = [...wrappers.imageAdding, ...wrappers.lineEffecting]
 
-export const statsTypes = [
-   'aimAssist',
-   'airborne',
-   'damage',
-   'handling',
-   'range',
-   'ready',
-   'reload',
-   'rateOfFire',
-   'RPM',
-   'chargeDraw',
-   'stability',
-   'stow',
-   'zoom'
-] as const
-
 export const languages: [Languages, string][] = [
    ['en', 'English'],
    ['de', 'German - Deutsch'],

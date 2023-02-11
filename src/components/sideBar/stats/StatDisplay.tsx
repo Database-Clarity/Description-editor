@@ -71,7 +71,7 @@ export function NewStatSelection() {
    useEffect(() => setDisplayStats(statsToString(stats)), [stats])
 
    const [linkedDisplayStats, setLinkedDisplayStats] = useImmer(statsToString(stats))
-   useEffect(() => setLinkedDisplayStats(statsToString(linkedPerk.stats)), [linkedPerk.stats])
+   useEffect(() => setLinkedDisplayStats(statsToString(linkedPerk?.stats)), [linkedPerk?.stats])
 
    const buttons = [
       !linkedStatEditStatus && (

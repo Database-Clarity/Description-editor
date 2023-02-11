@@ -10,9 +10,6 @@ export type StringStat = {
       stat: string
       multiplier: string
    }
-   /**
-    * [weaponType, isUsed]
-    */
    weaponTypes?: WeaponTypes[]
 }
 
@@ -31,14 +28,15 @@ export function statsStringToArray(stringStats: StringStats): Stats {
    }
    const newStats = TypedObject.entries(stringStats).reduce((acc, [key, stat]) => {
       const newStat = stat.map((value) => ({
-         passive: {
-            stat: stringToArray(value?.passive?.stat),
-            multiplier: stringToArray(value?.passive?.multiplier)
-         },
          active: {
             stat: stringToArray(value?.active?.stat),
             multiplier: stringToArray(value?.active?.multiplier)
          },
+         passive: {
+            stat: stringToArray(value?.passive?.stat),
+            multiplier: stringToArray(value?.passive?.multiplier)
+         },
+
          weaponTypes: value?.weaponTypes || []
       }))
 
@@ -53,8 +51,13 @@ export function statsStringToArray(stringStats: StringStats): Stats {
          return value
       })
 
-      acc[key] = cleanObject(filteredStat)
+      if (key === 'Damage') {
+         acc['PVE Damage'] = cleanObject(filteredStat)
+         acc['PVP Damage'] = cleanObject(filteredStat)
+         return acc
+      }
 
+      acc[key] = cleanObject(filteredStat)
       return acc
    }, {} as Stats)
 
