@@ -1,4 +1,4 @@
-import { Database, Editor, IntermediatePerk, languageKeys } from '@icemourne/description-converter'
+import { Database, Editor, IntermediatePerk, languageKeys, statNames } from '@icemourne/description-converter'
 import _ from 'lodash'
 import { store } from 'src/redux/store'
 import { getLoginDetails } from 'src/utils/getLogin'
@@ -41,6 +41,10 @@ const updateEditor = (savedEditor: Editor, modifiedEditor: Editor, liveEditor: E
       }
       return acc
    }, {})
+}
+
+const removeDeprecatedStats = (stats: IntermediatePerk['stats']) => {
+   return _.pick(stats, statNames)
 }
 
 const updateUpdateTracker = (
@@ -95,6 +99,12 @@ export const makeNewDatabase = (
       const savedPerk = savedDatabase[modifiedPerkHash]
       const livePerk = liveDatabase[modifiedPerkHash]
 
+      // add new perk
+      if (livePerk === undefined) {
+         acc[modifiedPerkHash] = { ...modifiedPerk, ...uploadInfo }
+         return acc
+      }
+
       // If where are no local changes return perk from live database
       if (comparePerks(savedPerk, modifiedPerk)) {
          acc[modifiedPerkHash] = livePerk
@@ -107,12 +117,6 @@ export const makeNewDatabase = (
          return acc
       }
 
-      // add new perk
-      if (livePerk === undefined) {
-         acc[modifiedPerkHash] = { ...modifiedPerk, ...uploadInfo }
-         return acc
-      }
-
       acc[modifiedPerkHash] = {
          name: modifiedPerk.name,
          itemName: modifiedPerk.itemName,
@@ -120,7 +124,7 @@ export const makeNewDatabase = (
          itemHash: Number(modifiedPerk.itemHash) || undefined,
          type: modifiedPerk.type,
 
-         stats: compareProperty(savedPerk.stats, modifiedPerk.stats, livePerk.stats),
+         stats: removeDeprecatedStats(compareProperty(savedPerk.stats, modifiedPerk.stats, livePerk.stats)),
          importStatsFrom: compareProperty(
             savedPerk.importStatsFrom,
             modifiedPerk.importStatsFrom,

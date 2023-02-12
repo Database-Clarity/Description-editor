@@ -42,15 +42,6 @@ export function BasicInfo() {
    const currentlySelected = settings.currentlySelected
    const selectedPerk = database[currentlySelected]
 
-   // TODO: remove this
-   _.once(() => {
-      Object.values(database).forEach((value) => {
-         if (value.stats?.RPM) {
-            console.log(value.name, value.itemName, value.type)
-         }
-      })
-   })()
-
    return (
       <div className={styles.info_display}>
          <InfoDisplayOptions selectedType={settings.selectedType}  selectedPerk={selectedPerk} />
