@@ -1,4 +1,4 @@
-import { IntermediatePerk, Languages } from '@icemourne/description-converter'
+import { IntermediatePerk } from '@icemourne/description-converter'
 
 const specialWrappers = ['green', 'blue', 'purple', 'yellow', 'center', 'bold', 'pve', 'pvp']
 
@@ -27,22 +27,6 @@ export const wrappers = {
 }
 
 export const selfContainedArr = [...wrappers.imageAdding, ...wrappers.lineEffecting]
-
-export const languages: [Languages, string][] = [
-   ['en', 'English'],
-   ['de', 'German - Deutsch'],
-   ['fr', 'French - Français'],
-   ['it', 'Italian - Italiano'],
-   ['pl', 'Polish - Polski'],
-   ['ru', 'Russian - Русский'],
-   ['es', 'Spanish (Spain) - Español (España)'],
-   ['es-mx', 'Spanish (Mexico) - Español (México)'],
-   ['ko', 'Korean - 한국어'],
-   ['pt-rb', 'Portuguese (Brazil) - Português (Brasil)'],
-   ['ja', 'Japanese - 日本語'],
-   ['zh-cht', 'Chinese (Traditional) - 繁體中文'],
-   ['zh-chs', 'Chinese (Simplified) - 简体中文']
-]
 
 export const defaultPerk: IntermediatePerk = {
    hash: 0,

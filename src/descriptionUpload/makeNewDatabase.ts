@@ -140,8 +140,10 @@ export const makeNewDatabase = (
 
          uploadedBy: uploadInfo.uploadedBy,
          lastUpload: uploadInfo.lastUpload,
-         inLiveDatabase: uploadingToLive && modifiedPerk.uploadToLive,
-         uploadToLive: uploadingToLive ? false : livePerk.uploadToLive
+         inLiveDatabase: uploadingToLive && modifiedPerk.uploadToLive ? true : livePerk.inLiveDatabase,
+         uploadToLive: uploadingToLive
+            ? false
+            : compareProperty(savedPerk.uploadToLive, modifiedPerk.uploadToLive, livePerk.uploadToLive) || false
       }
       return acc
    }, {})

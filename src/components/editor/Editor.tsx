@@ -1,10 +1,9 @@
 import * as monaco from 'monaco-editor'
-
 import { useEffect, useState } from 'react'
+import { store } from 'src/redux/store'
 
 import { editorHotkeys } from './editorHotkeys'
 import { editorUpdater } from './editorUpdater'
-import { store } from 'src/redux/store'
 import { updateStateOnEdit } from './stateUpdater'
 
 export type EditorInstances = {

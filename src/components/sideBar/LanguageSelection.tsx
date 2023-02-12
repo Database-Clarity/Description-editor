@@ -1,9 +1,9 @@
-import { Languages } from '@icemourne/description-converter'
-import { Select } from '../universal/Select'
+import { Languages, languages } from '@icemourne/description-converter'
 import { changeLanguage } from 'src/redux/globalSlice'
-import { languages } from 'src/data/randomData'
-import styles from './LanguageSelection.module.scss'
 import { useAppDispatch } from 'src/redux/hooks'
+
+import { Select } from '../universal/Select'
+import styles from './LanguageSelection.module.scss'
 
 export function LanguageSelection() {
    const dispatch = useAppDispatch()

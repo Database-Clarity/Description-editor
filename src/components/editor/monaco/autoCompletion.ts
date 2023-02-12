@@ -2,6 +2,7 @@ import { extractTitles, getVariables, weaponTypes } from '@icemourne/description
 import * as monaco from 'monaco-editor'
 import { wrappers } from 'src/data/randomData'
 import { store } from 'src/redux/store'
+
 import { ConditionalSuggestions } from './monacoEditor'
 
 const conditionalSuggestions: {
