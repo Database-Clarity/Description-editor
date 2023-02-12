@@ -72,8 +72,6 @@ export function DescriptionBuilder({
    const selectedPerk = database[currentlySelected]
    const enhancedPerks = databaseSettings.enhancedPerks
 
-   const bungieStatNames = bungie.stat
-
    const [hoverPopup, setHoverPopup] = useImmer<{ [key: string]: JSX.Element }>({})
 
    const buildLine = (description: DescriptionLine, i: number) =>

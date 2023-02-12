@@ -1,4 +1,5 @@
 import { IntermediatePerk, PerkTypes } from '@icemourne/description-converter'
+import _ from 'lodash'
 import { useAppSelector } from 'src/redux/hooks'
 
 import styles from './BasicItemInfo.module.scss'
@@ -40,6 +41,15 @@ export function BasicInfo() {
 
    const currentlySelected = settings.currentlySelected
    const selectedPerk = database[currentlySelected]
+
+   // TODO: remove this
+   _.once(() => {
+      Object.values(database).forEach((value) => {
+         if (value.stats?.RPM) {
+            console.log(value.name, value.itemName, value.type)
+         }
+      })
+   })()
 
    return (
       <div className={styles.info_display}>

@@ -1,4 +1,4 @@
-import { descriptionConverter, DescriptionData, descriptionFilter } from '@icemourne/description-converter'
+import { DescriptionData, descriptionConverter, descriptionFilter } from '@icemourne/description-converter'
 import clsx from 'clsx'
 import { useAppSelector } from 'src/redux/hooks'
 import { getPerk } from 'src/redux/reducers/dataBase'

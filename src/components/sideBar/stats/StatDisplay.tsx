@@ -114,7 +114,7 @@ export function NewStatSelection() {
             ))}
          </Fragment>
       ),
-      linkedPerk?.stats && (
+      (linkedPerk?.stats || linkedPerk?.importStatsFrom) && (
          <>
             <VerticalDivider key="divider" />
             <div className={styles.importLabel} key="linkedPerk">
