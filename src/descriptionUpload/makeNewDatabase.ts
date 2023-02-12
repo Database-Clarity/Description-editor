@@ -43,10 +43,6 @@ const updateEditor = (savedEditor: Editor, modifiedEditor: Editor, liveEditor: E
    }, {})
 }
 
-const removeDeprecatedStats = (stats: IntermediatePerk['stats']) => {
-   return _.pick(stats, statNames)
-}
-
 const updateUpdateTracker = (
    savedPerk: IntermediatePerk,
    modifiedPerk: IntermediatePerk,
@@ -81,6 +77,13 @@ const updateUpdateTracker = (
    }
 }
 
+const removeDeprecatedStats = (perk: IntermediatePerk) => {
+   return {
+      ...perk,
+      stats: _.pick(perk.stats, statNames)
+   }
+}
+
 export const makeNewDatabase = (
    databaseType: 'intermediate' | 'live',
    liveDatabase: Database['perks'],
@@ -95,9 +98,10 @@ export const makeNewDatabase = (
       lastUpload: Date.now()
    }
 
-   return Object.entries(modifiedDatabase).reduce<Database['perks']>((acc, [modifiedPerkHash, modifiedPerk]) => {
+   return Object.keys(modifiedDatabase).reduce<Database['perks']>((acc, modifiedPerkHash) => {
       const savedPerk = savedDatabase[modifiedPerkHash]
       const livePerk = liveDatabase[modifiedPerkHash]
+      const modifiedPerk = removeDeprecatedStats(modifiedDatabase[modifiedPerkHash])
 
       // add new perk
       if (livePerk === undefined) {
@@ -124,7 +128,7 @@ export const makeNewDatabase = (
          itemHash: Number(modifiedPerk.itemHash) || undefined,
          type: modifiedPerk.type,
 
-         stats: removeDeprecatedStats(compareProperty(savedPerk.stats, modifiedPerk.stats, livePerk.stats)),
+         stats: compareProperty(savedPerk.stats, modifiedPerk.stats, livePerk.stats),
          importStatsFrom: compareProperty(
             savedPerk.importStatsFrom,
             modifiedPerk.importStatsFrom,
