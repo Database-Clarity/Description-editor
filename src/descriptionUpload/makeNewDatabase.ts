@@ -84,6 +84,16 @@ const removeDeprecatedStats = (perk: IntermediatePerk) => {
    }
 }
 
+const setEverythingToUploadLIve = (database: Database['perks']) => {
+   return Object.entries(database).reduce<Database['perks']>((acc, [hash, perk]) => {
+      acc[hash] = {
+         ...perk,
+         uploadToLive: true
+      }
+      return acc
+   }, {})
+}
+
 export const makeNewDatabase = (
    databaseType: 'intermediate' | 'live',
    liveDatabase: Database['perks'],
@@ -91,7 +101,7 @@ export const makeNewDatabase = (
 ) => {
    const { database, originalDatabase } = store.getState().global
    const savedDatabase = originalDatabase[databaseType]
-   const modifiedDatabase = database
+   const modifiedDatabase = __SKIP_LIVE_CHECK__ ? setEverythingToUploadLIve(database) : database
 
    const uploadInfo = {
       uploadedBy: getLoginDetails()?.username || '',

@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,5 +16,6 @@ export default defineConfig({
    },
    define: {
       '__APP_VERSION__': JSON.stringify(process.env.npm_package_version),
+      '__SKIP_LIVE_CHECK__': false,
   }
 })
