@@ -8,6 +8,7 @@ export const wrappers = {
       'arc',
       'solar',
       'void',
+      'strand',
 
       'primary',
       'special',

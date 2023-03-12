@@ -9,25 +9,25 @@ import { DescriptionBuilder } from './Description'
 import styles from './Perks.module.scss'
 
 export function Perks() {
-   const globalState = useAppSelector((state) => state.global)
-   const langue = globalState.settings.language
+   const { database, settings, bungie } = useAppSelector((state) => state.global)
+   const langue = settings.language
    const perk = getPerk()
 
-   const perkIcon = globalState.bungie.inventoryItem?.[perk.hash]?.displayProperties?.icon
+   const perkIcon = bungie.inventoryItem?.[perk.hash]?.displayProperties?.icon
 
    const descriptionDataMain: DescriptionData = {
       descriptionString: perk.editor[langue]?.main || '',
       editorType: 'main',
       language: langue,
       hash: perk.hash,
-      database: globalState.database
+      database
    }
    const descriptionDataSecondary: DescriptionData = {
       descriptionString: perk.editor[langue]?.secondary || '',
       editorType: 'secondary',
       language: langue,
       hash: perk.hash,
-      database: globalState.database
+      database
    }
 
    const mainDescription = descriptionConverter(descriptionDataMain)

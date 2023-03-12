@@ -107,7 +107,7 @@ const PerkSelectionOptions = ({ displayedPerkList }: { displayedPerkList: string
       const updateTracker = perk.updateTracker.descriptions
       return (
          <option key={i} value={perkHash}>
-            {perk.name}
+            {perk.type === 'Armor Trait Exotic' ? perk.itemName || perk.name : perk.name}
             {Number(perkHash) > 10 && (
                <>
                   {perk.inLiveDatabase ? '' : `❌`}

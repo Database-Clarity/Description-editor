@@ -4,7 +4,13 @@ import { useAppSelector } from 'src/redux/hooks'
 
 import styles from './BasicItemInfo.module.scss'
 
-export function InfoDisplayOptions({selectedType, selectedPerk}: {selectedType: PerkTypes, selectedPerk: IntermediatePerk}) {
+export function InfoDisplayOptions({
+   selectedType,
+   selectedPerk
+}: {
+   selectedType: PerkTypes
+   selectedPerk: IntermediatePerk
+}) {
    switch (selectedType) {
       case 'Armor Trait Exotic':
       case 'Weapon Frame Exotic':
@@ -35,16 +41,14 @@ export function InfoDisplayOptions({selectedType, selectedPerk}: {selectedType: 
 }
 
 export function BasicInfo() {
-   const globalState = useAppSelector((state) => state.global)
-   const database = globalState.database
-   const settings = globalState.settings
+   const { database, settings } = useAppSelector((state) => state.global)
 
    const currentlySelected = settings.currentlySelected
    const selectedPerk = database[currentlySelected]
 
    return (
       <div className={styles.info_display}>
-         <InfoDisplayOptions selectedType={settings.selectedType}  selectedPerk={selectedPerk} />
+         <InfoDisplayOptions selectedType={settings.selectedType} selectedPerk={selectedPerk} />
       </div>
    )
 }

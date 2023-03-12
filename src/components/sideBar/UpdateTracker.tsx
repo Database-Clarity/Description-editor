@@ -1,10 +1,9 @@
-import styles from './UpdateTracker.module.scss'
 import { useAppSelector } from 'src/redux/hooks'
 
+import styles from './UpdateTracker.module.scss'
+
 export function UpdateTracker() {
-   const globalState = useAppSelector((state) => state.global)
-   const database = globalState.database
-   const settings = globalState.settings
+   const { database, settings } = useAppSelector((state) => state.global)
 
    const language = settings.language
    const currentlySelected = settings.currentlySelected

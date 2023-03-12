@@ -74,6 +74,10 @@
    background-image: url(https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_530c4c3e7981dc2aefd24fd3293482bf.png);
    @include img_before;
 }
+.strand::before {
+   background-image: url(https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_b2fe51a94f3533f97079dfa0d27a4096.png);
+   @include img_before;
+}
 //--- ammo
 .primary::before {
    background-image: url(https://www.bungie.net/common/destiny2_content/icons/dc4bb9bcdd4ae8a83fb9007a51d7d711.png);

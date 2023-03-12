@@ -1,7 +1,8 @@
-import { GlobalState } from './types'
 import { createSlice } from '@reduxjs/toolkit'
+
 import { databaseReducers } from './reducers/dataBase'
 import { settingsReducers } from './reducers/settings'
+import { GlobalState } from './types'
 
 const initialState = {} as GlobalState
 
