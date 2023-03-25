@@ -1,4 +1,4 @@
-import { Database } from '@icemourne/description-converter'
+import { Database, IntermediatePerk } from '@icemourne/description-converter'
 import { persistentFetch } from '@icemourne/tool-box'
 import { decode, encode } from 'js-base64'
 import { defaultPerk } from 'src/data/randomData'
@@ -27,7 +27,7 @@ export async function githubGet(location: keyof typeof apiUrlsV2): Promise<Githu
       return 'Login details missing'
    }
 
-   const resp = await persistentFetch(url, 5, {
+   const resp = await persistentFetch<any>(url, 5, {
       method: 'GET',
       mode: 'cors',
       headers: {
@@ -44,7 +44,7 @@ export async function githubGet(location: keyof typeof apiUrlsV2): Promise<Githu
 
    // if content is empty it means file is over 1MB in size and it has to be downloaded as raw
    if (respJson.content.trim() === '') {
-      const rawResp = await persistentFetch(url + '&cache=buster', 5, {
+      const rawResp = await persistentFetch<any>(url + '&cache=buster', 5, {
          method: 'GET',
          mode: 'cors',
          headers: {
@@ -76,7 +76,7 @@ export async function githubPut(location: keyof typeof apiUrlsV2, data: DataToSe
       return 'Login details missing'
    }
 
-   const resp = await persistentFetch(api.url, 5, {
+   const resp = await persistentFetch<any>(api.url, 5, {
       method: 'PUT',
       mode: 'cors',
       headers: {
@@ -99,7 +99,7 @@ export async function githubPut(location: keyof typeof apiUrlsV2, data: DataToSe
 
 const unauthorized = async (location: keyof typeof apiUrlsV2): Promise<any> => {
    const { raw } = apiUrlsV2[location]
-   const resp = await persistentFetch(raw, 3)
+   const resp = await persistentFetch<any>(raw, 3)
    if (resp === Error) {
       return resp.message
    }
@@ -115,7 +115,7 @@ export async function getStartUpDescriptions() {
       dataGenerator: Database = await dataGeneratorResp,
       live: Database = await liveResp
 
-   const updatedIntermediate = Object.entries(dataGenerator.perks).reduce((acc, [key, value]) => {
+   const updatedIntermediate = Object.entries(dataGenerator.perks).reduce<{[key: string]: IntermediatePerk}>((acc, [key, value]) => {
       acc[key] = {
          ...(intermediate.perks[key] || defaultPerk),
          ...{
@@ -126,8 +126,14 @@ export async function getStartUpDescriptions() {
             type: value.type,
          }
       }
+      // add custom perk not found in data generator
+      for (let i = 0; i < 100; i++) {
+         const perk = intermediate.perks[i]
+         if(!perk) continue
+         acc[i] = perk
+      }
       return acc
-   }, intermediate.perks)
+   }, {})
 
    return {
       intermediate: {
