@@ -39,7 +39,6 @@ export function DescriptionTypeSelection() {
       },
       'Mods': {
          'Armor Mod General': 'Armor General',
-         'Armor Mod Combat': 'Armor Combat',
          'Armor Mod Activity': 'Armor Activity',
          'Armor Mod Seasonal': 'Armor Seasonal',
          'Weapon Mod': 'Weapon',
