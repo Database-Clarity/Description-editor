@@ -15,6 +15,7 @@ const calculateStat = (formula?: string) => {
 }
 
 const otherOptions = (linesContent: LinesContent) => {
+   
    if (linesContent?.link) return <a href={linesContent.link}>{linesContent.text}</a>
    if (linesContent?.formula)
       return (
@@ -24,6 +25,8 @@ const otherOptions = (linesContent: LinesContent) => {
       )
    return null
 }
+
+
 
 const joinClassNames = (classNames: (string | null | undefined)[] | undefined) => {
    return classNames

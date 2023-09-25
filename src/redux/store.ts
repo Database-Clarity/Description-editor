@@ -1,3 +1,4 @@
+import { PerkTypes } from '@icemourne/description-converter'
 import { fetchBungieManifest } from '@icemourne/tool-box'
 import { configureStore } from '@reduxjs/toolkit'
 import _ from 'lodash'
@@ -9,6 +10,9 @@ import { GlobalState } from './types'
 
 const { inventoryItem, stat } = await fetchBungieManifest(['inventoryItem', 'stat'], 'en', false)
 const { live, intermediate } = await getStartUpDescriptions()
+
+const type = window.location.search.match(/type=(\w|\+)+/)?.[0].replace('type=', '').replaceAll('+', ' ') as PerkTypes | undefined
+const hash = window.location.search.match(/perkHash=\d+/)?.[0].replace('perkHash=', '')
 
 const preloadedState: { global: GlobalState } = {
    global: {
@@ -26,9 +30,9 @@ const preloadedState: { global: GlobalState } = {
       },
       databaseSettings: intermediate.databaseSettings,
       settings: {
-         currentlySelected: 0,
+         currentlySelected: hash ? Number(hash) : 0,
          language: 'en' as const,
-         selectedType: 'none' as const,
+         selectedType: type || 'none' as const,
          editorType: 'normal' as const,
          messages: [],
          weaponType: 'AR' as const,
