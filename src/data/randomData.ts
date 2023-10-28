@@ -4,6 +4,7 @@ const specialWrappers = ['green', 'blue', 'purple', 'yellow', 'center', 'bold', 
 
 export const wrappers = {
    imageAdding: [
+      'kinetic',
       'stasis',
       'arc',
       'solar',
@@ -59,7 +60,7 @@ export const defaultPerk: IntermediatePerk = {
 
 export const defaultDescription = `
 Images you can use in descriptions
-<arc/> <void/> <solar/>
+<kinetic/> <arc/> <void/> <solar/> <stasis/> <strand/>
 <primary/> <special/> <heavy/>
 <warlock/> <hunter/> <titan/>
 Text coloring

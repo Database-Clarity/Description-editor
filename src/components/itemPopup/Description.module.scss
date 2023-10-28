@@ -31,6 +31,7 @@
    margin: 0 1px;
    height: 10px;
 }
+.kinetic::before,
 .arc::before,
 .solar::before,
 .void::before,
@@ -59,6 +60,10 @@
 }
 
 //--- elements
+.kinetic::before {
+   background-image: url(https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_3385a924fd3ccb92c343ade19f19a370.png);
+   @include img_before;
+}
 .arc::before {
    background-image: url(https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_092d066688b879c807c3b460afdd61e6.png);
    @include img_before;
