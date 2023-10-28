@@ -33,6 +33,11 @@ export function Perks() {
    const mainDescription = descriptionConverter(descriptionDataMain)
    const secondaryDescription = descriptionFilter(descriptionConverter(descriptionDataSecondary), 'dim')
 
+   // add current description objects to window for use in console
+   const win = window as any
+   win.mainDescription = mainDescription
+   win.secondaryDescription = secondaryDescription
+
    return (
       <div className={styles.perk_box}>
          <div className={styles.perk_list}>
