@@ -1,0 +1,114 @@
+body {
+  background-color: hsl(0, 0%, 16%);
+  color: hsl(0, 0%, 80%);
+  font-family: 'Open Sans', sans-serif, 'D2 Clarity fonts';
+}
+.text-blue {
+  color: hsl(180deg, 100%, 45%);
+  stroke: hsl(180deg, 100%, 45%);
+}
+.text-green {
+  color: hsl(116deg, 58%, 65%);
+  stroke: hsl(116deg, 58%, 65%);
+}
+.text-yellow {
+  color: hsl(51deg, 100%, 45%);
+  stroke: hsl(51deg, 100%, 45%);
+}
+.text-purple {
+  color: hsl(300deg, 100%, 81%);
+  stroke: hsl(300deg, 100%, 81%);
+}
+
+.text-comment {
+  color: hsl(0deg, 0%, 50%);
+  // TODO: do something maybe add border
+}
+
+.text-pvp {
+  color: hsl(0deg, 100%, 80%);
+  stroke: hsl(0deg, 100%, 80%);
+}
+.text-pve {
+  color: hsl(220deg, 100%, 75%);
+  stroke: hsl(220deg, 100%, 75%);
+}
+
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+
+.img-arc {
+  color: #7cedf3;
+}
+.img-solar {
+  color: #f16e27;
+}
+.img-void {
+  color: #b384cd;
+}
+.img-stasis {
+  color: #4d88ff;
+}
+.img-strand {
+  color: #35e366;
+}
+
+.img-special {
+  color: #7bf48b;
+}
+.img-heavy {
+  color: #b185ff;
+}
+
+.img-hunter {
+  color: #307fc5;
+}
+.img-titan {
+  color: #ee423f;
+}
+.img-warlock {
+  color: #e7a704;
+}
+
+.ProseMirror {
+  padding: 5px;
+  ul {
+    margin: 0;
+    padding-inline-start: 15px;
+  }
+  table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+
+    td,
+    th {
+      border: 1px solid #727374;
+      box-sizing: border-box;
+      min-width: 1em;
+      padding: 3px 5px;
+      position: relative;
+      vertical-align: top;
+    }
+    .selectedCell:after {
+      background: hsla(224, 100%, 50%, 0.4);
+      content: '';
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+    }
+  }
+}

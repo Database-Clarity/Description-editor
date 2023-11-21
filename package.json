@@ -1,35 +1,47 @@
 {
-   "name": "editor",
-   "private": true,
-   "version": "2.4.11",
-   "scripts": {
-      "dev": "vite",
-      "build": "tsc && vite build",
-      "preview": "vite preview"
-   },
-   "dependencies": {
-      "@icemourne/description-converter": "^1.0.44",
-      "@icemourne/tool-box": "^1.0.37",
-      "@reduxjs/toolkit": "^1.9.1",
-      "clsx": "^1.2.1",
-      "immer": "^9.0.18",
-      "js-base64": "^3.7.4",
-      "lodash": "^4.17.21",
-      "monaco-editor": "^0.34.1",
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0",
-      "react-error-boundary": "^3.1.4",
-      "react-redux": "^8.0.5",
-      "use-immer": "^0.8.1"
-   },
-   "devDependencies": {
-      "@types/lodash": "^4.14.191",
-      "@types/node": "^18.11.18",
-      "@types/react": "^18.0.26",
-      "@types/react-dom": "^18.0.10",
-      "@vitejs/plugin-react": "^3.0.1",
-      "sass": "^1.57.1",
-      "typescript": "^4.9.4",
-      "vite": "^4.0.4"
-   }
+	"name": "description-editor-v5",
+	"version": "5.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"preinstall": "npx only-allow pnpm"
+	},
+	"type": "module",
+	"devDependencies": {
+		"@sveltejs/kit": "^1.27.6",
+		"@tiptap/core": "^2.1.12",
+		"@tiptap/extension-bubble-menu": "^2.1.12",
+		"@tiptap/extension-document": "^2.1.12",
+		"@tiptap/extension-history": "^2.1.12",
+		"@tiptap/extension-table": "^2.1.12",
+		"@tiptap/extension-table-cell": "^2.1.12",
+		"@tiptap/extension-table-header": "^2.1.12",
+		"@tiptap/extension-table-row": "^2.1.12",
+		"@tiptap/extension-text": "^2.1.12",
+		"@tiptap/pm": "^2.1.12",
+		"@typescript-eslint/eslint-plugin": "^6.11.0",
+		"@typescript-eslint/parser": "^6.11.0",
+		"eslint": "^8.53.0",
+		"eslint-config-prettier": "^9.0.0",
+		"eslint-plugin-svelte": "^2.35.0",
+		"prettier": "^3.1.0",
+		"prettier-plugin-svelte": "^3.1.0",
+		"sass": "^1.69.5",
+		"svelte": "^4.2.3",
+		"svelte-check": "^3.6.0",
+		"svelte-tiptap": "^1.1.2",
+		"tslib": "^2.6.2",
+		"typescript": "^5.2.2",
+		"vite": "^4.5.0"
+	},
+	"dependencies": {
+		"@sveltejs/adapter-auto": "^2.1.1",
+		"@sveltejs/adapter-vercel": "^3.0.3"
+	}
 }
