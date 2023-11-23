@@ -1,7 +1,11 @@
 body {
-  background-color: hsl(0, 0%, 16%);
+  background-color: hsl(0, 0%, 10%);
   color: hsl(0, 0%, 80%);
   font-family: 'Open Sans', sans-serif, 'D2 Clarity fonts';
+}
+.text-default {
+  color: hsl(0, 0%, 80%);
+  stroke: #cccccc;
 }
 .text-blue {
   color: hsl(180deg, 100%, 45%);

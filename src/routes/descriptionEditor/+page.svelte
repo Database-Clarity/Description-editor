@@ -11,7 +11,6 @@
   onMount(() => {
     editor = createEditor({
       extensions,
-      // add placeholder lore impusm every line should be in div in content
       content: `
         <div>Lorem ipsum dolor sit amet,</div>
         <div>consectetur adipiscing elit,</div>
@@ -29,17 +28,6 @@
     console.log($editor.getJSON())
   }
 </script>
-
-<div>
-  <button on:click={() => $editor.commands.addExport()}>export</button>
-</div>
-<div>
-  <button
-    on:click={() => {
-      $editor.chain().focus().setDiv().run()
-    }}>div</button
-  >
-</div>
 
 {#if editor}
   <MenuButtons {editor} />

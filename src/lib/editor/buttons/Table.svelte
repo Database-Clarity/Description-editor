@@ -1,5 +1,4 @@
 <script lang="ts">
-  import DropDown from '$lib/components/DropDown.svelte'
   import type { Editor } from 'svelte-tiptap'
   import type { Readable } from 'svelte/store'
 
@@ -10,8 +9,8 @@
   let withHeaderRow = false
 
   const setData = (columnIndex: number, rowIndex: number) => {
-    cols = columnIndex + 1
-    rows = rowIndex + 1
+    cols = columnIndex + 2
+    rows = rowIndex + 2
   }
   const resetData = () => {
     cols = 0
@@ -22,36 +21,85 @@
     $editor?.chain().focus().insertTable({ cols, rows, withHeaderRow }).run()
     resetData()
   }
+
+  let dropdownOpen = false
+  const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
+    if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
+    dropdownOpen = false
+  }
 </script>
 
-<DropDown>
-  <svelte:fragment slot="button">
+<div on:focusout={handleFocusLoss} class="dropDown">
+  <button on:click={() => (dropdownOpen = !dropdownOpen)}>
     <span>Table</span>
-  </svelte:fragment>
+  </button>
 
-  <svelte:fragment slot="content">
-    <label for="include header">Include Header row?</label>
-    <input type="checkbox" name="include header" bind:checked={withHeaderRow} />
-    <div class="tableSelection">
-      {#each Array(7) as _, columnIndex}
-        {#each Array(7) as _, rowIndex}
-          <button
-            on:click={addTable}
-            on:mouseenter={() => setData(columnIndex, rowIndex)}
-            on:mouseleave={resetData}
-            class={`${columnIndex < cols && rowIndex < rows ? 'highlight' : ''}`}
-          >
-            {columnIndex === 0 ? rowIndex + 1 : ''}
-            {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 1 : ''}
-          </button>
+  {#if dropdownOpen}
+    <div class="dropDownContent">
+      <label for="include header">Include Header row?</label>
+      <input type="checkbox" name="include header" bind:checked={withHeaderRow} />
+      <div class="tableSelection">
+        {#each Array(7) as _, columnIndex}
+          {#each Array(7) as _, rowIndex}
+            <button
+              on:click={addTable}
+              on:mouseenter={() => setData(columnIndex, rowIndex)}
+              on:mouseleave={resetData}
+              class={`${columnIndex < cols && rowIndex < rows ? 'highlight' : ''}`}
+            >
+              {columnIndex === 0 ? rowIndex + 2 : ''}
+              {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
+            </button>
+          {/each}
         {/each}
-      {/each}
+      </div>
     </div>
-  </svelte:fragment>
-</DropDown>
+  {/if}
+</div>
+
+<!-- <style lang="scss">
+  .dropDownContent {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
+  }
+  button {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    cursor: pointer;
+    gap: 6px;
+    width: 80px;
+  }
+  img {
+    height: 15px;
+  }
+  span {
+    text-transform: capitalize;
+  }
+</style> -->
 
 <style>
+  .dropDownContent {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
+  }
+
   button {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    cursor: pointer;
+    gap: 6px;
+    width: 80px;
+  }
+
+  .tableSelection button {
     width: 30px;
     height: 30px;
     border: 1px solid #ccc;
