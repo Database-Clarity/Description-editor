@@ -64,7 +64,7 @@
     align-items: center;
     cursor: pointer;
     gap: 6px;
-    width: 120px;
+    width: 125px;
     height: 23px;
 
     background-color: hsl(0, 0%, 15%);
@@ -76,7 +76,7 @@
     }
   }
   .img {
-    width: 23px;
+    width: 30px;
     font-size: large;
   }
   span {

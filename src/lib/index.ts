@@ -13,7 +13,7 @@ import { Div } from './editor/div'
 import { TextColor } from './editor/buttons/textColor'
 import { Link } from './editor/buttons/link'
 import { Images } from './editor/buttons/images'
-import { ListItem, BulletList } from './editor/buttons/list'
+import { ListItem, BulletList } from './editor/buttons/bulletList'
 import { Comment } from './editor/buttons/comment'
 import { TextAlign } from './editor/buttons/alignment'
 

@@ -1,23 +1,24 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
   import type { Editor } from 'svelte-tiptap'
-  import bulletListsSVG from '$lib/assets/bold.svg'
+  import bulletListsSVG from '$lib/assets/bulletLists.svg'
 
   export let editor: Readable<Editor> | undefined
 
+  $: active = $editor?.isActive('bulletList')
   const toggleList = () => {
     $editor?.chain().focus().toggleBulletList().run()
   }
 </script>
 
-<button on:click={toggleList} title="TAB">
+<button on:click={toggleList} class:active title="TAB">
   <img src={bulletListsSVG} alt="bullet lists" />
-  <span class="text">Bold</span>
+  <span class="text">Bullet list</span>
 </button>
 
 <style lang="scss">
-  .boldActive {
-    background-color: red;
+  .active {
+    background-color: hsl(0, 0%, 20%);
   }
 
   button {

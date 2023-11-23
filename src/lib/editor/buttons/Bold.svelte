@@ -1,24 +1,24 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
   import type { Editor } from 'svelte-tiptap'
-  import textBoldSVG from '$lib/assets/bold.svg'
+  import boldSVG from '$lib/assets/bold.svg'
 
   export let editor: Readable<Editor> | undefined
 
-  $: boldActive = $editor?.isActive('bold')
+  $: active = $editor?.isActive('bold')
   const toggleBold = () => {
     $editor?.commands.toggleBold()
   }
 </script>
 
-<button on:click={toggleBold} class:boldActive title="CTRL + B / ⌘ + B">
-  <img src={textBoldSVG} alt="bold" />
+<button on:click={toggleBold} class:active title="CTRL + B / ⌘ + B">
+  <img src={boldSVG} alt="bold" />
   <span class="text">Bold</span>
 </button>
 
 <style lang="scss">
-  .boldActive {
-    background-color: red;
+  .active {
+    background-color: hsl(0, 0%, 20%);
   }
 
   button {

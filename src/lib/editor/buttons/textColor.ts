@@ -51,13 +51,14 @@ export const TextColor = Mark.create({
         (className) =>
         ({ chain }) => {
           return chain()
+            .focus()
             .setMark(this.name, { class: 'text-' + className })
             .run()
         },
       removeTextColor:
         () =>
         ({ chain }) => {
-          return chain().unsetMark(this.name).run()
+          return chain().focus().unsetMark(this.name).run()
         },
     }
   },

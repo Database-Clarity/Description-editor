@@ -17,7 +17,7 @@
 
 <style lang="scss">
   .commentActive {
-    background-color: red;
+    background-color: hsl(0, 0%, 20%);
   }
   button {
     font-family: inherit;

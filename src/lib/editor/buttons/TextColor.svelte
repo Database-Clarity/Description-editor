@@ -6,13 +6,13 @@
 
   export let editor: Readable<Editor> | undefined
 
-  $: selectedTextColor = 'default' as TextColors
+  $: selectedTextColor = ($editor?.getAttributes('textColor').class?.replace('text-', '') as TextColors) || 'default'
   const setTextColor = (color: TextColors) => {
     selectedTextColor = color
     if (color === 'default') {
-      $editor?.chain().focus().removeTextColor().run()
+      $editor?.commands.removeTextColor()
     } else {
-      $editor?.chain().focus().setTextColor(color).run()
+      $editor?.commands.setTextColor(color)
     }
   }
 

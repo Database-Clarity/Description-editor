@@ -5,7 +5,7 @@
   import Bold from './buttons/Bold.svelte'
   import Comment from './buttons/Comment.svelte'
   import Images from './buttons/Images.svelte'
-  import List from './buttons/List.svelte'
+  import List from './buttons/BulletList.svelte'
   import TextColor from './buttons/TextColor.svelte'
   import Alignment from './buttons/Alignment.svelte'
   import Table from './buttons/Table.svelte'
@@ -32,5 +32,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 </style>
