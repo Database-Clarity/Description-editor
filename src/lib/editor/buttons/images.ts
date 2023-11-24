@@ -40,7 +40,7 @@ export const Images = Mark.create({
   name: 'image',
 
   // can't be inside any other mark
-  excludes: '_',
+  excludes: 'bold textColor',
 
   // then typing at the end of a mark, should new text be inside of the mark?
   inclusive: false, // false means no

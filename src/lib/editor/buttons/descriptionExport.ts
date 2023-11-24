@@ -9,7 +9,7 @@ declare module '@tiptap/core' {
       /**
        * Toggle a import block
        */
-      addExport: () => ReturnType
+      toggleExport: () => ReturnType
     }
   }
 }
@@ -19,12 +19,11 @@ export const DescriptionExport = Node.create({
   group: 'block',
   content: 'block+',
   draggable: true,
+  selectable: true,
 
   addAttributes() {
     return {
-      hash: {
-        default: 0,
-      },
+      exportName: '',
     }
   },
 
@@ -38,13 +37,10 @@ export const DescriptionExport = Node.create({
 
   addCommands() {
     return {
-      addExport:
+      toggleExport:
         () =>
         ({ chain }) => {
-          return chain()
-            .focus()
-            .insertContent(`<export-description-component><div></div></export-description-component>`)
-            .run()
+          return chain().toggleWrap(this.name).focus().run()
         },
     }
   },

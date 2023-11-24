@@ -30,6 +30,8 @@
 
   let selectedType = 'armor'
   let selectedName = '1'
+
+  // TODO: add a button to delete the import
 </script>
 
 <NodeViewWrapper>

@@ -16,6 +16,7 @@ import { Images } from './editor/buttons/images'
 import { ListItem, BulletList } from './editor/buttons/bulletList'
 import { Comment } from './editor/buttons/comment'
 import { TextAlign } from './editor/buttons/alignment'
+import { Enhanced } from './editor/buttons/enhanced'
 
 import { DescriptionImport } from './editor/buttons/descriptionImport'
 import { DescriptionExport } from './editor/buttons/descriptionExport'
@@ -41,6 +42,7 @@ export const extensions = [
   BulletList,
   Comment,
   TextAlign,
+  Enhanced,
 
   DescriptionImport,
   DescriptionExport,

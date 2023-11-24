@@ -4,8 +4,8 @@ body {
   font-family: 'Open Sans', sans-serif, 'D2 Clarity fonts';
 }
 .text-default {
-  color: #d9d9d9;
-  stroke: #d9d9d9;
+  color: hsl(0, 0%, 85%);
+  stroke: hsl(0, 0%, 85%);
 }
 .text-blue {
   color: hsl(180deg, 100%, 45%);
@@ -29,6 +29,11 @@ body {
   // TODO: do something maybe add border
 }
 
+.text-enhanced {
+  background-color: hsla(108, 100%, 50%, 0.2);
+  // stroke: hsl(220deg, 100%, 75%);
+}
+
 .text-pvp {
   color: hsl(0deg, 100%, 80%);
   stroke: hsl(0deg, 100%, 80%);
@@ -49,36 +54,40 @@ body {
 }
 
 .img-arc {
-  color: #7cedf3;
+  color: hsl(183, 83%, 72%);
 }
 .img-solar {
-  color: #f16e27;
+  color: hsl(21, 88%, 55%);
 }
 .img-void {
-  color: #b384cd;
+  color: hsl(279, 42%, 66%);
 }
 .img-stasis {
-  color: #4d88ff;
+  color: hsl(220, 100%, 65%);
 }
 .img-strand {
-  color: #35e366;
+  color: hsl(137, 76%, 55%);
 }
 
 .img-special {
-  color: #7bf48b;
+  color: hsl(128, 85%, 72%);
 }
 .img-heavy {
-  color: #b185ff;
+  color: hsl(262, 100%, 76%);
 }
 
 .img-hunter {
-  color: #307fc5;
+  color: hsl(208, 61%, 48%);
 }
 .img-titan {
-  color: #ee423f;
+  color: hsl(1, 84%, 59%);
 }
 .img-warlock {
-  color: #e7a704;
+  color: hsl(43, 97%, 46%);
+}
+
+.img-arrow {
+  color: hsl(46, 87%, 64%);
 }
 
 .ProseMirror {
@@ -96,7 +105,7 @@ body {
 
     td,
     th {
-      border: 1px solid #727374;
+      border: 1px solid hsl(210, 1%, 45%);
       box-sizing: border-box;
       min-width: 1em;
       padding: 3px 5px;
@@ -104,7 +113,7 @@ body {
       vertical-align: top;
     }
     .selectedCell:after {
-      background: hsla(224, 100%, 50%, 0.4);
+      background: hsla(219, 100%, 50%, 0.4);
       content: '';
       left: 0;
       right: 0;

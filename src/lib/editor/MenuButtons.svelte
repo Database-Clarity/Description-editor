@@ -11,6 +11,7 @@
   import Table from './buttons/Table.svelte'
   import DescriptionExport from './buttons/DescriptionExport.svelte'
   import DescriptionImport from './buttons/DescriptionImport.svelte'
+  import Enhanced from './buttons/Enhanced.svelte'
 
   export let editor: Readable<Editor> | undefined
 </script>
@@ -25,6 +26,7 @@
   <Table {editor} />
   <DescriptionImport {editor} />
   <DescriptionExport {editor} />
+  <Enhanced {editor} />
 </div>
 
 <style>

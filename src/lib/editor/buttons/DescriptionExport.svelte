@@ -11,7 +11,7 @@
   // }
 </script>
 
-<button on:click={() => $editor?.commands.addExport()}>
+<button on:click={() => $editor?.commands.toggleExport()}>
   <img src={exportSVG} alt="export" />
   <span class="text">Export</span>
 </button>

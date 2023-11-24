@@ -9,6 +9,7 @@
   const handleClick = () => {
     updateAttributes({ hash: node.attrs.hash + 1 })
   }
+  // TODO: add a button to delete the export
 </script>
 
 <NodeViewWrapper>

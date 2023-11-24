@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
   import type { Editor } from 'svelte-tiptap'
-  import boldSVG from '$lib/assets/bold.svg'
+  import BoldSVG from '$lib/assets/Bold.svelte'
 
   export let editor: Readable<Editor> | undefined
 
@@ -12,13 +12,16 @@
 </script>
 
 <button on:click={toggleBold} class:active title="CTRL + B / ⌘ + B">
-  <img src={boldSVG} alt="bold" />
+  <BoldSVG />
   <span class="text">Bold</span>
 </button>
 
 <style lang="scss">
+  @import '/src/variables.scss';
+
   .active {
-    background-color: hsl(0, 0%, 20%);
+    background-color: $button-background-color-active;
+    fill: $button-SVG-color-active;
   }
 
   button {
@@ -31,13 +34,15 @@
     gap: 6px;
     height: 23px;
 
-    background-color: hsl(0, 0%, 15%);
+    background-color: $button-background-color;
     border: none;
     border-radius: 5px;
     color: inherit;
     &:hover {
-      background-color: hsl(0, 0%, 20%);
+      background-color: $button-background-color-active;
+      fill: $button-SVG-color-active;
     }
+    fill: $button-SVG-color;
     img {
       height: 20px;
     }
