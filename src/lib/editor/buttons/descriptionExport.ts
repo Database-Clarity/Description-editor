@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { SvelteNodeViewRenderer } from 'svelte-tiptap'
 
-import ExportDescriptionComponent from '$lib/components/DescriptionIExportComp.svelte'
+import ExportDescriptionComponent from '$lib/editor/components/DescriptionIExportComp.svelte'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

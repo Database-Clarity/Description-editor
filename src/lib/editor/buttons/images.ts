@@ -78,4 +78,14 @@ export const Images = Mark.create({
         },
     }
   },
+
+  // addKeyboardShortcuts() {
+  //   return {
+  //     'shift-2': () => {
+  //       console.log('shift-2')
+
+  //       return this.editor.commands.toggleMark(this.name)
+  //     },
+  //   }
+  // },
 })
