@@ -1,7 +1,7 @@
 import postgres from 'postgres'
 import { env } from '$env/dynamic/private'
 import { dev } from '$app/environment'
-import type { PerkTypes } from '$lib/types'
+import type { PerkTypes, LanguageCode } from '$lib/types'
 
 function squeal() {
   const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = env
@@ -23,9 +23,11 @@ function squeal() {
 type Perks = {
   hash: number
   itemHash: number | null
-  name: string
+  name: { [key in LanguageCode]: string }
+  itemName: { [key in LanguageCode]: string }
   type: PerkTypes
   icon: string
+  itemIcon: string
   appearsOn: string[] | number[]
   linkedWith: number[] | null
 }
@@ -46,114 +48,92 @@ type Comment = {
   timestamp: number
 }
 
-export async function loadPageData(hash: number, language: string) {
+function buildDescription(hash: number, data: { [key in LanguageCode]?: Description[] }) {
+  const descriptions: { [key: number]: { [key in LanguageCode]?: { [key: number]: Description } } } = {
+    [hash]: {},
+  }
+
+  for (const lang in data) {
+    const language = lang as LanguageCode
+
+    descriptions[hash][language] = {}
+
+    for (const description of data[language]!) {
+      descriptions[hash][language]![description.timestamp] = {
+        hash,
+        description: description.description,
+        user: description.user,
+        live: description.live,
+        ready: description.ready,
+        timestamp: description.timestamp,
+      }
+    }
+  }
+
+  return descriptions
+}
+
+export async function loadPageData(hash: number, language: LanguageCode, firstLoad: boolean) {
   const sql = squeal()
 
-  const perksPromise = sql<Perks[] | []>`
-    SELECT p1."hash",
-      p1."itemHash",
-      p1."name"->>${language} as "name",
-      p1."type",
-      p1."icon",
-      p1."appearsOn",
-      p1."linkedWith"
-    FROM "perks" p1
-    JOIN (
-      SELECT "type"
-      FROM "perks"
-      WHERE "hash" = ${hash}
-    ) p2
-    ON p1."type" = p2."type";
+  const perksPromise = firstLoad
+    ? sql<Perks[]>`
+    SELECT * FROM "perks";
   `
+    : []
 
-  const descriptionPromise = sql<Description[] | []>`
+  const enDescriptionPromise = sql<Description[]>`
+    SELECT "hash", "description", "user", "live", "ready", "timestamp"
+    FROM "en"
+    WHERE "hash" = ${hash};
+  `
+  const mlDescriptionPromise =
+    language !== 'en'
+      ? sql<Description[]>`
     SELECT "hash", "description", "user", "live", "ready", "timestamp"
     FROM ${sql(language)}
     WHERE "hash" = ${hash};
   `
+      : []
 
-  const commentsPromise = sql<Comment[] | []>`
+  const commentsPromise = sql<Comment[]>`
     SELECT "hash", "user", "text", "timestamp"
     FROM "comment"
     WHERE "hash" = ${hash};
   `
 
-  const [perks, description, comments] = await Promise.all([perksPromise, descriptionPromise, commentsPromise])
-
+  const [perks, enDescription, comments, mlDescription] = await Promise.all([
+    perksPromise,
+    enDescriptionPromise,
+    commentsPromise,
+    mlDescriptionPromise,
+  ])
   sql.end()
+
   return {
-    perks: Object.fromEntries(perks.map((perk) => [perk.hash, perk])),
-    // return description if it exists, otherwise return placeholder
-    descriptions:
-      description.length !== 0
-        ? Object.fromEntries(description.map((description) => [description.hash, description]))
-        : {
-            [hash]: {
-              hash,
-              description: {},
-              user: '',
-              live: false,
-              ready: false,
-              timestamp: 0,
-            } satisfies Description,
-          },
+    perks: Object.fromEntries(
+      perks.map((perk) => [
+        perk.hash,
+        {
+          ...perk,
+          // workaround for Postgres returning strings instead of numbers because JS can't handle bigint and Postgres doesn't have an unsigned int type
+          hash: Number(perk.hash),
+          itemHash: Number(perk.itemHash) ?? null,
+        },
+      ])
+    ),
+    // return description if it exists
+    descriptions: buildDescription(hash, { en: enDescription, [language]: mlDescription }),
     // return comments if they exist, otherwise return placeholder
-    comments:
-      comments.length !== 0
-        ? Object.fromEntries(comments.map((comment) => [comment.hash, comment]))
-        : {
-            [hash]: {
-              hash,
-              user: '',
-              text: '',
-              timestamp: 0,
-            } satisfies Comment,
-          },
-    hash,
+    comments: Object.fromEntries(comments.map((comment) => [comment.hash, comment])),
   }
 }
 
-export async function getPerks() {
-  const sql = squeal()
-
-  const data = await sql`
-    SELECT ${sql(['hash', 'perk'])}
-    FROM perks;
-  `
-
-  sql.end()
-
-  return data.reduce((acc, cur) => {
-    const { hash, ...rest } = cur
-    acc[hash] = rest
-    return acc
-  }, {})
-}
-
-export async function getDescriptions(languages: string[], hashes: number[]) {
-  const sql = squeal()
-
-  const data = await sql`
-    SELECT ${sql([...languages, 'hash'])}
-    FROM descriptions
-    WHERE hash in ${sql(hashes)};
-  `
-
-  sql.end()
-
-  return data.reduce((acc, cur) => {
-    const { hash, ...rest } = cur
-    acc[hash] = rest
-    return acc
-  }, {})
-}
-
 type Hash = number
-type Language = string
 
 export type Descriptions = {
   [key: Hash]: {
-    [key: Language]: {
+    [key in LanguageCode]: {
       description: { [key: string]: { [key: string]: { [key: string]: string } } }
       timeStamp: number
       user: string
@@ -207,24 +187,6 @@ export async function updateDescriptions(data: Descriptions) {
   }
 
   await sql.end()
-}
-
-export async function getComments(hashes: number) {
-  const sql = squeal()
-
-  const data = await sql`
-    SELECT ${sql(['comments', 'hash'])}
-    FROM descriptions
-    WHERE hash in ${hashes};
-    `
-
-  sql.end()
-
-  return data.reduce((acc, cur) => {
-    const { hash, ...rest } = cur
-    acc[hash] = rest
-    return acc
-  }, {})
 }
 
 export async function updateComments(data: Descriptions) {

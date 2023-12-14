@@ -1,17 +1,18 @@
 import { browser } from '$app/environment'
-import type { Language, PerkTypes } from '$lib/types'
+import type { LanguageCode, PerkTypes } from '$lib/types'
 import { writable } from 'svelte/store'
 
 export type SidebarStoreType = {
   hash: number
+  itemHash: number | null
   type: PerkTypes | 'none'
-  weaponName?: string
-  language: Language
+  language: LanguageCode
   editorType: 'normal' | 'dual' | 'multiLanguage'
 }
 
 const { set, subscribe, update } = writable<SidebarStoreType>({
   hash: 0,
+  itemHash: null,
   type: 'none',
   language: 'en',
   editorType: 'normal',
@@ -23,17 +24,25 @@ export const sidebarStore = {
   update,
 }
 
-sidebarStore.subscribe((value) => {
+// update url search params on store change
+// TODO: figure out how to unsubscribe or move to a component
+sidebarStore.subscribe((store) => {
   if (!browser) return
 
-  const params = new URLSearchParams(location.search)
+  const url = new URL(window.location.href)
 
-  if (!params.has('hash', String(value.hash))) {
-    params.set('hash', String(value.hash))
-    console.log(123)
+  if (!url.searchParams.has('hash', String(store.hash))) {
+    url.searchParams.set('hash', String(store.hash))
+    history.pushState({}, '', url)
   }
 
-  if (!params.has('language', value.language)) {
-    params.set('language', value.language)
+  if (!url.searchParams.has('language', store.language)) {
+    url.searchParams.set('language', String(store.language))
+    history.pushState({}, '', url)
+  }
+
+  if (!url.searchParams.has('editorType', store.editorType)) {
+    url.searchParams.set('editorType', String(store.editorType))
+    history.pushState({}, '', url)
   }
 })

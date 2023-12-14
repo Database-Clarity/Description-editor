@@ -1,9 +1,14 @@
 import { loadPageData } from '$lib/server/databaseAccess'
 import type { PageServerLoad } from './$types'
+import { languageCodes, type LanguageCode } from '$lib/types'
 
 export const load = (async ({ url }) => {
-  const hash = Number(url.searchParams.get('hash')) || 0 // TODO: 0 is a placeholder
-  const language = url.searchParams.get('language') || 'en'
+  const hashParam = Number(url.searchParams.get('hash'))
+  const hash = isNaN(hashParam) ? 0 : hashParam
 
-  return await loadPageData(hash, language)
+  const languageParam = url.searchParams.get('language')
+  const isValidLanguageParam = languageCodes.includes(languageParam as LanguageCode)
+  const language = isValidLanguageParam ? (languageParam as LanguageCode) : 'en'
+
+  return Object.assign(await loadPageData(hash, language, true), { hash, language })
 }) satisfies PageServerLoad

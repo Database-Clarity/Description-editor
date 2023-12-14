@@ -1,35 +1,54 @@
 <script lang="ts">
   import '../styles.scss'
 
-  import { onMount } from 'svelte'
   import type { Readable } from 'svelte/store'
   import { createEditor, Editor, EditorContent } from 'svelte-tiptap'
   import { extensions, BubbleLink } from '$lib'
   import MenuButtons from '$lib/editor/MenuButtons.svelte'
   import { sidebarStore } from '$lib/sideBar/sidebarStore'
+  import Sidebar from '$lib/sideBar/Sidebar.svelte'
+  import { browser } from '$app/environment'
 
   export let data
-  const { hash, perks, descriptions, comments } = data
+  const { hash, language, perks, descriptions, comments } = data
+
+  if (perks[hash]) {
+    $sidebarStore.hash = hash
+    $sidebarStore.itemHash = perks[hash].itemHash
+    $sidebarStore.type = perks[hash].type
+    $sidebarStore.language = language
+  }
 
   let editor: Readable<Editor>
-
-  onMount(() => {
+  if (browser) {
     editor = createEditor({
       extensions,
-      content: descriptions[hash].description,
+      content: descriptions[$sidebarStore.hash]?.[$sidebarStore.language] || '',
     })
-  })
+  }
 
   const click = () => {
-    $sidebarStore.hash++
+    console.log($editor.getJSON())
   }
 </script>
 
-{#if editor}
-  <MenuButtons {editor} />
-{/if}
+<MenuButtons {editor} />
 
-<EditorContent editor={$editor}></EditorContent>
+<div class="editor">
+  <EditorContent editor={$editor} />
+</div>
+
 <BubbleLink {editor} />
 
 <button on:click={click}>click me</button>
+
+<Sidebar {perks} />
+
+<style lang="scss">
+  @import '/src/variables.scss';
+  .editor {
+    height: $editor-height;
+    background-color: $editor-background-color;
+    padding: 5px;
+  }
+</style>
