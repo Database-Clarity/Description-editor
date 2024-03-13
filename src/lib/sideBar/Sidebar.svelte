@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { sidebarStore } from '$lib/sideBar/sidebarStore'
+  import { sidebarStore } from '$lib/sideBar/sidebarStore.svelte'
   import { languageCodes, languageNames } from '$lib/types'
   import type { LanguageCode, Perk, PerkTypes } from '$lib/types'
   import { derived } from 'svelte/store'
 
-  export let perks: {
-    [k: string]: Perk
-  }
+  const { perks } = $props<{ perks: { [key: string]: Perk } }>()
 
   const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } } = {
     Exotics: {
@@ -41,47 +39,44 @@
 
   const perksArray = Object.values(perks)
 
-  // derived stores allow to listen to changes of individual properties instead of the whole* store // btw derived stores are read-only
-  const derivedType = derived(sidebarStore, ($sidebarStore) => $sidebarStore.type)
-  const derivedItemHash = derived(sidebarStore, ($sidebarStore) => $sidebarStore.itemHash)
-  const derivedLanguage = derived(sidebarStore, ($sidebarStore) => $sidebarStore.language)
+  let perkSelection = $state<Perk[]>([])
+  $effect(() => {
+    const { type, language } = sidebarStore
 
-  const getPerkSelection = (type: PerkTypes | 'none', language: LanguageCode) => {
-    const perks = perksArray
+    perkSelection = perksArray
       .filter((perk) => perk.type === type)
       .sort((a, b) => a.name[language].localeCompare(b.name[language]))
-
-    if (type === 'none') return perks
-    if (perks.findIndex((perk) => perk.hash === $sidebarStore.hash) !== -1) return perks
+  })
+  $effect(() => {
+    const { hash, type } = sidebarStore
+    if (type === 'none') return
+    if (perkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
 
     if (type === 'Weapon Frame Exotic') {
-      $sidebarStore.itemHash = perks[0].itemHash
+      sidebarStore.itemHash = perks[0].itemHash
     } else {
-      $sidebarStore.hash = perks[0].hash
-      $sidebarStore.itemHash = null
+      sidebarStore.hash = perks[0].hash
+      sidebarStore.itemHash = null
     }
+  })
 
-    return perks
-  }
-  $: perkSelection = getPerkSelection($derivedType, $derivedLanguage)
+  let exoticPerkSelection = $state<Perk[]>([])
+  $effect(() => {
+    const { type, language, itemHash, hash } = sidebarStore
 
-  const getExoticPerkSelection = (type: PerkTypes | 'none', language: LanguageCode, itemHash: number | null) => {
-    if (type !== 'Weapon Frame Exotic') return null
-    const perks = perksArray
+    if (type !== 'Weapon Frame Exotic') return
+    exoticPerkSelection = perksArray
       .filter((perk) => perk.itemHash === itemHash)
       .sort((a, b) => a.itemName[language].localeCompare(b.itemName[language]))
 
-    if (perks.findIndex((perk) => perk.hash === $sidebarStore.hash) !== -1) return perks
+    if (exoticPerkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
 
-    $sidebarStore.hash = perks[0].hash
-
-    return perks
-  }
-  $: exoticPerkSelection = getExoticPerkSelection($derivedType, $derivedLanguage, $derivedItemHash)
+    sidebarStore.hash = perks[0].hash
+  })
 </script>
 
 <div class="sidebar">
-  <select bind:value={$sidebarStore.type}>
+  <select bind:value={sidebarStore.type}>
     <option value="none">Select description type</option>
 
     {#each Object.entries(descriptionTypes) as [groupName, groupOptions]}
@@ -94,26 +89,26 @@
   </select>
 
   {#if exoticPerkSelection !== null}
-    <select bind:value={$sidebarStore.itemHash}>
+    <select bind:value={sidebarStore.itemHash}>
       {#each perkSelection as perk}
-        <option value={perk.itemHash}>{perk.itemName[$sidebarStore.language]}</option>
+        <option value={perk.itemHash}>{perk.itemName[sidebarStore.language]}</option>
       {/each}
     </select>
 
-    <select bind:value={$sidebarStore.hash}>
+    <select bind:value={sidebarStore.hash}>
       {#each exoticPerkSelection as perk}
-        <option value={perk.hash}>{perk.name[$sidebarStore.language]}</option>
+        <option value={perk.hash}>{perk.name[sidebarStore.language]}</option>
       {/each}
     </select>
   {:else}
-    <select bind:value={$sidebarStore.hash}>
+    <select bind:value={sidebarStore.hash}>
       {#each perkSelection as perk}
-        <option value={perk.hash}>{perk.name[$sidebarStore.language]}</option>
+        <option value={perk.hash}>{perk.name[sidebarStore.language]}</option>
       {/each}
     </select>
   {/if}
 
-  <select bind:value={$sidebarStore.language}>
+  <select bind:value={sidebarStore.language}>
     {#each languageCodes as language}
       <option value={language}>{languageNames[language]}</option>
     {/each}

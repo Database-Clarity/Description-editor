@@ -1,5 +1,19 @@
 {
-  "cSpell.words": ["prosemirror", "tiptap"],
+  "cSpell.words": [
+    "Deepsight",
+    "fuckups",
+    "interactable",
+    "osteo",
+    "PGDATABASE",
+    "PGHOST",
+    "PGPASSWORD",
+    "PGUSER",
+    "prosemirror",
+    "reinitialization",
+    "striga",
+    "tiptap",
+    "transformative"
+  ],
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {

@@ -10,5 +10,5 @@ export const load = (async ({ url }) => {
   const isValidLanguageParam = languageCodes.includes(languageParam as LanguageCode)
   const language = isValidLanguageParam ? (languageParam as LanguageCode) : 'en'
 
-  return Object.assign(await loadPageData(hash, language, true), { hash, language })
+  return {} // Object.assign(await loadPageData(hash, language, true), { hash, language })
 }) satisfies PageServerLoad

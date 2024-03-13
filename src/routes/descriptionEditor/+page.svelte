@@ -1,34 +1,55 @@
 <script lang="ts">
   import '../styles.scss'
 
-  import type { Readable } from 'svelte/store'
+  import { derived, type Readable } from 'svelte/store'
   import { createEditor, Editor, EditorContent } from 'svelte-tiptap'
   import { extensions, BubbleLink } from '$lib'
   import MenuButtons from '$lib/editor/MenuButtons.svelte'
-  import { sidebarStore } from '$lib/sideBar/sidebarStore'
+  import { sidebarStore } from '$lib/sideBar/sidebarStore.svelte'
   import Sidebar from '$lib/sideBar/Sidebar.svelte'
   import { browser } from '$app/environment'
+  import { editorStore } from '$lib/editor/editorStore'
 
   export let data
   const { hash, language, perks, descriptions, comments } = data
 
+
+
+
+
+
+
+
+  // editorStore.set(descriptions)
+
   if (perks[hash]) {
-    $sidebarStore.hash = hash
-    $sidebarStore.itemHash = perks[hash].itemHash
-    $sidebarStore.type = perks[hash].type
-    $sidebarStore.language = language
+    sidebarStore.hash = hash
+    sidebarStore.itemHash = perks[hash].itemHash
+    sidebarStore.type = perks[hash].type
+    sidebarStore.language = language
   }
 
   let editor: Readable<Editor>
+
+  // let enDescription = derived(sidebarStore, ($sidebarStore) => {
+  //   const descriptions = $editorStore[$sidebarStore.hash]?.en
+  //   return descriptions?.sort((a, b) => b.timestamp - a.timestamp)[0] ?? ''
+  // })
   if (browser) {
     editor = createEditor({
       extensions,
-      content: descriptions[$sidebarStore.hash]?.[$sidebarStore.language] || '',
+      content: 'enDescription',
     })
   }
 
-  const click = () => {
-    console.log($editor.getJSON())
+  const click = async () => {
+
+    // const qb = new QueryBuilder()
+    // const query = qb.select().from(de).where(eq(de.id, 0))
+    // const { sql, params } = query.toSQL()
+
+    // console.log(sql, params);
+    
   }
 </script>
 
