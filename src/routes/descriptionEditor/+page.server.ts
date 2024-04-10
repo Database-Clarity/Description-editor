@@ -1,6 +1,5 @@
-import { loadPageData } from '$lib/server/databaseAccess'
+import { languageCodes, type LanguageCode } from 'src/lib/types'
 import type { PageServerLoad } from './$types'
-import { languageCodes, type LanguageCode } from '$lib/types'
 
 export const load = (async ({ url }) => {
   const hashParam = Number(url.searchParams.get('hash'))

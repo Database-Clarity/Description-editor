@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "migration:generate": "drizzle-kit generate:pg --schema ./src/lib/server/schema.ts",
     "preinstall": "npx only-allow pnpm",
-    "generator": "tsc --project second.tsconfig.json"
+    "generator": "tsc -p second.tsconfig.json && node _dataGenerator/main.js"
   },
   "type": "module",
   "devDependencies": {

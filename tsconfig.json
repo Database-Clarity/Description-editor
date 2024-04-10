@@ -12,13 +12,8 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "paths": {
-      "@drizzle/*": ["_drizzle/*"],
-      "@tips/*": ["_types/*"]
-    }
-  },
-  "include": ["_dataGenerator", "_descriptionConverter", "_drizzle"]
+    "baseUrl": "."
+  }
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   //
   // If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes

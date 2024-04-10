@@ -1,5 +1,6 @@
 <script lang="ts">
   import './styles.scss'
+
   // import { updateData } from '$lib/test/getDescription'
 </script>
 

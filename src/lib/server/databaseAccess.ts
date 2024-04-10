@@ -1,10 +1,7 @@
-import postgres from 'postgres'
+import type { LanguageCode, PerkTypes } from '../types'
+
 import { env } from '$env/dynamic/private'
-import { dev } from '$app/environment'
-import { type PerkTypes, type LanguageCode, TypedObject, languageCodes } from '$lib/types'
-import type { Description as DescriptionData } from '$lib/editor/editorStore'
-import { drizzle } from 'drizzle-orm/postgres-js'
-import { squeal } from '@drizzle/db'
+import { squeal } from './squeal'
 
 type Perks = {
   hash: number
@@ -25,110 +22,6 @@ type Comment = {
   timestamp: number
 }
 
-// export async function loadPageData(hash: number, language: LanguageCode, firstLoad: boolean) {
-//   const timeStart = Date.now()
-//   const sql = squeal()
-
-//   const perksPromise = firstLoad
-//     ? sql<Perks[]>`
-//     SELECT * FROM "perks";
-//   `
-//     : []
-
-//   const enDescriptionPromise = sql<DescriptionData[]>`
-//     SELECT "hash", "description", "user", "live", "ready", "timestamp"
-//     FROM "en"
-//     WHERE "hash" = ${hash};
-//   `
-//   const mlDescriptionPromise =
-//     language !== 'en'
-//       ? sql<DescriptionData[]>`
-//     SELECT "hash", "description", "user", "live", "ready", "timestamp"
-//     FROM ${sql(language)}
-//     WHERE "hash" = ${hash};
-//   `
-//       : []
-
-//   const commentsPromise = sql<Comment[]>`
-//     SELECT "hash", "user", "text", "timestamp"
-//     FROM "comment"
-//     WHERE "hash" = ${hash};
-//   `
-
-//   const [perks, enDescription, comments, mlDescription] = await Promise.all([
-//     perksPromise,
-//     enDescriptionPromise,
-//     commentsPromise,
-//     mlDescriptionPromise,
-//   ])
-
-//   const columns = ['description', 'user', 'live', 'ready', 'timestamp', 'hash']
-//   const lang = ['en', 'de']
-
-//   const unionBuilder = (
-//     sql: postgres.Sql,
-//     langs: string[] | true,
-//     cols: string[],
-//     hashes: number[] | true,
-//     timestamp: number | undefined
-//   ) => {
-//     const languages = langs === true ? languageCodes : langs
-
-//     // TODO: then getting de for example we need specific en version not latest
-
-//     return languages.map((lang, i, arr) => {
-//       return sql`
-//       (
-//         SELECT
-
-//         -- returns only latest entry for each hash
-//         -- if timestamp is defined, return all entries after the timestamp
-//         ${timestamp === undefined ? sql`DISTINCT ON ("hash")` : sql``}
-
-//         -- adds column with the language
-//         ${sql`${lang}`} AS "table",
-
-//         -- adds the columns to be returned
-//         ${sql(cols)}
-
-//         -- table to be queried
-//         FROM ${sql(lang)}
-
-//         -- if hashes is true, return all hashes
-//         -- otherwise return only the hashes in the array
-//         ${hashes === true ? sql`` : sql`WHERE "hash" IN ${sql(hashes)}`}
-
-//         -- if timestamp is defined, return all entries after the timestamp
-//         ${timestamp === undefined ? sql`` : sql`AND "timestamp" > ${timestamp}`}
-
-//         -- order by hash and timestamp to get the latest entry for each hash
-//         -- required for DISTINCT ON
-//         ORDER BY "hash", "timestamp" DESC
-//       )
-//       -- used to combine the results from each language
-//       -- if it's the last element, don't add UNION ALL
-//       ${i === arr.length - 1 ? sql`` : sql`UNION ALL`}
-//     `
-//     })
-//   }
-
-//   const test = sql`${unionBuilder(sql, true, columns, true, undefined)}`
-
-//   console.log(await test)
-
-//   sql.end()
-//   const timeEnd = Date.now()
-//   console.log(`Database response time ${(timeEnd - timeStart) / 1000}s`)
-
-//   return {
-//     perks: Object.fromEntries(perks.map((perk) => [perk.hash, perk])),
-//     // return description if it exists
-//     descriptions: { hash: { en: enDescription, [language]: mlDescription } },
-//     // return comments if they exist, otherwise return placeholder
-//     comments: Object.fromEntries(comments.map((comment) => [comment.hash, comment])),
-//   }
-// }
-
 type Hash = number
 
 export type Descriptions = {
@@ -141,7 +34,7 @@ export type Descriptions = {
   }
 }
 
-export async function updateDescription(language: LanguageCode, descriptionData: DescriptionData) {
+export async function updateDescription(language: LanguageCode, descriptionData: Descriptions) {
   const sql = squeal()
 
   const { description, user, live, ready, timestamp, hash } = descriptionData
@@ -201,14 +94,17 @@ export async function updateComments(data: Descriptions) {
   await sql.end()
 }
 
-export async function loadPageData(hash: number, language: LanguageCode, firstLoad: boolean) {
-  const timeStart = Date.now()
+export async function loadPageData(hash: number, language: LanguageCode) {
+  const sql = squeal(env, true)
 
-  const db = drizzle(squeal(env, dev))
+  const [perks] = await Promise.all([
+    sql`
+      SELECT * FROM perks
+      WHERE hash = ${hash}
+    `,
+  ])
 
-  await db.select().from('perks')
+  await sql.end()
 
-  const timeEnd = Date.now()
-  console.log(`Database response time ${(timeEnd - timeStart) / 1000}s`)
-  return {}
+  return { perks }
 }
