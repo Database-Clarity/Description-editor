@@ -144,7 +144,7 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
   // const start_sql = Date.now()
 
   const [perks] = await Promise.all([
-    sql`SELECT "hash", ${sql('name_' + language)}, type FROM perk WHERE "hash" = ${hash}`,
+    sql`SELECT "hash", ${sql('name_' + language)}, type FROM perk`,
     sql`
       SELECT * FROM ${sql(language)}
       WHERE hash = ${hash}
