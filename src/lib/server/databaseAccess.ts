@@ -143,28 +143,28 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
 
   // const start_sql = Date.now()
 
-  const [perks] = await Promise.all([
-    sql`SELECT "hash", ${sql('name_' + language)}, type FROM perk`,
-    sql`
-      SELECT * FROM ${sql(language)}
-      WHERE hash = ${hash}
-      AND timestamp = (
-        SELECT MAX(timestamp)
-        FROM ${sql(language)}
-        WHERE hash = ${hash}
-        AND timestamp <= ${timestamp}
-      )
-    `,
-  ])
+  // const [perks] = await Promise.all([
+  //   sql`SELECT "hash", ${sql('name_' + language)}, type FROM perk`,
+  //   sql`
+  //     SELECT * FROM ${sql(language)}
+  //     WHERE hash = ${hash}
+  //     AND timestamp = (
+  //       SELECT MAX(timestamp)
+  //       FROM ${sql(language)}
+  //       WHERE hash = ${hash}
+  //       AND timestamp <= ${timestamp}
+  //     )
+  //   `,
+  // ])
 
-  // const end_sql = Date.now()
-  // console.log('SQL time:', end_sql - start_sql)
+  // // const end_sql = Date.now()
+  // // console.log('SQL time:', end_sql - start_sql)
 
-  // await sql.end()
+  // // await sql.end()
 
-  // if (perks.length !== 0) {
-  //   redis.set(redisKey, JSON.stringify({ perks }), 'EX', 600)
-  // }
+  // // if (perks.length !== 0) {
+  // //   redis.set(redisKey, JSON.stringify({ perks }), 'EX', 600)
+  // // }
 
-  return { perks }
+  return {}
 }
