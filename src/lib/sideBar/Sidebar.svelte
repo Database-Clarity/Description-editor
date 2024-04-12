@@ -4,7 +4,7 @@
   import type { LanguageCode, Perk, PerkTypes } from '$lib/types'
   import { derived } from 'svelte/store'
 
-  const { perks } = $props<{ perks: { [key: string]: Perk } }>()
+  // const { perks } = $props<{ perks: { [key: string]: Perk } }>()
 
   const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } } = {
     Exotics: {
@@ -37,42 +37,42 @@
     },
   }
 
-  const perksArray = Object.values(perks)
+  // const perksArray = Object.values(perks)
 
-  let perkSelection = $state<Perk[]>([])
-  $effect(() => {
-    const { type, language } = sidebarStore
+  // let perkSelection = $state<Perk[]>([])
+  // $effect(() => {
+  //   const { type, language } = sidebarStore
 
-    perkSelection = perksArray
-      .filter((perk) => perk.type === type)
-      .sort((a, b) => a.name[language].localeCompare(b.name[language]))
-  })
-  $effect(() => {
-    const { hash, type } = sidebarStore
-    if (type === 'none') return
-    if (perkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
+  //   perkSelection = perksArray
+  //     .filter((perk) => perk.type === type)
+  //     .sort((a, b) => a.name[language].localeCompare(b.name[language]))
+  // })
+  // $effect(() => {
+  //   const { hash, type } = sidebarStore
+  //   if (type === 'none') return
+  //   if (perkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
 
-    if (type === 'Weapon Frame Exotic') {
-      sidebarStore.itemHash = perks[0].itemHash
-    } else {
-      sidebarStore.hash = perks[0].hash
-      sidebarStore.itemHash = null
-    }
-  })
+  //   if (type === 'Weapon Frame Exotic') {
+  //     sidebarStore.itemHash = perks[0].itemHash
+  //   } else {
+  //     sidebarStore.hash = perks[0].hash
+  //     sidebarStore.itemHash = null
+  //   }
+  // })
 
-  let exoticPerkSelection = $state<Perk[]>([])
-  $effect(() => {
-    const { type, language, itemHash, hash } = sidebarStore
+  // let exoticPerkSelection = $state<Perk[]>([])
+  // $effect(() => {
+  //   const { type, language, itemHash, hash } = sidebarStore
 
-    if (type !== 'Weapon Frame Exotic') return
-    exoticPerkSelection = perksArray
-      .filter((perk) => perk.itemHash === itemHash)
-      .sort((a, b) => a.itemName[language].localeCompare(b.itemName[language]))
+  //   if (type !== 'Weapon Frame Exotic') return
+  //   exoticPerkSelection = perksArray
+  //     .filter((perk) => perk.itemHash === itemHash)
+  //     .sort((a, b) => a.itemName[language].localeCompare(b.itemName[language]))
 
-    if (exoticPerkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
+  //   if (exoticPerkSelection.findIndex((perk) => perk.hash === hash) !== -1) return
 
-    sidebarStore.hash = perks[0].hash
-  })
+  //   sidebarStore.hash = perks[0].hash
+  // })
 </script>
 
 <div class="sidebar">
@@ -88,7 +88,7 @@
     {/each}
   </select>
 
-  {#if exoticPerkSelection !== null}
+  <!-- {#if exoticPerkSelection !== null}
     <select bind:value={sidebarStore.itemHash}>
       {#each perkSelection as perk}
         <option value={perk.itemHash}>{perk.itemName[sidebarStore.language]}</option>
@@ -106,7 +106,7 @@
         <option value={perk.hash}>{perk.name[sidebarStore.language]}</option>
       {/each}
     </select>
-  {/if}
+  {/if} -->
 
   <select bind:value={sidebarStore.language}>
     {#each languageCodes as language}

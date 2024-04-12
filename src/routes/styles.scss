@@ -132,3 +132,16 @@ body {
     }
   }
 }
+
+select {
+  background-color: $background;
+  color: $text;
+  border: 2px solid hsl(0deg, 0%, 36%);
+  margin: 2px 0;
+  optgroup {
+    color: $accent;
+    option {
+      color: $text;
+    }
+  }
+}

@@ -8,26 +8,21 @@
   import { sidebarStore } from '$lib/sideBar/sidebarStore.svelte'
   import Sidebar from '$lib/sideBar/Sidebar.svelte'
   import { browser } from '$app/environment'
-  import { editorStore } from '$lib/editor/editorStore'
 
   export let data
-  const { hash, language, perks, descriptions, comments } = data
 
+  console.log(data.perks)
 
+  // const { hash, lang, perks, descriptions, comments } = data
 
+  // // editorStore.set(descriptions)
 
-
-
-
-
-  // editorStore.set(descriptions)
-
-  if (perks[hash]) {
-    sidebarStore.hash = hash
-    sidebarStore.itemHash = perks[hash].itemHash
-    sidebarStore.type = perks[hash].type
-    sidebarStore.language = language
-  }
+  // if (perks[hash]) {
+  //   sidebarStore.hash = hash
+  //   sidebarStore.itemHash = perks[hash].itemHash
+  //   sidebarStore.type = perks[hash].type
+  //   sidebarStore.language = lang
+  // }
 
   let editor: Readable<Editor>
 
@@ -43,33 +38,44 @@
   }
 
   const click = async () => {
-
     // const qb = new QueryBuilder()
     // const query = qb.select().from(de).where(eq(de.id, 0))
     // const { sql, params } = query.toSQL()
-
     // console.log(sql, params);
-    
   }
 </script>
 
-<MenuButtons {editor} />
+<div class="descriptionEditor">
+  <div>
+    <MenuButtons {editor} />
+    <div class="editor">
+      <EditorContent editor={$editor} />
+    </div>
+  </div>
 
-<div class="editor">
-  <EditorContent editor={$editor} />
+  <BubbleLink {editor} />
+
+  <div class="sideBar">
+    <Sidebar />
+  </div>
 </div>
-
-<BubbleLink {editor} />
-
 <button on:click={click}>click me</button>
 
-<Sidebar {perks} />
-
 <style lang="scss">
+  .descriptionEditor {
+    display: flex;
+  }
+
   @import '/src/variables.scss';
   .editor {
     height: $editor-height;
     background-color: $editor-background-color;
+    padding: 5px;
+  }
+  .sideBar {
+    width: 300px;
+    height: 100%;
+    // background-color: $sidebar-background-color;
     padding: 5px;
   }
 </style>
