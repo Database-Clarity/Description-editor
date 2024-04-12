@@ -122,7 +122,7 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
   //   return JSON.parse(pageData)
   // }
 
-  // let total_redis = 0
+  let total_redis = 0
   const sql = squeal(env, true)
 
   // for (let i = 0; i < 60; i++) {
