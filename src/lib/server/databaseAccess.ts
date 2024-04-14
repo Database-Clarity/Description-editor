@@ -96,8 +96,8 @@ export type Descriptions = {
 // }
 
 export async function loadPageData(hash: number, language: LanguageCode, timestamp: number) {
-  const redis = new Redis('rediss://default:afeddd4767654f16a8cc7a9276f9876a@ace-mosquito-49121.upstash.io:49121')
-  const redisKey = 'pageData-' + hash + '-' + language
+  // const redis = new Redis('rediss://default:afeddd4767654f16a8cc7a9276f9876a@ace-mosquito-49121.upstash.io:49121')
+  // const redisKey = 'pageData-' + hash + '-' + language
 
   // let total_redis = 0
 
@@ -122,7 +122,7 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
   //   return JSON.parse(pageData)
   // }
 
-  let total_redis = 0
+  // let total_redis = 0
   const sql = squeal(env, true)
 
   // for (let i = 0; i < 60; i++) {
@@ -142,6 +142,8 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
   // console.log('Average sql time:', total_redis / 60)
 
   // const start_sql = Date.now()
+
+  const perks = sql`SELECT "hash", "name_en", type FROM perk WHERE "hash" = ${hash}`
 
   // const [perks] = await Promise.all([
   //   sql`SELECT "hash", ${sql('name_' + language)}, type FROM perk`,
@@ -166,5 +168,5 @@ export async function loadPageData(hash: number, language: LanguageCode, timesta
   // //   redis.set(redisKey, JSON.stringify({ perks }), 'EX', 600)
   // // }
 
-  return {}
+  return { perks }
 }
