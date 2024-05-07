@@ -82,24 +82,26 @@ beforeNavigate(({ from, to }) => {
 </div>
 
 <svelte:head>
-  <!-- HTML Meta Tags -->
-  <title>Clarity Description Editor</title>
-  <meta name="description" content="Description for ...." />
+  {#await data.perksPromise then value}
+    <!-- HTML Meta Tags -->
+    <title>Clarity Description Editor</title>
+    <meta name="description" content={`Description for ${value[0].name}`} />
 
-  <!-- Facebook Meta Tags -->
-  <meta property="og:url" content="https://description-editor.vercel.app/descriptionEditor/1294026524" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Clarity Description Editor" />
-  <meta property="og:description" content="Description for ...." />
-  <meta property="og:image" content="" />
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Clarity Description Editor" />
+    <meta property="og:description" content={`Description for ${value[0].name}`} />
+    <meta property="og:image" content="" />
 
-  <!-- Twitter Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta property="twitter:domain" content="description-editor.vercel.app" />
-  <meta property="twitter:url" content="https://description-editor.vercel.app/descriptionEditor/1294026524" />
-  <meta name="twitter:title" content="Clarity Description Editor" />
-  <meta name="twitter:description" content="Description for ...." />
-  <meta name="twitter:image" content="" />
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="description-editor.vercel.app" />
+    <meta property="twitter:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
+    <meta name="twitter:title" content="Clarity Description Editor" />
+    <meta name="twitter:description" content={`Description for ${value[0].name}`} />
+    <meta name="twitter:image" content="" />
+  {/await}
 </svelte:head>
 
 <style lang="scss">
