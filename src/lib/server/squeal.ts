@@ -1,9 +1,13 @@
 import postgres from 'postgres'
 
+let connection: ReturnType<typeof postgres> | null = null
+
 export function squeal(env: Record<string, string | undefined>, dev: boolean) {
   const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = env
 
-  return postgres({
+  if (connection) return connection
+
+  const pg = postgres({
     host: PGHOST,
     database: PGDATABASE,
     username: PGUSER,
@@ -24,4 +28,7 @@ export function squeal(env: Record<string, string | undefined>, dev: boolean) {
       },
     },
   })
+
+  connection = pg
+  return pg
 }

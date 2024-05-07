@@ -1,0 +1,27 @@
+// Place for styles used everywhere in the app
+// Keep this file small and think twice before adding new styles here
+
+body {
+  background-color: hsl(0, 0%, 10%);
+  color: hsl(0, 0%, 85%);
+  font-family: 'Open Sans', sans-serif, 'D2 Clarity fonts';
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+* {
+  margin: 0;
+}
+
+svg {
+  fill: hsl(0, 0%, 85%);
+}

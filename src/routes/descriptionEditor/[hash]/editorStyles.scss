@@ -1,0 +1,127 @@
+.editorStyles {
+  .default {
+    color: hsl(0, 0%, 85%);
+    stroke: hsl(0, 0%, 85%);
+  }
+  .blue {
+    color: hsl(180deg, 100%, 45%);
+    stroke: hsl(180deg, 100%, 45%);
+  }
+  .green {
+    color: hsl(116deg, 58%, 65%);
+    stroke: hsl(116deg, 58%, 65%);
+  }
+  .yellow {
+    color: hsl(51deg, 100%, 45%);
+    stroke: hsl(51deg, 100%, 45%);
+  }
+  .purple {
+    color: hsl(300deg, 100%, 81%);
+    stroke: hsl(300deg, 100%, 81%);
+  }
+
+  .comment {
+    color: hsl(0deg, 0%, 50%);
+    // TODO: do something maybe add border
+  }
+
+  .enhanced {
+    background-color: hsla(108, 100%, 50%, 0.2);
+    // stroke: hsl(220deg, 100%, 75%);
+  }
+  .pvp {
+    color: hsl(0deg, 100%, 80%);
+    stroke: hsl(0deg, 100%, 80%);
+  }
+  .pve {
+    color: hsl(220deg, 100%, 75%);
+    stroke: hsl(220deg, 100%, 75%);
+  }
+
+  .left {
+    text-align: left;
+  }
+  .center {
+    text-align: center;
+  }
+  .right {
+    text-align: right;
+  }
+
+  .arc {
+    color: hsl(183, 83%, 72%);
+  }
+  .solar {
+    color: hsl(21, 88%, 55%);
+  }
+  .void {
+    color: hsl(279, 42%, 66%);
+  }
+  .stasis {
+    color: hsl(220, 100%, 65%);
+  }
+  .strand {
+    color: hsl(137, 76%, 55%);
+  }
+
+  .special {
+    color: hsl(128, 85%, 72%);
+  }
+  .heavy {
+    color: hsl(262, 100%, 76%);
+  }
+
+  .hunter {
+    color: hsl(208, 61%, 48%);
+  }
+  .titan {
+    color: #ee423f;
+  }
+  .warlock {
+    color: hsl(43, 97%, 46%);
+  }
+
+  .arrow {
+    color: hsl(46, 87%, 64%);
+  }
+}
+
+.ProseMirror {
+  overflow: auto;
+  height: 100%;
+  &:focus-visible {
+    outline: none;
+  }
+  ul {
+    margin: 0;
+    padding-inline-start: 15px;
+  }
+  table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+
+    td,
+    th {
+      border: 1px solid hsl(210, 1%, 45%);
+      box-sizing: border-box;
+      min-width: 1em;
+      padding: 3px 5px;
+      position: relative;
+      vertical-align: top;
+    }
+    .selectedCell:after {
+      background: hsla(219, 100%, 50%, 0.4);
+      content: '';
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+    }
+  }
+}

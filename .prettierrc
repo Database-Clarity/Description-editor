@@ -11,7 +11,12 @@
   "trailingComma": "es5",
   "useTabs": false,
 
+  "svelteSortOrder": "options-scripts-markup-styles",
+  "svelteStrictMode": false,
+  "svelteAllowShorthand": true,
+  "svelteBracketNewLine": false,
+  "svelteIndentScriptAndStyle": false,
+
   "plugins": ["prettier-plugin-svelte"],
-  "pluginSearchDirs": ["."],
   "overrides": [{ "files": "*.svelte", "options": { "parser": "svelte" } }]
 }

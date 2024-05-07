@@ -1,18 +1,7 @@
-type Entries<T> = {
-  [K in keyof T]: [K, T[K]]
-}[keyof T][]
+import { TypedObject } from './utils'
+import type postgres from 'postgres'
 
-export class TypedObject {
-  static entries<T extends object>(obj: T) {
-    return Object.entries(obj) as Entries<T>
-  }
-  static keys<T extends object>(obj: T) {
-    return Object.keys(obj) as (keyof T)[]
-  }
-  static fromEntries<T extends Array<readonly [string, unknown]>>(entries: T) {
-    return Object.fromEntries(entries) as Record<T[number][0], T[number][1]>
-  }
-}
+export type PendingQuery<T extends postgres.MaybeRow[]> = postgres.PendingQuery<T>
 
 export const perkTypes = [
   'Armor Trait Exotic',
@@ -81,12 +70,11 @@ export type EditorType = (typeof editorTypes)[number]
 
 export type Perk = {
   hash: number
-  itemHash: number | null
-  name: { [key in LanguageCode]: string }
-  itemName: { [key in LanguageCode]: string }
+  name: string
   type: PerkTypes
-  icon: string
-  itemIcon: string
-  appearsOn: string[] | number[]
-  linkedWith: number[] | null
+}
+
+export type EditorLayoutData = {
+  perksPromise: PendingQuery<Perk[]>
+  lang: LanguageCode
 }
