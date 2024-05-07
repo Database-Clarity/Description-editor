@@ -81,6 +81,27 @@ beforeNavigate(({ from, to }) => {
   <Selection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
+<svelte:head>
+  <!-- HTML Meta Tags -->
+  <title>Clarity Description Editor</title>
+  <meta name="description" content="Description for ...." />
+
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content="https://description-editor.vercel.app/descriptionEditor/1294026524" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Clarity Description Editor" />
+  <meta property="og:description" content="Description for ...." />
+  <meta property="og:image" content="" />
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="twitter:domain" content="description-editor.vercel.app" />
+  <meta property="twitter:url" content="https://description-editor.vercel.app/descriptionEditor/1294026524" />
+  <meta name="twitter:title" content="Clarity Description Editor" />
+  <meta name="twitter:description" content="Description for ...." />
+  <meta name="twitter:image" content="" />
+</svelte:head>
+
 <style lang="scss">
 .editor {
   display: flex;

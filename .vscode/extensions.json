@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+    "streetsidesoftware.code-spell-checker",
+    "esbenp.prettier-vscode",
+    "yoavbls.pretty-ts-errors",
+    "1yib.svelte-bundle",
+    "dbaeumer.vscode-eslint"
+  ]
+}
