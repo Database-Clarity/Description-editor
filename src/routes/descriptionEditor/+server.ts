@@ -1,9 +1,15 @@
+import { error, json } from '@sveltejs/kit'
+
 import { env } from '$env/dynamic/private'
-import { json } from '@sveltejs/kit'
 import { squeal } from '$lib/server/squeal.js'
 
 export async function POST({ request, cookies }) {
   const { lang, description, live, ready, hash, username } = await request.json()
+
+  // Limit description size to 10KB
+  if (new TextEncoder().encode(description).length > 1024 * 10) {
+    error(400, 'Description is too long')
+  }
 
   const sql = squeal(env, true)
   // const username = cookies.get('username')!

@@ -6,6 +6,8 @@ import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
 import History from '@tiptap/extension-history'
 import { Images } from './editor/extensions/images'
+import { Link } from './editor/extensions/link'
+import { SvelteCounterExtension } from './editor/test/nodeExtension'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -31,9 +33,12 @@ export const extensions = [
   Comment,
   TextColor,
   Images,
+  Link,
 
   Table,
   TableRow,
   TableHeader,
   TableCell,
+
+  SvelteCounterExtension,
 ]

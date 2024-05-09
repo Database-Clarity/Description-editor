@@ -24,20 +24,11 @@ let { children, active = false, ...props }: Props = $props()
 }
 
 button {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  cursor: pointer;
-  gap: 0.5rem;
   height: 1.5rem;
+  width: 6.8rem;
 
-  background-color: hsl(0, 0%, 15%);
-  border: none;
   border-radius: 0.3rem;
-  &:hover {
-    background-color: hsl(0, 0%, 25%);
-  }
+
   :global(img) {
     height: 1rem;
     width: 1rem;

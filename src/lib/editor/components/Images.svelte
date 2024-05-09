@@ -23,7 +23,7 @@ let randomImgName = $derived.by(() => {
 })
 </script>
 
-<div onfocusout={handleFocusLoss} class="dropDown">
+<div onfocusout={handleFocusLoss}>
   <Button onclick={() => (dropdownOpen = !dropdownOpen)}>
     <img src={images[randomImgName]} alt={randomImgName} />
     <span>Images</span>
@@ -49,6 +49,6 @@ let randomImgName = $derived.by(() => {
   z-index: 99;
 
   background-color: hsl(0, 0%, 15%);
-  border-radius: 5px;
+  border-radius: 0.3rem;
 }
 </style>

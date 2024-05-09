@@ -27,7 +27,7 @@ afterNavigate(({ to }) => {
   if (hash === undefined) return
 
   data.descriptionPromise.then((description) => {
-    $editor?.commands.setContent(description[0]?.description ?? '')
+    // $editor?.commands.setContent(description[0]?.description ?? '')
   })
 })
 
@@ -51,7 +51,7 @@ beforeNavigate(({ from, to }) => {
     },
     body: JSON.stringify({
       lang: 'en',
-      description: $editor?.getJSON(),
+      description: $editor?.getHTML(),
       live: false,
       ready: false,
       hash: hash,
@@ -59,6 +59,10 @@ beforeNavigate(({ from, to }) => {
     }),
   })
 })
+
+const dump = () => {
+  console.log(JSON.stringify($editor?.getJSON()))
+}
 </script>
 
 <div class="editor">
@@ -75,47 +79,68 @@ beforeNavigate(({ from, to }) => {
     </div>
     <div class="descriptionEditor editorStyles">
       <!-- TODO: Are booth classes needed? -->
-      <SvelteTiptap {editor} {editorSettings} />
+      <SvelteTiptap {editor} {editorSettings}>
+        {#snippet bubbleMenu()}
+          <div class="bubbleMenu">
+            <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
+            <EditorButton {editor} type="comment" title="CTRL + /" />
+            <TextColor {editor} />
+          </div>
+        {/snippet}
+      </SvelteTiptap>
     </div>
   </div>
   <Selection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
+<button onclick={dump}>dump</button>
+
 <svelte:head>
-  {#await data.perksPromise then value}
-    <!-- HTML Meta Tags -->
-    <title>Clarity Description Editor</title>
-    <meta name="description" content={`Description for ${value[0].name}`} />
+  <!-- {#await data.perksPromise then value} -->
+  <!-- HTML Meta Tags -->
+  <title>Clarity Description Editor</title>
+  <meta name="description" content={`Description for figure out how to add perk name`} />
 
-    <!-- Facebook Meta Tags -->
-    <meta property="og:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Clarity Description Editor" />
-    <meta property="og:description" content={`Description for ${value[0].name}`} />
-    <meta property="og:image" content="" />
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Clarity Description Editor" />
+  <meta property="og:description" content={`Description for figure out how to add perk name`} />
+  <meta property="og:image" content="" />
 
-    <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta property="twitter:domain" content="description-editor.vercel.app" />
-    <meta property="twitter:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
-    <meta name="twitter:title" content="Clarity Description Editor" />
-    <meta name="twitter:description" content={`Description for ${value[0].name}`} />
-    <meta name="twitter:image" content="" />
-  {/await}
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="twitter:domain" content="description-editor.vercel.app" />
+  <meta property="twitter:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
+  <meta name="twitter:title" content="Clarity Description Editor" />
+  <meta name="twitter:description" content={`Description for figure out how to add perk name`} />
+  <meta name="twitter:image" content="" />
+  <!-- {/await} -->
 </svelte:head>
 
 <style lang="scss">
 .editor {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .buttons {
   display: flex;
-  gap: 5px;
-  padding: 5px;
+  gap: 0.3rem;
+  padding: 0.3rem;
 }
 .descriptionEditor {
   height: 50vh;
+}
+
+.bubbleMenu {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  background-color: hsla(0, 0%, 30%, 0.7);
+  border-radius: 0.3rem;
+  box-shadow: 0 0 0.3rem 0 hsla(0, 0%, 0%, 0.2);
 }
 
 @font-face {
