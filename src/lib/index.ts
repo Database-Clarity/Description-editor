@@ -2,12 +2,13 @@ import { BulletList, ListItem } from './editor/extensions/bulletList'
 
 import { Bold } from './editor/extensions/bold'
 import { Comment } from './editor/extensions/comment'
+import { DescriptionImportExtension } from './editor/test/descriptionImport'
 import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
+import Dropcursor from '@tiptap/extension-dropcursor'
 import History from '@tiptap/extension-history'
 import { Images } from './editor/extensions/images'
 import { Link } from './editor/extensions/link'
-import { SvelteCounterExtension } from './editor/test/nodeExtension'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -34,11 +35,15 @@ export const extensions = [
   TextColor,
   Images,
   Link,
+  Dropcursor.configure({
+    width: 2,
+    color: '#00cc11',
+  }),
 
   Table,
   TableRow,
   TableHeader,
   TableCell,
 
-  SvelteCounterExtension,
+  DescriptionImportExtension,
 ]
