@@ -12,8 +12,12 @@ import Images from '$lib/editor/components/Images.svelte'
 import Table from '$lib/editor/components/Table.svelte'
 import { beforeNavigate, afterNavigate } from '$app/navigation'
 import Selection from '$lib/editor/sideBar/Selection.svelte'
+import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
 
 const { data } = $props()
+
+// Consumed by description import component
+descriptionImportStore.set(data.perksPromise)
 
 const editorSettings: EditorSettings = {
   extensions: extensions,
@@ -27,7 +31,7 @@ afterNavigate(({ to }) => {
   if (hash === undefined) return
 
   data.descriptionPromise.then((description) => {
-    // $editor?.commands.setContent(description[0]?.description ?? '')
+    $editor?.commands.setContent(description[0]?.description ?? '')
   })
 })
 
@@ -61,7 +65,7 @@ beforeNavigate(({ from, to }) => {
 })
 
 const dump = () => {
-  console.log(JSON.stringify($editor?.getJSON()))
+  $editor?.commands.addDescriptionImport()
 }
 </script>
 
@@ -93,7 +97,7 @@ const dump = () => {
   <Selection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
-<button onclick={dump}>dump</button>
+<button onclick={dump}>add</button>
 
 <svelte:head>
   <!-- {#await data.perksPromise then value} -->

@@ -78,3 +78,34 @@ export type EditorLayoutData = {
   perksPromise: PendingQuery<Perk[]>
   lang: LanguageCode
 }
+
+export const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } } = {
+  Exotics: {
+    'Armor Trait Exotic': 'Armor',
+    'Weapon Frame Exotic': 'Weapon',
+  },
+  Weapon: {
+    'Weapon Trait': 'Trait',
+    // 'Weapon Trait Enhanced': 'Enhanced Trait', // removed from database
+    'Weapon Perk': 'Perk',
+    'Weapon Trait Origin': 'Origin Trait',
+    'Weapon Frame': 'Frame',
+    'Weapon Frame Enhanced': 'Enhanced Frame', // probably will remove this too
+  },
+  'Abilities / Subclass stuff': {
+    'Subclass Fragment': 'Fragment',
+    'Subclass Aspect': 'Aspect',
+    'Subclass Super': 'Super',
+    'Subclass Grenade': 'Grenade',
+    'Subclass Melee': 'Melee',
+    'Subclass Class': 'Class',
+    'Subclass Movement': 'Movement',
+  },
+  Mods: {
+    'Armor Mod General': 'Armor General',
+    'Armor Mod Activity': 'Armor Activity',
+    'Armor Mod Seasonal': 'Armor Seasonal',
+    'Weapon Mod': 'Weapon',
+    'Ghost Mod': 'Ghost',
+  },
+}

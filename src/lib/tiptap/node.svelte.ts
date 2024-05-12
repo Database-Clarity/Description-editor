@@ -77,9 +77,15 @@ class SvelteNodeView extends NodeView<SvelteComponentRaw, Editor, SvelteNodeView
     this.handleSelectionUpdate = this.handleSelectionUpdate.bind(this)
     this.editor.on('selectionUpdate', this.handleSelectionUpdate)
 
+    const context = new Map()
+    context.set('STT_DragEvent', {
+      onDragStart: this.onDragStart.bind(this),
+    })
+
     const svelteComponent = mount(Component, {
       target,
       props,
+      context,
     })
 
     this.renderer = new SvelteRenderer(svelteComponent, {
