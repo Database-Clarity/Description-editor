@@ -6,6 +6,7 @@ import { DescriptionImportExtension } from './editor/test/descriptionImport'
 import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
 import Dropcursor from '@tiptap/extension-dropcursor'
+// import HardBreak from '@tiptap/extension-hard-break'
 import History from '@tiptap/extension-history'
 import { Images } from './editor/extensions/images'
 import { Link } from './editor/extensions/link'
@@ -39,6 +40,7 @@ export const extensions = [
     width: 2,
     color: '#00cc11',
   }),
+  // HardBreak,
 
   Table,
   TableRow,

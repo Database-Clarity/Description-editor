@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types'
 import { squealInstance as squeal } from '$lib/server/squeal'
 import { languageCodes, type LanguageCode } from '$lib/types'
+import type postgres from 'postgres'
 
 type Description = {
   description: string
@@ -8,6 +9,11 @@ type Description = {
   live: boolean
   ready: boolean
   timestamp: number
+}
+
+function fixDescription(descriptionObject: postgres.RowList<Description[]>) {
+  const description = descriptionObject[0]?.description || ''
+  return description.replace(/<(\/)?descriptionImport.*?>/gi, '')
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -35,9 +41,9 @@ export const GET: RequestHandler = async ({ url }) => {
       WHERE hash = ${hash}
     )`
 
-    return new Response(JSON.stringify(description), {
+    return new Response(fixDescription(description), {
       headers: {
-        'content-type': 'application/json',
+        'content-type': 'text/plain',
       },
     })
   } catch (error) {

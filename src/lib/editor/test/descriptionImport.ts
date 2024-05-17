@@ -24,8 +24,8 @@ declare module '@tiptap/core' {
 export const DescriptionImportExtension = Node.create({
   name: 'descriptionImport',
   group: 'block',
-  content: 'inline*',
-  draggable: true, // Optional: to make the node draggable
+  content: 'block*',
+  // draggable: true, // Optional: to make the node draggable
 
   addAttributes() {
     return {
@@ -40,7 +40,7 @@ export const DescriptionImportExtension = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['descriptionImport', mergeAttributes(HTMLAttributes)]
+    return ['descriptionImport', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
@@ -51,8 +51,16 @@ export const DescriptionImportExtension = Node.create({
     return {
       addDescriptionImport:
         () =>
-        ({ commands }) => {
-          return commands.setNode(this.name)
+        ({ chain, tr }) => {
+          // prevent adding descriptionImport inside another descriptionImport
+          if (tr.selection.$head.depth > 1) return chain().focus().run()
+          console.log('addDescriptionImport')
+
+          return chain()
+            .deleteSelection()
+            .insertContent('<descriptionImport count="0"><div></div></descriptionImport>')
+            .focus()
+            .run()
         },
     }
   },

@@ -76,9 +76,9 @@ const dump = () => {
       <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
       <EditorButton {editor} type="bulletList" title="TAB" />
       <EditorButton {editor} type="comment" title="CTRL + /" />
+      <EditorButton {editor} type="import" title="" />
       <TextColor {editor} />
       <Images {editor} />
-
       <Table {editor} />
     </div>
     <div class="descriptionEditor editorStyles">
@@ -127,10 +127,13 @@ const dump = () => {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
 }
 .buttons {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.3rem;
   padding: 0.3rem;
 }

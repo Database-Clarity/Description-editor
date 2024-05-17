@@ -12,18 +12,13 @@ let { editor, attrs, node, getPos }: Props = $props()
 
 let descriptionType = $state<PerkTypes | 'none'>('none')
 
-const perkChange: ChangeEventHandler<HTMLSelectElement> = ({ currentTarget }) => {
+const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget }) => {
   $attrs!.hash = parseInt(currentTarget.value)
-}
 
-const test = () => {
+  const description = await fetch(`/api/description?hash=${currentTarget.value}`).then((res) => res.text())
   const pos = { from: getPos() + 1, to: node.content.size + getPos() + 1 }
 
-  editor
-    .chain()
-    .insertContentAt(pos, 'Hello world!' + Math.random())
-    .focus()
-    .run()
+  editor.chain().deleteRange(pos).insertContentAt(pos, description).focus().run()
 }
 </script>
 
@@ -54,8 +49,6 @@ const test = () => {
   <div contenteditable="false">
     <STT_Editable />
   </div>
-
-  <button onclick={test}>test</button>
 </STT_Component>
 
 <style>

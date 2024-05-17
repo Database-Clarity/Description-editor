@@ -7,7 +7,7 @@ interface Props extends HTMLButtonAttributes {
   active?: boolean
 }
 
-let { children, active = false, ...props }: Props = $props()
+let { children, active, ...props }: Props = $props()
 </script>
 
 <button class:active {...props}>
