@@ -31,7 +31,7 @@ export type Props = {
   attrs: Writable<any>
 }
 
-type SvelteComponentRaw = ComponentType<SvelteComponent<Partial<Props>>>
+type SvelteComponentRaw = ComponentType<SvelteComponent<Props>>
 
 class SvelteNodeView extends NodeView<SvelteComponentRaw, Editor, SvelteNodeViewRendererOptions> {
   declare renderer: SvelteRenderer
