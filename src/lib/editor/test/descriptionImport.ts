@@ -24,12 +24,15 @@ declare module '@tiptap/core' {
 export const DescriptionImportExtension = Node.create({
   name: 'descriptionImport',
   group: 'block',
-  content: 'block*',
-  // draggable: true, // Optional: to make the node draggable
+  content: 'div*', // seems like best option it won't let anything to be dragged in to it
+  draggable: true, // Optional: to make the node draggable
+  selectable: true, // Optional: to make the node selectable
+
+  // atom: true, // king of prevents editing but bugged
 
   addAttributes() {
     return {
-      count: {
+      hash: {
         default: 0,
       },
     }
@@ -56,12 +59,16 @@ export const DescriptionImportExtension = Node.create({
           if (tr.selection.$head.depth > 1) return chain().focus().run()
           console.log('addDescriptionImport')
 
-          return chain()
-            .deleteSelection()
-            .insertContent('<descriptionImport count="0"><div></div></descriptionImport>')
-            .focus()
-            .run()
+          return (
+            chain()
+              .deleteSelection()
+              .insertContent('<descriptionImport hash="0"><div></div></descriptionImport><div></div>')
+              // .setNode(this.name, { hash: 0 }) // this would be preferable but it doesn't work
+              .focus()
+              .run()
+          )
         },
     }
   },
+  // TODO: add a way to add div above or below
 })

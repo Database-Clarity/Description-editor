@@ -19,7 +19,5 @@ export const load = async ({ url }) => {
     FROM perk
     ORDER BY ${sql('name_' + lang)} ASC`
 
-  console.log('test')
-
   return { perksPromise, lang }
 }

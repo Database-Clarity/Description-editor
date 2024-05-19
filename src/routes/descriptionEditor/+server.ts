@@ -1,13 +1,26 @@
 import { error, json } from '@sveltejs/kit'
 
+import type { LanguageCode } from '$lib/types.js'
 import { env } from '$env/dynamic/private'
 import { squeal } from '$lib/server/squeal.js'
+import { trimEmptyDivElements } from '$lib/utils.js'
+
+type RequestJson = {
+  lang: LanguageCode
+  description: string
+  live: boolean
+  ready: boolean
+  hash: number
+  username: string
+}
 
 export async function POST({ request, cookies }) {
-  const { lang, description, live, ready, hash, username } = await request.json()
+  const { lang, description, live, ready, hash, username }: RequestJson = await request.json()
+
+  const trimmedDescription = trimEmptyDivElements(description)
 
   // Limit description size to 10KB
-  if (new TextEncoder().encode(description).length > 1024 * 10) {
+  if (new TextEncoder().encode(trimmedDescription).length > 1024 * 10) {
     error(400, 'Description is too long')
   }
 
@@ -19,7 +32,7 @@ export async function POST({ request, cookies }) {
   const updateResult = await sql`
     UPDATE ${sql(lang)}
     SET
-      "description" = ${description},
+      "description" = ${trimmedDescription},
       "username" = ${username},
       "live" = ${live},
       "ready" = ${ready},
@@ -40,7 +53,7 @@ export async function POST({ request, cookies }) {
     INSERT INTO ${sql(lang)}
       ("description",  "username",  "live",  "ready",  "timestamp",  "hash")
     SELECT
-      ${description}, ${username}, ${live}, ${ready}, ${timestamp}, ${hash}
+      ${trimmedDescription}, ${username}, ${live}, ${ready}, ${timestamp}, ${hash}
     WHERE NOT EXISTS ( -- this mess is for comparing the description with the latest one
       SELECT 1
       FROM ${sql(lang)} e2 -- e2 is a reference to the table in the outer query
@@ -50,7 +63,7 @@ export async function POST({ request, cookies }) {
         FROM ${sql(lang)} e3
         WHERE e3."hash" = ${hash}
       )
-      AND e2."description" = ${description} -- as never to prevent type error
+      AND e2."description" = ${trimmedDescription}
     );`
 
   return json({ status: 201 })

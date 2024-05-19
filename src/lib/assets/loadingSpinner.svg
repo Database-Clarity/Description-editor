@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25">
+  <path fill="#35e366" d="m7.9.88C1.48 3.4-1.65 10.68.88 17.1c2.52 6.42 9.8 9.57 16.23 7.03l-.78-1.98c-5.33 2.1-11.35-.5-13.45-5.83-2.1-5.33.5-11.35 5.83-13.45l-.8-2z">
+    <animateTransform 
+      attributeName="transform" 
+      type="rotate"
+      dur="2s" 
+      from="0 12.5 12.5"
+      to="360 12.5 12.5" 
+      repeatCount="indefinite" />
+    </path>
+  <path fill="#35e366" d="m10.57 9.9c1.43-1.07 3.48-.78 4.53.68 1.07 1.43.78 3.48-.68 4.53l1.02 1.38c2.2-1.63 2.65-4.75 1.02-6.92-1.63-2.2-4.75-2.65-6.92-1.02l1.02 1.38z">
+    <animateTransform 
+      attributeName="transform" 
+      type="rotate"
+      dur="1s" 
+      from="0 12.5 12.5"
+      to="-360 12.5 12.5" 
+      repeatCount="indefinite" />
+    </path>
+  <path fill="#35e366" d="m20.5 8.93C18.52 4.5 13.35 2.52 8.93 4.5S2.52 11.65 4.5 16.07l1.9-.85c-1.5-3.38 0-7.33 3.38-8.82s7.33 0 8.82 3.38l1.9-.85z">
+    <animateTransform 
+      attributeName="transform" 
+      type="rotate"
+      dur="2s" 
+      from="0 12.5 12.5"
+      to="360 12.5 12.5" 
+      repeatCount="indefinite" />
+  </path>
+</svg>

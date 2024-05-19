@@ -12,7 +12,6 @@ const {
 }: {
   children?: Snippet
   as?: string
-  'data-drag-handle'?: string
 } = $props()
 </script>
 
