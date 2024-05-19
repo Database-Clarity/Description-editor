@@ -49,8 +49,8 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
         <input type="checkbox" name="include header" bind:checked={withHeaderRow} />
       </div>
       <div class="tableSelection">
-        {#each Array(7) as _, columnIndex}
-          {#each Array(7) as _, rowIndex}
+        {#each Array(7) as _, rowIndex}
+          {#each Array(7) as _, columnIndex}
             <button
               onclick={addTable}
               onmouseenter={() => setData(columnIndex, rowIndex)}
