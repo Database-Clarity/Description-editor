@@ -29,6 +29,13 @@ const addTable = () => {
   resetData()
 }
 
+const addRowColumn = (location: 'RowAfter' | 'RowBefore' | 'ColumnAfter' | 'ColumnBefore') => {
+  $editor?.chain().focus()[`add${location}`]().run()
+}
+const removeRowColumn = (location: 'Column' | 'Row') => {
+  $editor?.chain().focus()[`delete${location}`]().run()
+}
+
 let dropdownOpen = $state<boolean>(false)
 const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
   if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
@@ -62,16 +69,93 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
           {/each}
         {/each}
       </div>
+      <button>Merge</button>
+      <button>Split</button>
+      <div>Add/Remove Row/Column</div>
+      <div class="insert-remove">
+        <button class="delete-column" onclick={() => removeRowColumn('Column')}>Remove</button>
+        <button class="delete-row" onclick={() => removeRowColumn('Row')}>Remove</button>
+        <button class="row-above" onclick={() => addRowColumn('RowBefore')}>Add</button>
+        <button class="row-bellow" onclick={() => addRowColumn('RowAfter')}>Add</button>
+        <button class="column-left" onclick={() => addRowColumn('ColumnBefore')}>Add</button>
+        <button class="column-right" onclick={() => addRowColumn('ColumnAfter')}>Add</button>
+      </div>
     </div>
   {/if}
 </div>
 
 <style lang="scss">
+.insert-remove {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  // gap: 0.3rem;
+  grid-auto-flow: row;
+  grid-template-areas:
+    'delete-column top-left row-above top-right'
+    'delete-column column-left . column-right'
+    'delete-column bottom-left row-bellow bottom-right'
+    'delete-column delete-row delete-row delete-row';
+  justify-items: center;
+  border: 1px solid hsl(0, 0%, 80%);
+}
+.delete-column {
+  grid-area: delete-column;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  &:hover {
+    background-color: hsla(0, 100%, 50%, 0.25);
+  }
+}
+.delete-row {
+  grid-area: delete-row;
+  width: 100%;
+  justify-content: center;
+  &:hover {
+    background-color: hsla(0, 100%, 50%, 0.25);
+  }
+}
+.row-above {
+  grid-area: row-above;
+  justify-content: center;
+  &:hover {
+    width: 300%;
+    background-color: rgba(120, 100%, 25%, 0.25);
+    grid-area: top-left / row-above / top-right;
+  }
+}
+.row-bellow {
+  grid-area: row-bellow;
+  justify-content: center;
+  &:hover {
+    width: 300%;
+    background-color: rgba(120, 100%, 25%, 0.25);
+    grid-area: bottom-left / row-bellow / bottom-right;
+  }
+}
+.column-left {
+  grid-area: column-left;
+  &:hover {
+    background-color: rgba(120, 100%, 25%, 0.25);
+    grid-area: top-left / column-left / bottom-left;
+  }
+}
+.column-right {
+  grid-area: column-right;
+  &:hover {
+    background-color: rgba(120, 100%, 25%, 0.25);
+    grid-area: top-right / column-right / bottom-right;
+  }
+}
+
 .dropDownContent {
   position: absolute;
   display: flex;
   flex-direction: column;
   z-index: 99;
+  background-color: hsl(0, 0%, 15%);
+  padding: 0.5rem;
+  border-radius: 0.3rem;
 }
 
 .headerInput {
@@ -92,8 +176,10 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(7, 1fr);
   border-radius: 5px;
+  padding: 0.3rem 0;
+  width: min-content;
 }
 .highlight {
-  background-color: green !important;
+  background-color: hsl(120, 100%, 25%) !important;
 }
 </style>
