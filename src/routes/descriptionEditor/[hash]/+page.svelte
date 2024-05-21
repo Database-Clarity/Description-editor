@@ -82,7 +82,6 @@ const dump = () => {
       <Table {editor} />
     </div>
     <div class="descriptionEditor editorStyles">
-      <!-- TODO: Are booth classes needed? -->
       <SvelteTiptap {editor} {editorSettings}>
         {#snippet bubbleMenu()}
           <div class="bubbleMenu">
@@ -97,7 +96,7 @@ const dump = () => {
   <Selection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
-<button onclick={dump}>add</button>
+<!-- <button onclick={dump}>add</button> -->
 
 <svelte:head>
   <!-- {#await data.perksPromise then value} -->
