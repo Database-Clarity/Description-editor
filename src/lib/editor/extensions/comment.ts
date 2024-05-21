@@ -31,7 +31,14 @@ export const Comment = Mark.create({
   },
 
   parseHTML() {
-    return [{ tag: 'span' }]
+    return [
+      {
+        tag: 'span',
+        getAttrs: (node) => {
+          return node.classList.contains('text-comment') ? {} : false
+        },
+      }
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {

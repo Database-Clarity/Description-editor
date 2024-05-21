@@ -38,7 +38,17 @@ export const TextAlign = Extension.create<TextAlignOptions>({
         attributes: {
           class: {
             default: this.options.defaultAlignment,
-            parseHTML: (element) => element.getAttribute('class'),
+            parseHTML: (element) => {
+              // code in parseHTML => filters out the class names that are not in the alignments array
+              const className = element.getAttribute('class')
+              const regex = new RegExp(alignments.join('|'))
+              const match = className?.match(regex)
+
+              if (match) {
+                return match[0]
+              }
+              return false
+            },
             renderHTML: (attributes) => {
               if (attributes.class === this.options.defaultAlignment) {
                 return {}

@@ -1,4 +1,6 @@
-import { Mark, mergeAttributes } from '@tiptap/core'
+import { Mark, PasteRule, markPasteRule, mergeAttributes } from '@tiptap/core'
+
+import { Fragment } from '@tiptap/pm/model'
 
 export const images = {
   // elements
@@ -62,7 +64,17 @@ export const Images = Mark.create({
   },
 
   parseHTML() {
-    return [{ tag: 'span' }]
+    return [
+      {
+        tag: 'span',
+        getAttrs: (node) => {
+          for (const className of node.classList) {
+            if (imageNames.includes(className as ImageNames)) return { class: className }
+          }
+          return false
+        },
+      },
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -83,6 +95,17 @@ export const Images = Mark.create({
         },
     }
   },
+
+  // addPasteRules() {
+  //   const regex = /<void\/>/
+  //   return [
+  //     markPasteRule({
+  //       find: regex,
+  //       type: this.editor.schema.marks.image,
+
+  //     }),
+  //   ]
+  // },
 
   // addKeyboardShortcuts() {
   //   return {

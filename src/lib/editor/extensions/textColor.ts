@@ -1,4 +1,4 @@
-import { Mark, mergeAttributes } from '@tiptap/core'
+import { Mark, markPasteRule, mergeAttributes } from '@tiptap/core'
 
 export const textColors = ['default', 'blue', 'green', 'yellow', 'purple', 'pvp', 'pve'] as const
 export type TextColors = (typeof textColors)[number]
@@ -38,7 +38,17 @@ export const TextColor = Mark.create({
   },
 
   parseHTML() {
-    return [{ tag: 'span' }]
+    return [
+      {
+        tag: 'span',
+        getAttrs: (node) => {
+          for (const iterator of node.classList) {
+            if (textColors.includes(iterator as TextColors)) return { class: iterator }
+          }
+          return false
+        },
+      },
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
