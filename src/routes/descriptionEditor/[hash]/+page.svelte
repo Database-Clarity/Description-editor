@@ -11,7 +11,7 @@ import TextColor from '$lib/editor/components/TextColor.svelte'
 import Images from '$lib/editor/components/Images.svelte'
 import Table from '$lib/editor/components/Table.svelte'
 import { beforeNavigate, afterNavigate } from '$app/navigation'
-import Selection from '$lib/editor/sideBar/Selection.svelte'
+import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
 import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
 
 const { data } = $props()
@@ -93,7 +93,7 @@ const dump = () => {
       </SvelteTiptap>
     </div>
   </div>
-  <Selection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
+  <PerkSelection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
 <!-- <button onclick={dump}>add</button> -->
