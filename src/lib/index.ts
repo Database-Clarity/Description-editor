@@ -6,6 +6,7 @@ import { DescriptionImportExtension } from './editor/test/descriptionImport'
 import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
 import Dropcursor from '@tiptap/extension-dropcursor'
+import Gapcursor from '@tiptap/extension-gapcursor'
 // import HardBreak from '@tiptap/extension-hard-break'
 import History from '@tiptap/extension-history'
 import { Images } from './editor/extensions/images'
@@ -40,6 +41,11 @@ export const extensions = [
     width: 2,
     color: '#00cc11',
   }),
+  Gapcursor.configure({
+    width: 2,
+    color: '#00cc11',
+  }),
+
   // HardBreak,
 
   Table,
