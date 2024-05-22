@@ -1,6 +1,5 @@
-import { squeal } from '$lib/server/squeal'
 import { languageCodes, type LanguageCode } from '$lib/types'
-import { env } from '$env/dynamic/private'
+import { sql } from '$lib/server/squeal'
 
 type Description = {
   description: string
@@ -25,8 +24,6 @@ export const load = async ({ url, params }) => {
   const lang = languageCodes.includes(langParam) ? langParam : languageCodes[0]
   const timestamp = isNaN(timestampParam) ? 0 : timestampParam
   const editor = ['single', 'dual'].includes(editorParam || '') ? editorParam : 'single'
-
-  const sql = squeal(env, true)
 
   const descriptionPromise = sql<Description[]>`
   SELECT "description", "username", "live", "ready", "timestamp"

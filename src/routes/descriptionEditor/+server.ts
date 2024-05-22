@@ -1,8 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 
 import type { LanguageCode } from '$lib/types.js'
-import { env } from '$env/dynamic/private'
-import { squeal } from '$lib/server/squeal.js'
+import { sql } from '$lib/server/squeal'
 import { trimEmptyDivElements } from '$lib/utils.js'
 
 type RequestJson = {
@@ -24,7 +23,6 @@ export async function POST({ request, cookies }) {
     error(400, 'Description is too long')
   }
 
-  const sql = squeal(env, true)
   // const username = cookies.get('username')!
   const timestamp = Date.now()
 
