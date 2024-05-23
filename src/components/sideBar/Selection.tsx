@@ -139,7 +139,7 @@ export const PerkSelection = () => {
   const [selectedFolder, setSelectedFolder] = useImmer<string | null>(null)
 
   const setDisplayedPerks = (foldersName_: string) => {
-    const index = foldersName_.split('___')[1]
+    const index = foldersName_.split('___')[1] as unknown as number
 
     const foldersName = foldersName_.replace(/___\d+/, '')
 
