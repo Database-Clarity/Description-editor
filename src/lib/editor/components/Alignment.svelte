@@ -2,7 +2,7 @@
 import type { Writable } from 'svelte/store'
 import type { Editor } from '@tiptap/core'
 import { alignments, type Alignments } from '../extensions/alignment'
-import alignSVGs from '$lib/assets/alignment/svgExport'
+import Alignment from '$lib/assets/Alignment.svelte'
 import Button from './Button.svelte'
 
 let { editor }: { editor: Writable<Editor | undefined> } = $props()
@@ -21,7 +21,7 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
 
 <div onfocusout={handleFocusLoss}>
   <Button onclick={() => (dropdownOpen = !dropdownOpen)}>
-    <img src={alignSVGs[currentAlignment]} alt={currentAlignment} />
+    <Alignment align={currentAlignment} />
     <span class={currentAlignment}>{currentAlignment}</span>
   </Button>
 
@@ -29,7 +29,7 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
     <div class="dropDownContent">
       {#each alignments as alignment}
         <Button onclick={() => setTextAlign(alignment)}>
-          <img src={alignSVGs[alignment]} alt={alignment} />
+          <Alignment align={alignment} />
           <span class={alignment}>{alignment}</span>
         </Button>
       {/each}

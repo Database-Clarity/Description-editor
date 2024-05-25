@@ -2,7 +2,7 @@
 import type { Writable } from 'svelte/store'
 import type { Editor } from '@tiptap/core'
 import { imageNames, type ImageNames } from '../extensions/images'
-import images from '$lib/assets/bungie/svgExport'
+import Bungie from '$lib/assets/Bungie.svelte'
 import Button from './Button.svelte'
 
 let { editor }: { editor: Writable<Editor | undefined> } = $props()
@@ -25,7 +25,7 @@ let randomImgName = $derived.by(() => {
 
 <div onfocusout={handleFocusLoss}>
   <Button onclick={() => (dropdownOpen = !dropdownOpen)}>
-    <img src={images[randomImgName]} alt={randomImgName} />
+    <Bungie img={randomImgName} />
     <span>Images</span>
   </Button>
 
@@ -33,7 +33,7 @@ let randomImgName = $derived.by(() => {
     <div class="dropDownContent">
       {#each imageNames as imageName}
         <Button onclick={() => setImg(imageName)}>
-          <img src={images[imageName]} alt={randomImgName} />
+          <Bungie img={imageName} />
           <span>{imageName}</span>
         </Button>
       {/each}
