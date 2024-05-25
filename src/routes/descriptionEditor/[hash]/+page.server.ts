@@ -26,19 +26,19 @@ export const load = async ({ url, params }) => {
   const editor = ['single', 'dual'].includes(editorParam || '') ? editorParam : 'single'
 
   const descriptionPromise = sql<Description[]>`
-  SELECT "description", "username", "live", "ready", "timestamp"
-  FROM ${sql(lang)}
-  WHERE "hash" = ${hash}
-  AND timestamp = (
-    SELECT MAX(timestamp)
+    SELECT "description", "username", "live", "ready", "timestamp"
     FROM ${sql(lang)}
-    WHERE hash = ${hash}
-  )`
+    WHERE "hash" = ${hash}
+    AND timestamp = (
+      SELECT MAX(timestamp)
+      FROM ${sql(lang)}
+      WHERE hash = ${hash}
+    )`
 
   const comments = sql<Comments[]>`
-  SELECT "username", "timestamp", "text"
-  FROM comment
-  WHERE "hash" = ${hash}`
+    SELECT "username", "timestamp", "text"
+    FROM comment
+    WHERE "hash" = ${hash}`
 
   return { descriptionPromise, comments, hash, editor, test: 'test' }
 }

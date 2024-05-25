@@ -1,6 +1,4 @@
-import { Mark, PasteRule, markPasteRule, mergeAttributes } from '@tiptap/core'
-
-import { Fragment } from '@tiptap/pm/model'
+import { Mark, mergeAttributes } from '@tiptap/core'
 
 export const images = {
   // elements
