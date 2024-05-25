@@ -12,7 +12,7 @@ export const images = {
   // breakers
   barrier: { img: '󒰐', class: 'barrier' },
   overload: { img: '󒰑', class: 'overload' },
-  stagger: { img: '󒰒', class: 'stagger' },
+  unstoppable: { img: '󒰒', class: 'unstoppable' },
   // ammo
   primary: { img: '󒰠', class: 'primary' },
   special: { img: '󒰡', class: 'special' },
