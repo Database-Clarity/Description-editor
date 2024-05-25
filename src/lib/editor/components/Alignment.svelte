@@ -36,15 +36,3 @@ const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
     </div>
   {/if}
 </div>
-
-<style lang="scss">
-.dropDownContent {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  z-index: 99;
-
-  background-color: hsl(0, 0%, 15%);
-  border-radius: 5px;
-}
-</style>

@@ -40,15 +40,3 @@ let randomImgName = $derived.by(() => {
     </div>
   {/if}
 </div>
-
-<style lang="scss">
-.dropDownContent {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  z-index: 99;
-
-  background-color: hsl(0, 0%, 15%);
-  border-radius: 0.3rem;
-}
-</style>

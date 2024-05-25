@@ -5,36 +5,24 @@ import type { HTMLButtonAttributes } from 'svelte/elements'
 interface Props extends HTMLButtonAttributes {
   children: Snippet
   active?: boolean
+  class?: string
 }
 
-let { children, active, ...props }: Props = $props()
+let { children, active, class: className, ...props }: Props = $props()
 </script>
 
-<button class:active {...props}>
+<button class:active {...props} class="h-6 w-28 rounded {className ?? ''}">
   {@render children()}
 </button>
 
-<style lang="scss">
+<style lang="postcss">
 .active {
-  background-color: hsl(0, 0%, 20%);
-  color: hsl(125, 100%, 40%);
-  :global(svg) {
-    fill: hsl(125, 100%, 40%);
-  }
+  @apply bg-neutral-800 text-lime-400;
 }
-
-button {
-  height: 1.5rem;
-  width: 6.8rem;
-
-  border-radius: 0.3rem;
-
-  :global(img) {
-    height: 1rem;
-    width: 1rem;
-  }
-  :global(span) {
-    text-transform: capitalize;
-  }
+:global(img) {
+  @apply h-4 w-4;
+}
+:global(span) {
+  @apply capitalize;
 }
 </style>
