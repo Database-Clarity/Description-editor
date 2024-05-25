@@ -5,7 +5,11 @@ import { imageNames, type ImageNames } from '../extensions/images'
 import Bungie from '$lib/assets/Bungie.svelte'
 import Button from './Button.svelte'
 
-let { editor }: { editor: Writable<Editor | undefined> } = $props()
+let {
+  editor,
+}: {
+  editor: Writable<Editor | undefined>
+} = $props()
 
 const setImg = (imgName: ImageNames) => {
   $editor?.commands.setImage(imgName)
@@ -14,7 +18,7 @@ const setImg = (imgName: ImageNames) => {
 let dropdownOpen = $state<boolean>(false)
 const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
   if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
-  dropdownOpen = false
+  dropdownOpen = true
 }
 
 let randomImgName = $derived.by(() => {

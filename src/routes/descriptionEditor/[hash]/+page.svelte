@@ -65,7 +65,7 @@ beforeNavigate(({ from, to }) => {
 })
 
 const dump = () => {
-  $editor?.commands.addDescriptionImport()
+  console.log($editor?.getHTML())
 }
 </script>
 
@@ -96,7 +96,7 @@ const dump = () => {
   <PerkSelection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
 </div>
 
-<!-- <button onclick={dump}>add</button> -->
+<button onclick={dump}>dump</button>
 
 <svelte:head>
   <!-- {#await data.perksPromise then value} -->

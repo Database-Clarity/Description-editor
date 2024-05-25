@@ -15,7 +15,7 @@ const setTextAlign = (align: Alignments) => {
 let dropdownOpen = $state<boolean>(false)
 const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
   if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
-  dropdownOpen = false
+  dropdownOpen = true
 }
 </script>
 
