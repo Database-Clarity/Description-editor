@@ -9,10 +9,12 @@ import dragHandleSVG from '$lib/assets/dragHandle.svg'
 import loadingSpinner from '$lib/assets/loadingSpinner.svg'
 import { triggerChangeEvent } from '$lib/utils'
 
-let { editor, attrs, node, selected, getPos }: Props = $props()
+let { attrs, selected }: Props = $props()
 
 let descriptionType = $state<PerkTypes | 'none'>('none')
 let loadingDescription = $state(false)
+
+let description = $state('')
 
 const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget }) => {
   const spinnerDelay = setTimeout(() => {
@@ -22,14 +24,7 @@ const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget
 
   $attrs!.hash = parseInt(hash)
 
-  const description = await fetch(`/api/description?hash=${hash}`).then((res) => res.text())
-  const pos = { from: getPos() + 1, to: node.content.size + getPos() + 1 }
-
-  if (description.trim() === '') {
-    editor.chain().insertContentAt(pos, '<div></div>').run()
-  } else {
-    editor.chain().insertContentAt(pos, description).run()
-  }
+  description = await fetch(`/api/description?hash=${hash}`).then((res) => res.text())
   clearTimeout(spinnerDelay)
   loadingDescription = false
 }
@@ -64,8 +59,8 @@ const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget
       <img src={loadingSpinner} alt="loading spinner" />
     {/if}
   </div>
-  <div contenteditable="false" class="description">
-    <STT_Editable />
+  <div class="description" contenteditable="false">
+    {@html description}
   </div>
 </STT_Component>
 
