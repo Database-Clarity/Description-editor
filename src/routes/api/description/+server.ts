@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types'
-import { squeal_ as squeal_ } from '$lib/server/squeal'
+import { sql } from '$lib/server/squeal'
 import { languageCodes, type LanguageCode } from '$lib/types'
 import type postgres from 'postgres'
 import { trimEmptyDivElements } from '$lib/utils'
@@ -33,13 +33,13 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   try {
-    const description = await squeal_<Description[]>`
+    const description = await sql<Description[]>`
     SELECT "description"
-    FROM ${squeal_(lang)}
+    FROM ${sql(lang)}
     WHERE "hash" = ${hash}
     AND timestamp = (
       SELECT MAX(timestamp)
-      FROM ${squeal_(lang)}
+      FROM ${sql(lang)}
       WHERE hash = ${hash}
     )`
 

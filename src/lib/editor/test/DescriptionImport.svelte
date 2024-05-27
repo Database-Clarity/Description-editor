@@ -37,7 +37,7 @@ const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget
 
 <STT_Component>
   <div class="top-bar" class:selected contenteditable="false">
-    <div draggable="true" data-drag-handle contenteditable="false">
+    <div draggable="true" data-drag-handle>
       <img src={dragHandleSVG} alt="drag handle" class="drag-handle" />
     </div>
     <select bind:value={descriptionType} class="type-select">
@@ -51,7 +51,7 @@ const perkChange: ChangeEventHandler<HTMLSelectElement> = async ({ currentTarget
         </optgroup>
       {/each}
     </select>
-    <select onchange={perkChange} use:triggerChangeEvent class="perk-select" contenteditable="false">
+    <select onchange={perkChange} use:triggerChangeEvent class="perk-select">
       {#await $descriptionImportStore}
         <option>Loading...</option>
       {:then perks}

@@ -8,7 +8,6 @@ import Document from '@tiptap/extension-document'
 import Dropcursor from '@tiptap/extension-dropcursor'
 import { Enhanced } from './editor/extensions/enhanced'
 import Gapcursor from '@tiptap/extension-gapcursor'
-// import HardBreak from '@tiptap/extension-hard-break'
 import History from '@tiptap/extension-history'
 import { Images } from './editor/extensions/images'
 import { Link } from './editor/extensions/link'
@@ -19,6 +18,8 @@ import TableRow from '@tiptap/extension-table-row'
 import Text from '@tiptap/extension-text'
 import { TextAlign } from './editor/extensions/alignment'
 import { TextColor } from './editor/extensions/textColor'
+
+// import HardBreak from '@tiptap/extension-hard-break'
 
 export const extensions = [
   // Non optional extensions required for editor to work properly
@@ -43,10 +44,7 @@ export const extensions = [
     width: 2,
     color: '#00cc11',
   }),
-  Gapcursor.configure({
-    width: 2,
-    color: '#00cc11',
-  }),
+  Gapcursor,
 
   // HardBreak,
 

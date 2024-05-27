@@ -1,6 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 
 import type { LanguageCode } from '$lib/types.js'
+import { redirect } from '@sveltejs/kit'
 import { sql } from '$lib/server/squeal'
 import { trimEmptyDivElements } from '$lib/utils.js'
 

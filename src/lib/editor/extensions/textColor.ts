@@ -1,4 +1,4 @@
-import { Mark, markPasteRule, mergeAttributes } from '@tiptap/core'
+import { Mark, mergeAttributes } from '@tiptap/core'
 
 export const textColors = ['default', 'blue', 'green', 'yellow', 'purple', 'pvp', 'pve'] as const
 export type TextColors = (typeof textColors)[number]
