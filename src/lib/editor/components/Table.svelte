@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/core'
 import type { Writable } from 'svelte/store'
 import tableSVG from '$lib/assets/table.svg'
 import Button from './Button.svelte'
+import DropDown from '$lib/components/DropDown.svelte'
 
 let { editor }: { editor: Writable<Editor | undefined> } = $props()
 
@@ -35,54 +36,46 @@ const addRowColumn = (location: 'RowAfter' | 'RowBefore' | 'ColumnAfter' | 'Colu
 const removeRowColumn = (location: 'Column' | 'Row') => {
   $editor?.chain().focus()[`delete${location}`]().run()
 }
-
-let dropdownOpen = $state<boolean>(false)
-const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
-  if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
-  dropdownOpen = false
-}
 </script>
 
-<div onfocusout={handleFocusLoss} class="dropDown">
-  <Button onclick={() => (dropdownOpen = !dropdownOpen)}>
-    <img src={tableSVG} alt="table" />
-    <span>Table</span>
-  </Button>
+<DropDown class="flex flex-col rounded">
+  {#snippet button(onclick)}
+    <Button {onclick}>
+      <img src={tableSVG} alt="table" />
+      <span>Table</span>
+    </Button>
+  {/snippet}
 
-  {#if dropdownOpen}
-    <div class="dropDownContent">
-      <div class="headerInput">
-        <label for="include header">Header row?</label>
-        <input type="checkbox" name="include header" bind:checked={withHeaderRow} />
-      </div>
-      <div class="tableSelection">
-        {#each Array(7) as _, rowIndex}
-          {#each Array(7) as _, columnIndex}
-            <button
-              onclick={addTable}
-              onmouseenter={() => setData(columnIndex, rowIndex)}
-              onmouseleave={resetData}
-              class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''}`}>
-              {columnIndex === 0 ? rowIndex + 2 : ''}
-              {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
-            </button>
-          {/each}
-        {/each}
-      </div>
-      <button>Merge</button>
-      <button>Split</button>
-      <div>Add/Remove Row/Column</div>
-      <div class="insert-remove">
-        <button class="delete-column" onclick={() => removeRowColumn('Column')}>Remove</button>
-        <button class="delete-row" onclick={() => removeRowColumn('Row')}>Remove</button>
-        <button class="row-above" onclick={() => addRowColumn('RowBefore')}>Add</button>
-        <button class="row-bellow" onclick={() => addRowColumn('RowAfter')}>Add</button>
-        <button class="column-left" onclick={() => addRowColumn('ColumnBefore')}>Add</button>
-        <button class="column-right" onclick={() => addRowColumn('ColumnAfter')}>Add</button>
-      </div>
-    </div>
-  {/if}
-</div>
+  <div class="headerInput">
+    <label for="include header">Header row?</label>
+    <input type="checkbox" name="include header" bind:checked={withHeaderRow} />
+  </div>
+  <div class="tableSelection">
+    {#each Array(7) as _, rowIndex}
+      {#each Array(7) as _, columnIndex}
+        <button
+          onclick={addTable}
+          onmouseenter={() => setData(columnIndex, rowIndex)}
+          onmouseleave={resetData}
+          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''}`}>
+          {columnIndex === 0 ? rowIndex + 2 : ''}
+          {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
+        </button>
+      {/each}
+    {/each}
+  </div>
+  <button>Merge</button>
+  <button>Split</button>
+  <div>Add/Remove Row/Column</div>
+  <div class="insert-remove">
+    <button class="delete-column" onclick={() => removeRowColumn('Column')}>Remove</button>
+    <button class="delete-row" onclick={() => removeRowColumn('Row')}>Remove</button>
+    <button class="row-above" onclick={() => addRowColumn('RowBefore')}>Add</button>
+    <button class="row-bellow" onclick={() => addRowColumn('RowAfter')}>Add</button>
+    <button class="column-left" onclick={() => addRowColumn('ColumnBefore')}>Add</button>
+    <button class="column-right" onclick={() => addRowColumn('ColumnAfter')}>Add</button>
+  </div>
+</DropDown>
 
 <style lang="scss">
 .insert-remove {

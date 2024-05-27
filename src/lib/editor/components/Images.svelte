@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/core'
 import { imageNames, type ImageNames } from '../extensions/images'
 import Bungie from '$lib/assets/Bungie.svelte'
 import Button from './Button.svelte'
+import DropDown from '$lib/components/DropDown.svelte'
 
 let {
   editor,
@@ -14,33 +15,20 @@ let {
 const setImg = (imgName: ImageNames) => {
   $editor?.commands.setImage(imgName)
 }
-
-let dropdownOpen = $state<boolean>(false)
-const handleFocusLoss = ({ relatedTarget, currentTarget }: FocusEvent) => {
-  if (relatedTarget && (currentTarget as Node)?.contains(relatedTarget as Node)) return
-  dropdownOpen = true
-}
-
-let randomImgName = $derived.by(() => {
-  dropdownOpen // re-run when dropdownOpen changes
-  return imageNames[Math.floor(Math.random() * imageNames.length)]
-})
 </script>
 
-<div onfocusout={handleFocusLoss}>
-  <Button onclick={() => (dropdownOpen = !dropdownOpen)}>
-    <Bungie img={randomImgName} />
-    <span>Images</span>
-  </Button>
+<DropDown class="flex flex-col rounded">
+  {#snippet button(onclick)}
+    <Button {onclick}>
+      <Bungie img={'strand'} />
+      <span>Images</span>
+    </Button>
+  {/snippet}
 
-  {#if dropdownOpen}
-    <div class="dropDownContent">
-      {#each imageNames as imageName}
-        <Button onclick={() => setImg(imageName)}>
-          <Bungie img={imageName} />
-          <span>{imageName}</span>
-        </Button>
-      {/each}
-    </div>
-  {/if}
-</div>
+  {#each imageNames as imageName}
+    <Button onclick={() => setImg(imageName)}>
+      <Bungie img={imageName} />
+      <span>{imageName}</span>
+    </Button>
+  {/each}
+</DropDown>
