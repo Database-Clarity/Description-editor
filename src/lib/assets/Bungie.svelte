@@ -93,8 +93,8 @@ const xmlns = 'http://www.w3.org/2000/svg'
       d="m9.27 32L22.9 8l-4.36-8L0 32zm10 0 8.91-15.82-4.36-7.64-13.45 23.45zm16-24L48.9 32h9.28L39.63 0zM20.36 32h17.45l-8.72-15.27zm14-23.45L30 16.19l8.91 15.82h8.91zM24.54 8l4.55-8 4.54 8-4.54 7.63z" />
   </svg>
 {:else if img === 'arrow'}
-  <svg {xmlns} viewBox="0 0 58.18 32" fill="#e7a704">
-    <path d="" />
+  <svg {xmlns} viewBox="0 0 32 32" fill="#f2d164">
+    <path d="m16 0 10 10-7 0 0 22-6 0 0-22-7 0z" />
   </svg>
 {/if}
 

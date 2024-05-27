@@ -77,6 +77,7 @@ const dump = () => {
       <EditorButton {editor} type="bulletList" title="TAB" />
       <EditorButton {editor} type="comment" title="CTRL + /" />
       <EditorButton {editor} type="import" title="" />
+      <EditorButton {editor} type="enhanced" title="" />
       <TextColor {editor} />
       <Images {editor} />
       <Table {editor} />

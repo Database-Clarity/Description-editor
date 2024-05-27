@@ -6,6 +6,7 @@ import { DescriptionImportExtension } from './editor/test/descriptionImport'
 import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
 import Dropcursor from '@tiptap/extension-dropcursor'
+import { Enhanced } from './editor/extensions/enhanced'
 import Gapcursor from '@tiptap/extension-gapcursor'
 // import HardBreak from '@tiptap/extension-hard-break'
 import History from '@tiptap/extension-history'
@@ -35,6 +36,7 @@ export const extensions = [
   BulletList,
   Comment,
   TextColor,
+  Enhanced,
   Images,
   Link,
   Dropcursor.configure({
