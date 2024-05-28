@@ -57,7 +57,8 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
           onclick={addTable}
           onmouseenter={() => setData(columnIndex, rowIndex)}
           onmouseleave={resetData}
-          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''}`}>
+          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''}`}
+        >
           {columnIndex === 0 ? rowIndex + 2 : ''}
           {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
         </button>

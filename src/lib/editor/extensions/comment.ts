@@ -37,7 +37,7 @@ export const Comment = Mark.create({
         getAttrs: (node) => {
           return node.classList.contains('text-comment') ? {} : false
         },
-      }
+      },
     ]
   },
 

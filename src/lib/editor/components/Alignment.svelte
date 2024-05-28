@@ -1,10 +1,10 @@
 <script lang="ts">
+import DropDown from '$lib/components/DropDown.svelte'
 import type { Writable } from 'svelte/store'
 import type { Editor } from '@tiptap/core'
 import { alignments, type Alignments } from '../extensions/alignment'
 import Alignment from '$lib/assets/Alignment.svelte'
 import Button from './Button.svelte'
-import DropDown from '$lib/components/DropDown.svelte'
 
 let { editor }: { editor: Writable<Editor | undefined> } = $props()
 

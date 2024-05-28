@@ -21,7 +21,8 @@ const {
   data-node-view-wrapper=""
   role="none"
   {ondragstart}
-  {...restProps}>
+  {...restProps}
+>
   {#if children}
     {@render children()}
   {/if}

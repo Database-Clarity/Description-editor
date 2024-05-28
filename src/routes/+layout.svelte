@@ -6,7 +6,7 @@ const { children } = $props()
 </script>
 
 <header>
-  <nav class="bg-neutral-800 mb-2">
+  <nav class="mb-2 bg-neutral-800">
     <div>Nav bar work in progress</div>
     <a href="/">Home</a>
     <a href="/descriptionEditor/">Description Editor</a>
