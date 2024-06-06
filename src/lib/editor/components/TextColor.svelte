@@ -14,18 +14,18 @@ const setTextColor = (color: TextColors) => {
 }
 </script>
 
-<DropDown class="flex flex-col rounded">
+<DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
     <Button {onclick}>
       <TextColorSvg color={currentColor} />
-      <span class={currentColor}>{currentColor}</span>
+      <span class="{currentColor} capitalize">{currentColor}</span>
     </Button>
   {/snippet}
 
   {#each textColors as color}
     <Button onclick={() => setTextColor(color)}>
       <TextColorSvg {color} />
-      <span class={color}>{color}</span>
+      <span class="{color} capitalize">{color}</span>
     </Button>
   {/each}
 </DropDown>

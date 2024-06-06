@@ -14,18 +14,18 @@ const setTextAlign = (align: Alignments) => {
 }
 </script>
 
-<DropDown class="flex flex-col rounded">
+<DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
     <Button {onclick}>
       <Alignment align={currentAlignment} />
-      <span class={currentAlignment}>{currentAlignment}</span>
+      <span class="{currentAlignment} capitalize">{currentAlignment}</span>
     </Button>
   {/snippet}
 
   {#each alignments as alignment}
     <Button onclick={() => setTextAlign(alignment)}>
       <Alignment align={alignment} />
-      <span class={alignment}>{alignment}</span>
+      <span class="{alignment} capitalize">{alignment}</span>
     </Button>
   {/each}
 </DropDown>

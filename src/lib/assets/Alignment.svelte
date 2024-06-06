@@ -5,33 +5,22 @@ type Alignment = {
 
 const { align }: Alignment = $props()
 
-const fill = '#d9d9d9'
-
-const className = 'h-5 w-6 fill-'
+const className = 'h-5 px-1 fill-LM-text dark:fill-DM-text'
 </script>
 
 {#if align === 'left'}
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {fill} class={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 24" class="{className}">
     <path
-      d="m14 17a1 1 0 010 2H3a1 1 0 010-2h11zm7-6a1 1 0 010 2H3a1 1 0 010-2h18zm-3-6a1 1 0 010 2H3a1 1 0 010-2h15z"
-    />
+      d="m12 18a1 1 0 010 2H1a1 1 0 010-2zm7-7a1 1 0 010 2H1a1 1 0 010-2zm-3-7a1 1 0 010 2H1a1 1 0 010-2z" />
   </svg>
 {:else if align === 'center'}
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {fill}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 24" class={className}>
     <path
-      d="m17 17a1 1 0 110 2H7a1 1 0 110-2h10zm4-6a1 1 0 010 2H3a1 1 0 010-2h18zm-2-6a1 1 0 110 2H5a1 1 0 110-2h14z"
-    />
+      d="m15 18a1 1 0 110 2H4a1 1 0 110-2zm4-7a1 1 0 010 2H1a1 1 0 010-2zm-2-7a1 1 0 110 2H3a1 1 0 110-2z" />
   </svg>
 {:else if align === 'right'}
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {fill}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 24" class={className}>
     <path
-      d="m21 17a1 1 0 110 2H10a1 1 0 110-2h11zm0-6a1 1 0 010 2H3a1 1 0 010-2h18zm0-6a1 1 0 110 2H6a1 1 0 110-2h15z"
-    />
+      d="m19 18a1 1 0 110 2H8a1 1 0 110-2zm0-7a1 1 0 010 2H1a1 1 0 010-2zm0-7a1 1 0 110 2H4a1 1 0 110-2z" />
   </svg>
 {/if}
-
-<style lang="postcss">
-svg {
-  @apply h-5 w-6;
-}
-</style>

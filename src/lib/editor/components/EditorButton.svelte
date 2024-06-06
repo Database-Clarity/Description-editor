@@ -7,6 +7,7 @@ import BulletList from '$lib/assets/BulletList.svelte'
 import Comment from '$lib/assets/Comment.svelte'
 import Button from './Button.svelte'
 import DescriptionImport from '$lib/assets/DescriptionImport.svelte'
+import Highlight from '$lib/assets/Highlight.svelte'
 
 const {
   editor,
@@ -40,5 +41,5 @@ let active = $derived<boolean>($editor?.isActive(type) || false)
 
 <Button onclick={toggle} {active} {title}>
   <svelte:component this={SVGs[type]} />
-  <span>{type}</span>
+  <span class="capitalize">{type}</span>
 </Button>

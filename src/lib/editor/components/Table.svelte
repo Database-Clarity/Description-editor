@@ -38,7 +38,7 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
 }
 </script>
 
-<DropDown class="flex flex-col rounded">
+<DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
     <Button {onclick}>
       <img src={tableSVG} alt="table" />
@@ -57,8 +57,7 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
           onclick={addTable}
           onmouseenter={() => setData(columnIndex, rowIndex)}
           onmouseleave={resetData}
-          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''}`}
-        >
+          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''} flex h-5 w-5 items-center justify-center border`}>
           {columnIndex === 0 ? rowIndex + 2 : ''}
           {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
         </button>
