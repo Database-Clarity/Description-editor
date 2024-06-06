@@ -1,10 +1,15 @@
 {
   "recommendations": [
     // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+    "formulahendry.auto-rename-tag",
     "streetsidesoftware.code-spell-checker",
+    "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "yoavbls.pretty-ts-errors",
-    "1yib.svelte-bundle",
-    "dbaeumer.vscode-eslint"
-  ]
+    "fivethree.vscode-svelte-snippets",
+    "svelte.svelte-vscode",
+    "bradlc.vscode-tailwindcss",
+    "stivo.tailwind-fold",
+    "gruntfuggly.todo-tree"
+  ],
 }
