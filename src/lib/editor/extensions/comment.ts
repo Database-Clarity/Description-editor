@@ -4,7 +4,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     comment: {
       /**
-       * Set text color
+       * Toggle a comment mark
        */
       toggleComment: () => ReturnType
     }
@@ -17,7 +17,7 @@ export const Comment = Mark.create({
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'text-comment',
+        class: 'comment',
       },
     }
   },
@@ -35,7 +35,7 @@ export const Comment = Mark.create({
       {
         tag: 'span',
         getAttrs: (node) => {
-          return node.classList.contains('text-comment') ? {} : false
+          return node.classList.contains('comment') ? {} : false
         },
       },
     ]
