@@ -18,6 +18,7 @@ import TableRow from '@tiptap/extension-table-row'
 import Text from '@tiptap/extension-text'
 import { TextAlign } from './editor/extensions/alignment'
 import { TextColor } from './editor/extensions/textColor'
+import { Highlight } from './editor/extensions/highlight'
 
 // import HardBreak from '@tiptap/extension-hard-break'
 
@@ -40,6 +41,7 @@ export const extensions = [
   Enhanced,
   Images,
   Link,
+  Highlight,
   Dropcursor.configure({
     width: 2,
     color: '#00cc11',

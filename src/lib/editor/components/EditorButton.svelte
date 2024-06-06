@@ -14,7 +14,7 @@ const {
   title,
 }: {
   editor: Writable<Editor | undefined>
-  type: 'bold' | 'bulletList' | 'comment' | 'import' | 'enhanced'
+  type: 'bold' | 'bulletList' | 'comment' | 'import' | 'enhanced' | 'highlight'
   title: string
 } = $props()
 
@@ -24,6 +24,7 @@ const SVGs = {
   comment: Comment,
   import: DescriptionImport,
   enhanced: Bold,
+  highlight: Highlight,
 }
 
 const toggle = () => {

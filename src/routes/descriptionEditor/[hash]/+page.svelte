@@ -78,6 +78,7 @@ const dump = () => {
       <EditorButton {editor} type="comment" title="CTRL + /" />
       <EditorButton {editor} type="import" title="" />
       <EditorButton {editor} type="enhanced" title="" />
+      <EditorButton {editor} type="highlight" title="" />
       <TextColor {editor} />
       <Images {editor} />
       <Table {editor} />
