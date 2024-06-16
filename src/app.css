@@ -38,7 +38,6 @@ body {
 }
 .highlight {
   background-color: hsla(0, 0%, 100%, 0.20);
-  color: hsl(0, 0%, 95%);
 }
 
 .enhanced {
@@ -99,4 +98,11 @@ body {
 
 .arrow {
   color: hsl(46, 87%, 64%);
+}
+
+.barrier,
+.overload,
+.unstoppable,
+.primary {
+  @apply text-DM-10 dark:text-LM-10;
 }

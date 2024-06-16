@@ -14,6 +14,9 @@ let {
   hash,
 }: {
   perksPromise: PendingQuery<Perk[]>
+  /**
+   * Language code
+   */
   lang: LanguageCode
   editor: Writable<Editor | undefined>
   hash: number
@@ -63,12 +66,6 @@ perksPromise.then((perksList) => {
       {/each}
     {/await}
   </select>
-
-  <!-- <select bind:value={sidebarStore.language}>
-  {#each languageCodes as language}
-    <option value={language}>{languageNames[language]}</option>
-  {/each}
-</select> -->
 </div>
 
 <style lang="scss">

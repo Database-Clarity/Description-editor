@@ -47,7 +47,7 @@ export const TextAlign = Extension.create<TextAlignOptions>({
               if (match) {
                 return match[0]
               }
-              return false
+              // return false
             },
             renderHTML: (attributes) => {
               if (attributes.class === this.options.defaultAlignment) {

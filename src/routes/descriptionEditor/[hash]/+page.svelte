@@ -59,7 +59,6 @@ beforeNavigate(({ from, to }) => {
       live: false,
       ready: false,
       hash: hash,
-      username: 'Icemourne',
     }),
   })
 })
@@ -139,7 +138,7 @@ const dump = () => {
   padding: 0.3rem;
 }
 .descriptionEditor {
-  height: 50vh;
+  height: 60vh;
 }
 
 .bubbleMenu {

@@ -20,8 +20,6 @@ import { TextAlign } from './editor/extensions/alignment'
 import { TextColor } from './editor/extensions/textColor'
 import { Highlight } from './editor/extensions/highlight'
 
-// import HardBreak from '@tiptap/extension-hard-break'
-
 export const extensions = [
   // Non optional extensions required for editor to work properly
   Document,
@@ -48,7 +46,6 @@ export const extensions = [
   }),
   Gapcursor,
 
-  // HardBreak,
 
   Table,
   TableRow,

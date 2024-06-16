@@ -103,17 +103,6 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
 </DropDown>
 
 <style>
-/* .tableSelection button {
-  border: 1px solid hsl(0, 0%, 80%);
-  // background-color: hsl(0, 0%, 15%);
-} */
-/* .tableSelection {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  border-radius: 5px;
-  width: min-content;
-} */
 .highlight {
   background-color: hsl(120, 100%, 25%) !important;
 }
