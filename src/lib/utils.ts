@@ -48,3 +48,20 @@ export function trimEmptyDivElements(html: string) {
     .replace(/^(<div>\s*<\/div>)+/, '')
     .trim()
 }
+
+export function cookiesFromString(cookieString: string, cookieNames: string[]) {
+  const cookies = cookieString.split(';').map((cookie) => cookie.split('='))
+
+  const cookieMap = new Map<string, string>()
+  for (const [key, value] of cookies) {
+    cookieMap.set(key.trim(), value.trim())
+  }
+  // return object with cookies
+  return cookieNames.reduce(
+    (acc, key) => {
+      acc[key] = cookieMap.get(key)!
+      return acc
+    },
+    {} as Record<string, string>
+  )
+}
