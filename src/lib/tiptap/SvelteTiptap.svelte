@@ -46,6 +46,9 @@ onMount(() => {
       //   return false
       // },
       ...bubbleSettings,
+      tippyOptions: {
+        maxWidth: 'none',
+      },
     })
     $editor?.registerPlugin(bubbleMenuPlugin)
   }

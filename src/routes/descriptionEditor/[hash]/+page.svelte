@@ -13,6 +13,7 @@ import Table from '$lib/editor/components/Table.svelte'
 import { beforeNavigate, afterNavigate } from '$app/navigation'
 import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
 import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
+import { cookiesFromString } from '$lib/utils'
 
 const { data } = $props()
 
@@ -39,11 +40,23 @@ afterNavigate(({ to }) => {
 beforeNavigate(({ from, to }) => {
   const hash = from?.params?.hash
 
+  const { username, role } = cookiesFromString(document.cookie, ['username', 'role'])
+
+  if (
+    // Kill it if data is missing
+    !hash ||
+    !$editor ||
+    !username ||
+    !role
+  ) {
+    return
+  }
+
   if (
     // Kill it if:
-    hash === undefined || // Hash is missing
     hash === to?.params?.hash || // User navigates to the same page
-    $editor?.getText().trim() === '' // Editor is empty
+    $editor.getText().trim() === '' || // Editor is empty
+    (role !== 'admin' && role !== 'editor') // User is not an admin or editor
   ) {
     return
   }
@@ -88,6 +101,8 @@ const dump = () => {
           <div class="bubbleMenu">
             <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
             <EditorButton {editor} type="comment" title="CTRL + /" />
+            <EditorButton {editor} type="enhanced" title="" />
+            <EditorButton {editor} type="highlight" title="" />
             <TextColor {editor} />
           </div>
         {/snippet}

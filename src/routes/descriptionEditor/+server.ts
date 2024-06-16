@@ -1,9 +1,9 @@
 import { error, json } from '@sveltejs/kit'
 
 import type { LanguageCode } from '$lib/types.js'
-import { redirect } from '@sveltejs/kit'
 import { sql } from '$lib/server/squeal'
 import { trimEmptyDivElements } from '$lib/utils.js'
+import { decrypt } from '$lib/server/encryption'
 
 type RequestJson = {
   lang: LanguageCode
@@ -11,11 +11,34 @@ type RequestJson = {
   live: boolean
   ready: boolean
   hash: number
-  username: string
 }
 
 export async function POST({ request, cookies }) {
-  const { lang, description, live, ready, hash, username }: RequestJson = await request.json()
+  const { lang, description, live, ready, hash }: RequestJson = await request.json()
+
+  const username = cookies.get('username')
+  if (!username) {
+    error(401, 'Invalid username')
+  }
+  const role = cookies.get('role')
+  if (!role || (role !== 'admin' && role !== 'editor')) {
+    error(401, 'Invalid role')
+  }
+  const decrypted_id = decrypt(cookies.get('membershipId')!)
+  if (!decrypted_id) {
+    error(401, 'Invalid membership_id')
+  }
+
+  const hasPermission = await sql`
+    SELECT role
+    FROM "user"
+    WHERE "membership_id" = ${decrypted_id}
+    AND "role" IN ('admin', 'editor')
+  `
+
+  if (hasPermission.length === 0 || hasPermission[0].role !== role) {
+    error(401, 'Role provided in the cookie does not match the one in the database')
+  }
 
   const trimmedDescription = trimEmptyDivElements(description)
 
@@ -32,7 +55,7 @@ export async function POST({ request, cookies }) {
     UPDATE ${sql(lang)}
     SET
       "description" = ${trimmedDescription},
-      "username" = ${username},
+      "username" = ${cookies.get('username')!},
       "live" = ${live},
       "ready" = ${ready},
       "timestamp" = CURRENT_TIMESTAMP
@@ -52,7 +75,7 @@ export async function POST({ request, cookies }) {
     INSERT INTO ${sql(lang)}
       ("description",  "username",  "live",  "ready",  "timestamp",  "hash")
     SELECT
-      ${trimmedDescription}, ${username}, ${live}, ${ready}, ${timestamp}, ${hash}
+      ${trimmedDescription}, ${cookies.get('username')!}, ${live}, ${ready}, ${timestamp}, ${hash}
     WHERE NOT EXISTS ( -- this mess is for comparing the description with the latest one
       SELECT 1
       FROM ${sql(lang)} e2 -- e2 is a reference to the table in the outer query

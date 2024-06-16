@@ -13,6 +13,7 @@ declare module '@tiptap/core' {
 
 export const Enhanced = Mark.create({
   name: 'enhanced',
+  priority: 101,
 
   inclusive: false,
 

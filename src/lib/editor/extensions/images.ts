@@ -75,7 +75,7 @@ export const Images = Mark.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes, mark }) {
     return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
   },
 
