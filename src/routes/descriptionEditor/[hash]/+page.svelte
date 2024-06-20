@@ -56,7 +56,6 @@ beforeNavigate(({ from, to }) => {
   if (
     // Kill it if:
     hash === to?.params?.hash || // User navigates to the same page
-    $editor.getText().trim() === '' || // Editor is empty
     (role !== 'admin' && role !== 'editor') // User is not an admin or editor
   ) {
     return

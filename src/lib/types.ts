@@ -1,3 +1,4 @@
+import type { Perk } from './server/queries'
 import { TypedObject } from './utils'
 import type postgres from 'postgres'
 
@@ -42,17 +43,17 @@ export const perkTypes = [
 export type PerkTypes = (typeof perkTypes)[number]
 
 export const languageNames = {
-  en: 'English',
-  de: 'German',
-  es: 'Spanish',
+  'en': 'English',
+  'de': 'German',
+  'es': 'Spanish',
   'es-mx': 'Spanish (Mexico)',
-  fr: 'French',
-  it: 'Italian',
-  ja: 'Japanese',
-  ko: 'Korean',
-  pl: 'Polish',
+  'fr': 'French',
+  'it': 'Italian',
+  'ja': 'Japanese',
+  'ko': 'Korean',
+  'pl': 'Polish',
   'pt-br': 'Portuguese (Brazil)',
-  ru: 'Russian',
+  'ru': 'Russian',
   'zh-chs': 'Chinese (Simplified)',
   'zh-cht': 'Chinese (Traditional)',
 } as const
@@ -68,23 +69,17 @@ export type LanguageCodeUnderscore = ReplaceDashWithUnderscore<LanguageCode>
 export const editorTypes = ['normal', 'dual', 'multiLanguage'] as const
 export type EditorType = (typeof editorTypes)[number]
 
-export type Perk = {
-  hash: number
-  name: string
-  type: PerkTypes
-}
-
 export type EditorLayoutData = {
   perksPromise: PendingQuery<Perk[]>
   lang: LanguageCode
 }
 
 export const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } } = {
-  Exotics: {
+  'Exotics': {
     'Armor Trait Exotic': 'Armor',
     'Weapon Frame Exotic': 'Weapon',
   },
-  Weapon: {
+  'Weapon': {
     'Weapon Trait': 'Trait',
     // 'Weapon Trait Enhanced': 'Enhanced Trait', // removed from database
     'Weapon Perk': 'Perk',
@@ -101,7 +96,7 @@ export const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } 
     'Subclass Class': 'Class',
     'Subclass Movement': 'Movement',
   },
-  Mods: {
+  'Mods': {
     'Armor Mod General': 'Armor General',
     'Armor Mod Activity': 'Armor Activity',
     'Armor Mod Seasonal': 'Armor Seasonal',

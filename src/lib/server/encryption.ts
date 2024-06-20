@@ -22,7 +22,9 @@ export function decrypt(encryptedText: string) {
 
   try {
     text = decipher.update(encryptedText, 'hex', 'utf8') + decipher.final('utf8')
-  } catch {}
+  } catch {
+    return undefined
+  }
 
   return text
 }

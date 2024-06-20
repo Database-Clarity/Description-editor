@@ -39,7 +39,7 @@ declare module '@tiptap/core' {
 export const Images = Mark.create({
   name: 'image',
 
-  // can't be inside any other mark
+  // can't be inside in the following marks
   excludes: 'bold textColor',
 
   // then typing at the end of a mark, should new text be inside of the mark?
@@ -75,7 +75,7 @@ export const Images = Mark.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes, mark }) {
+  renderHTML({ HTMLAttributes }) {
     return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
   },
 
@@ -93,25 +93,4 @@ export const Images = Mark.create({
         },
     }
   },
-
-  // addPasteRules() {
-  //   const regex = /<void\/>/
-  //   return [
-  //     markPasteRule({
-  //       find: regex,
-  //       type: this.editor.schema.marks.image,
-
-  //     }),
-  //   ]
-  // },
-
-  // addKeyboardShortcuts() {
-  //   return {
-  //     'shift-2': () => {
-  //       console.log('shift-2')
-
-  //       return this.editor.commands.toggleMark(this.name)
-  //     },
-  //   }
-  // },
 })

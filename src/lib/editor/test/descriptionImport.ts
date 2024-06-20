@@ -1,11 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core'
-import type { PendingQuery, Perk } from '$lib/types'
-import { mount, unmount } from 'svelte'
-
-import Component from './Component.svelte'
+import type { PendingQuery } from '$lib/types'
 import DescriptionImport from './DescriptionImport.svelte'
 import SvelteNodeViewRenderer from '$lib/tiptap/node.svelte'
 import { writable } from 'svelte/store'
+import type { Perk } from '$lib/server/queries'
 
 /**
  * It is used for one edge case and that is only place it should be used.

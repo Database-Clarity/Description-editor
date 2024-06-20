@@ -58,7 +58,7 @@ export const load = (async ({ url, cookies }) => {
       DO UPDATE SET membership_id = ${user.membershipId}
       RETURNING role;
     `
-    cookies.set('role', role[0].role ?? 'user', { path: '/', maxAge: authResponse.refresh_expires_in, httpOnly: false })
+    cookies.set('role', role[0].role ?? 'user', { path: '/', maxAge: 60 * 60 * 24 * 180, httpOnly: false })
   } catch {
     return { success: false }
   }

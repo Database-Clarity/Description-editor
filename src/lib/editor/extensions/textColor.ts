@@ -41,9 +41,10 @@ export const TextColor = Mark.create({
     return [
       {
         tag: 'span',
+        // Attributes returned from the getAttrs function are ignored as should be expected from these idiots
         getAttrs: (node) => {
-          for (const iterator of node.classList) {
-            if (textColors.includes(iterator as TextColors)) return { class: iterator }
+          for (const className of node.classList) {
+            if (textColors.includes(className as TextColors)) return { class: className }
           }
           return false
         },

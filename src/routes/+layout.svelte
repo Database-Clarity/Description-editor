@@ -11,8 +11,6 @@ const openLoginPage = () => {
     'width=800,height=600'
   )
 }
-
-console.log(data)
 </script>
 
 <header class="bg-DM-15 px-2 py-1">
