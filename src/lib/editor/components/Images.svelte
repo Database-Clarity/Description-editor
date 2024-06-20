@@ -28,7 +28,7 @@ const setImg = (imgName: ImageNames) => {
   {#each imageNames as imageName}
     <Button onclick={() => setImg(imageName)}>
       <Bungie img={imageName} />
-      <span class="w-[4.5rem] overflow-hidden text-ellipsis whitespace-nowrap text-start capitalize">{imageName}</span>
+      <span class="w-20 overflow-hidden text-ellipsis whitespace-nowrap text-start capitalize">{imageName}</span>
     </Button>
   {/each}
 </DropDown>

@@ -39,32 +39,27 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
 }
 </script>
 
-<DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
+<DropDown class="flex w-28 flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
-    <Button {onclick} class="w-32">
+    <Button {onclick}>
       <TableSVG img="table" />
-      Table
+      <span>Table</span>
     </Button>
   {/snippet}
 
-  <div class="self-center">Include header</div>
-  <Button onclick={() => (horizontalHeader = !horizontalHeader)} active={horizontalHeader} class="w-32">
-    <TableSVG img="removeRow" />
-    Horizontal
-  </Button>
-  <Button onclick={() => (VerticalHeader = !VerticalHeader)} active={VerticalHeader} class="w-32">
-    <TableSVG img="removeRow" />
-    Vertical
-  </Button>
+  <div class="self-center">Header</div>
+  <Button onclick={() => (horizontalHeader = !horizontalHeader)} active={horizontalHeader} class="pl-1"
+    >Horizontal</Button>
+  <Button onclick={() => (VerticalHeader = !VerticalHeader)} active={VerticalHeader} class="pl-1">Vertical</Button>
 
-  <div class="tableSelection grid grid-cols-6 grid-rows-6 p-1">
-    {#each Array(6) as _, rowIndex}
-      {#each Array(6) as _, columnIndex}
+  <div class="tableSelection grid grid-cols-5 grid-rows-5 px-1">
+    {#each Array(5) as _, rowIndex}
+      {#each Array(5) as _, columnIndex}
         <button
           onclick={addTable}
           onmouseenter={() => setData(columnIndex, rowIndex)}
           onmouseleave={resetData}
-          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''} flex h-5 w-5 items-center justify-center border`}>
+          class={`${columnIndex < cols - 1 && rowIndex < rows - 1 ? 'highlight' : ''} flex h-5 w-full items-center justify-center border`}>
           {columnIndex === 0 ? rowIndex + 2 : ''}
           {rowIndex === 0 && columnIndex !== 0 ? columnIndex + 2 : ''}
         </button>
@@ -72,34 +67,32 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
     {/each}
   </div>
 
-  <Button class="w-32"><TableSVG img="merge" />Merge</Button>
-  <Button class="w-32"><TableSVG img="split" />Split</Button>
+  <Button class="pl-1">Merge</Button>
+  <Button class="pl-1">Split</Button>
 
-  <Button onclick={() => addRowColumn('ColumnBefore')} class="w-32">
-    <TableSVG img="addColLeft" />
-    + Col left
+  <Button onclick={() => addRowColumn('ColumnBefore')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">+</span>
+    <span>Col left</span>
   </Button>
-  <Button onclick={() => addRowColumn('ColumnAfter')} class="w-32">
-    <TableSVG img="addColRight" />
-    + Col right
+  <Button onclick={() => addRowColumn('ColumnAfter')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">+</span>
+    <span>Col right</span>
   </Button>
-  <Button onclick={() => addRowColumn('RowBefore')} class="w-32">
-    <TableSVG img="addRowAbove" />
-    + Row above
+  <Button onclick={() => addRowColumn('RowBefore')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">+</span>
+    <span>Row above</span>
   </Button>
-  <Button onclick={() => addRowColumn('RowAfter')} class="w-32">
-    <TableSVG img="addRowBelow" />
-    + Row bellow
+  <Button onclick={() => addRowColumn('RowAfter')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">+</span>
+    <span>Row bellow</span>
   </Button>
 
-  <Button onclick={() => removeRowColumn('Column')} class="w-32">
-    <TableSVG img="removeCol" />
-    - Col
+  <Button onclick={() => removeRowColumn('Column')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">-</span>
+    <span>Col</span>
   </Button>
-  <Button onclick={() => removeRowColumn('Row')} class="w-32">
-    <TableSVG img="removeRow" />
-    - Row
-  </Button>
+  <Button onclick={() => removeRowColumn('Row')} class="grid-cols-[1fr_6fr] pl-1">
+    <span class="w-2">-</span><span>Row</span></Button>
 </DropDown>
 
 <style>

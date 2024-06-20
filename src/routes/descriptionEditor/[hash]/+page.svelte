@@ -81,9 +81,9 @@ const dump = () => {
 }
 </script>
 
-<div class="editor">
+<div class="flex flex-row flex-wrap justify-center gap-2">
   <div>
-    <div class="buttons">
+    <div class="flex flex-row flex-wrap gap-1 p-1">
       <Alignment {editor} />
       <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
       <EditorButton {editor} type="bulletList" title="TAB" />
@@ -95,7 +95,7 @@ const dump = () => {
       <Images {editor} />
       <Table {editor} />
     </div>
-    <div class="descriptionEditor editorStyles">
+    <div class="editorStyles h-[60vh] bg-tint-dark px-2">
       <SvelteTiptap {editor} {editorSettings}>
         {#snippet bubbleMenu()}
           <div class="bubbleMenu">
@@ -137,25 +137,7 @@ const dump = () => {
   <!-- {/await} -->
 </svelte:head>
 
-<style lang="scss">
-.editor {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-.buttons {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  padding: 0.3rem;
-}
-.descriptionEditor {
-  height: 60vh;
-}
-
+<style>
 .bubbleMenu {
   display: flex;
   gap: 0.3rem;

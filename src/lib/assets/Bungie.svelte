@@ -21,7 +21,7 @@ type Props = {
 const { img }: Props = $props()
 
 const xmlns = 'http://www.w3.org/2000/svg'
-const style = `h-4 w-8`
+const style = `h-4 w-5`
 </script>
 
 <!-- Elements -->
