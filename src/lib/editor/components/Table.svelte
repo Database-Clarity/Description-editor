@@ -42,7 +42,7 @@ const removeRowColumn = (location: 'Column' | 'Row') => {
 <DropDown class="flex w-28 flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
     <Button {onclick}>
-      <TableSVG img="table" />
+      <TableSVG />
       <span>Table</span>
     </Button>
   {/snippet}
