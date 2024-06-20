@@ -14,6 +14,7 @@ import { beforeNavigate, afterNavigate } from '$app/navigation'
 import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
 import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
 import { cookiesFromString } from '$lib/utils'
+import Link from '$lib/editor/components/Link.svelte'
 
 const { data } = $props()
 
@@ -94,6 +95,7 @@ const dump = () => {
       <TextColor {editor} />
       <Images {editor} />
       <Table {editor} />
+      <Link {editor} />
     </div>
     <div class="editorStyles h-[60vh] bg-tint-dark px-2">
       <SvelteTiptap {editor} {editorSettings}>
@@ -104,6 +106,7 @@ const dump = () => {
             <EditorButton {editor} type="enhanced" title="" />
             <EditorButton {editor} type="highlight" title="" />
             <TextColor {editor} />
+            <Link {editor} />
           </div>
         {/snippet}
       </SvelteTiptap>

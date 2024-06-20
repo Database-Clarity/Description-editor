@@ -47,7 +47,7 @@ export const Link = Mark.create<LinkOptions>({
     return {
       HTMLAttributes: {
         target: '_blank',
-        class: null,
+        class: 'underline',
       },
     }
   },
