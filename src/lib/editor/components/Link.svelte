@@ -3,6 +3,7 @@ import DropDown from '$lib/components/DropDown.svelte'
 import type { Writable } from 'svelte/store'
 import Button from './Button.svelte'
 import type { Editor } from '@tiptap/core'
+import Link from '$lib/assets/Link.svelte'
 
 let { editor }: { editor: Writable<Editor | undefined> } = $props()
 
@@ -21,6 +22,7 @@ const setLink = (url: string) => {
 <DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
   {#snippet button(onclick)}
     <Button {onclick}>
+      <Link />
       <span>Link</span>
     </Button>
   {/snippet}
