@@ -2,7 +2,6 @@
 import { dev } from '$app/environment'
 import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
-import { env } from '$env/dynamic/private'
 import '../app.css'
 
 injectSpeedInsights()
@@ -12,7 +11,7 @@ const { children, data } = $props()
 
 const openLoginPage = () => {
   open(
-    `https://www.bungie.net/en/OAuth/Authorize?client_id=${dev ? env.BUNGIE_CLIENT_ID_DEV : env.BUNGIE_CLIENT_ID}&response_type=code`,
+    `https://www.bungie.net/en/OAuth/Authorize?client_id=${dev ? 40419 : 47338}&response_type=code`,
     '_blank',
     'width=800,height=600'
   )
