@@ -56,6 +56,7 @@ beforeNavigate(({ from, to }) => {
   if (
     // Kill it if:
     hash === to?.params?.hash || // User navigates to the same page
+    hash === '0' || // User navigates to the home page
     (role !== 'admin' && role !== 'editor') // User is not an admin or editor
   ) {
     return

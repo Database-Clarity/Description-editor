@@ -53,7 +53,9 @@ export function cookiesFromString(cookieString: string, cookieNames: string[]) {
   const cookies = cookieString.split(';').map((cookie) => cookie.split('='))
 
   const cookieMap = new Map<string, string>()
+
   for (const [key, value] of cookies) {
+    if (!key || !value) continue
     cookieMap.set(key.trim(), value.trim())
   }
   // return object with cookies
