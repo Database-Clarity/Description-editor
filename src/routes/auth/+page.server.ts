@@ -24,12 +24,16 @@ export const load = (async ({ url, cookies }) => {
   const code = new URLSearchParams(url.search).get('code')
   if (!code) return { success: false }
 
+  const BUNGIE_API_KEY = dev ? env.BUNGIE_API_KEY_DEV : env.BUNGIE_API_KEY
+  const BUNGIE_CLIENT_SECRET = dev ? env.BUNGIE_CLIENT_SECRET_DEV : env.BUNGIE_CLIENT_SECRET
+  const BUNGIE_CLIENT_ID = dev ? env.BUNGIE_CLIENT_ID_DEV : env.BUNGIE_CLIENT_ID
+
   try {
     const authResponse: AuthResponse = await fetch('https://www.bungie.net/Platform/App/OAuth/Token/', {
       method: 'POST',
       headers: {
-        'X-API-Key': env.BUNGIE_API_KEY!,
-        'authorization': `Basic ${Buffer.from(`${dev ? 40419 : 0}:${env.BUNGIE_CLIENT_SECRET}`).toString('base64')}`,
+        'X-API-Key': BUNGIE_API_KEY,
+        'authorization': `Basic ${Buffer.from(`${BUNGIE_CLIENT_ID}:${BUNGIE_CLIENT_SECRET}`).toString('base64')}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: `grant_type=authorization_code&code=${code}`,
@@ -37,7 +41,7 @@ export const load = (async ({ url, cookies }) => {
 
     const user: User = await fetch('https://www.bungie.net/Platform/User/GetMembershipsForCurrentUser/', {
       headers: {
-        'X-API-Key': env.BUNGIE_API_KEY!,
+        'X-API-Key': BUNGIE_API_KEY,
         'authorization': `Bearer ${authResponse.access_token}`,
       },
     })
