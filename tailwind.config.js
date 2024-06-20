@@ -18,6 +18,7 @@ export default {
           text: 'hsl(0, 0%, 15%)',
           accent: 'hsl(120, 100%, 25%)',
         },
+        'tint-dark': 'rgba(0, 0, 0, 0.2)',
       },
     },
   },
