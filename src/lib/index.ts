@@ -46,7 +46,6 @@ export const extensions = [
   }),
   Gapcursor,
 
-
   Table,
   TableRow,
   TableHeader,

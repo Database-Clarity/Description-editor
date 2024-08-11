@@ -15,7 +15,10 @@ const links = [
 ]
 
 const setLink = (url: string) => {
-  $editor?.chain().focus().setLink({ href: url }).run()
+  $editor?.commands.setLink({ href: url })
+}
+const removeLink = () => {
+  $editor?.commands.unsetLink()
 }
 </script>
 
@@ -33,7 +36,10 @@ const setLink = (url: string) => {
     </Button>
   {/each}
   <Button onclick={() => setLink('')}>
-    <span class="text-nowrap pl-1">Custom URL</span>
+    <span class="pl-1">Custom URL</span>
+  </Button>
+  <Button onclick={() => removeLink()}>
+    <span class="pl-1">Remove</span>
   </Button>
 </DropDown>
 

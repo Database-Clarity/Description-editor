@@ -6,12 +6,6 @@ export interface LinkOptions {
    * A list of HTML attributes to be rendered.
    */
   HTMLAttributes: Record<string, unknown>
-  /**
-   * A validation function that modifies link verification for the auto linker.
-   * @param url - The url to be validated.
-   * @returns - True if the url is valid, false otherwise.
-   */
-  // validate?: (url: string) => boolean
 }
 
 declare module '@tiptap/core' {
@@ -21,10 +15,6 @@ declare module '@tiptap/core' {
        * Set a link mark
        */
       setLink: (attributes: { href: string; target?: string | null; class?: string | null }) => ReturnType
-      /**
-       * Toggle a link mark
-       */
-      toggleLink: (attributes: { href: string; target?: string | null; class?: string | null }) => ReturnType
       /**
        * Unset a link mark
        */
@@ -47,7 +37,7 @@ export const Link = Mark.create<LinkOptions>({
     return {
       HTMLAttributes: {
         target: '_blank',
-        class: 'underline',
+        class: 'underline ',
       },
     }
   },
@@ -79,20 +69,18 @@ export const Link = Mark.create<LinkOptions>({
       setLink:
         (attributes) =>
         ({ chain }) => {
-          return chain().setMark(this.name, attributes).run()
+          return chain().focus().setMark(this.name, attributes).run()
         },
-
-      toggleLink:
-        (attributes) =>
-        ({ chain }) => {
-          return chain().toggleMark(this.name, attributes, { extendEmptyMarkRange: true }).run()
-        },
-
       unsetLink:
         () =>
         ({ chain }) => {
-          return chain().unsetMark(this.name, { extendEmptyMarkRange: true }).run()
+          return chain().focus().unsetMark(this.name, { extendEmptyMarkRange: true }).run()
         },
+      // updateLink:
+      //   () =>
+      //   ({ chain }) => {
+      //     return chain().focus().unsetMark(this.name, { extendEmptyMarkRange: true }).run()
+      //   },
     }
   },
 

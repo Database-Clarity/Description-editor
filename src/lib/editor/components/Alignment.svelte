@@ -18,14 +18,14 @@ const setTextAlign = (align: Alignments) => {
   {#snippet button(onclick)}
     <Button {onclick}>
       <Alignment align={currentAlignment} />
-      <span class="{currentAlignment} capitalize">{currentAlignment}</span>
+      <span class={currentAlignment}>{currentAlignment}</span>
     </Button>
   {/snippet}
 
   {#each alignments as alignment}
     <Button onclick={() => setTextAlign(alignment)}>
       <Alignment align={alignment} />
-      <span class="{alignment} capitalize">{alignment}</span>
+      <span class={alignment}>{alignment}</span>
     </Button>
   {/each}
 </DropDown>

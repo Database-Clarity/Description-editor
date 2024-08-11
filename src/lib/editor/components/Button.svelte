@@ -2,11 +2,11 @@
 import type { Snippet } from 'svelte'
 import type { HTMLButtonAttributes } from 'svelte/elements'
 
-interface Props extends HTMLButtonAttributes {
+type Props = {
   children: Snippet
   active?: boolean
   class?: string
-}
+} & HTMLButtonAttributes
 
 let { children, active, class: className, ...props }: Props = $props()
 
@@ -26,5 +26,7 @@ hover:bg-LM-25 hover:dark:bg-DM-25
 <style>
 :global(button > span) {
   justify-self: baseline;
+  text-wrap: nowrap;
+  text-transform: capitalize;
 }
 </style>

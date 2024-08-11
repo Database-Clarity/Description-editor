@@ -18,14 +18,14 @@ const setTextColor = (color: TextColors) => {
   {#snippet button(onclick)}
     <Button {onclick}>
       <TextColorSvg color={currentColor} />
-      <span class="{currentColor} capitalize">{currentColor}</span>
+      <span class={currentColor}>{currentColor}</span>
     </Button>
   {/snippet}
 
   {#each textColors as color}
     <Button onclick={() => setTextColor(color)}>
       <TextColorSvg {color} />
-      <span class="{color} capitalize">{color}</span>
+      <span class={color}>{color}</span>
     </Button>
   {/each}
 </DropDown>

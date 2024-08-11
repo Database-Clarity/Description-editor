@@ -41,5 +41,5 @@ let active = $derived<boolean>($editor?.isActive(type) || false)
 
 <Button onclick={toggle} {active} {title}>
   <svelte:component this={SVGs[type]} />
-  <span class="capitalize">{type}</span>
+  <span>{type}</span>
 </Button>
