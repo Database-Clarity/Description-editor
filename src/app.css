@@ -40,6 +40,11 @@ body {
   background-color: hsla(0, 0%, 100%, 0.20);
 }
 
+.tooltip {
+  color: hsl(38deg, 80%, 56%);
+  text-decoration: underline;
+}
+
 .enhanced {
   border: 1px solid #f2d164;
   padding: 2px;

@@ -35,7 +35,6 @@ export const Bold = Mark.create({
   addKeyboardShortcuts() {
     return {
       'Mod-b': () => this.editor.commands.toggleBold(),
-      'Mod-B': () => this.editor.commands.toggleBold(),
     }
   },
 })

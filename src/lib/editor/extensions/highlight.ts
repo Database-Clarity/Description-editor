@@ -17,15 +17,7 @@ export const Highlight = Mark.create({
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'highlight',
-      },
-    }
-  },
-
-  addAttributes() {
-    return {
-      class: {
-        default: this.options.HTMLAttributes.class,
+        class: 'highlight ',
       },
     }
   },
@@ -35,13 +27,16 @@ export const Highlight = Mark.create({
       {
         tag: 'span',
         getAttrs: (node) => {
-          return node.classList.contains('highlight') ? {} : false
+          for (const className of node.classList) {
+            if (className === 'highlight') return { class: className }
+          }
+          return false
         },
       },
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes, mark }) {
     return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0]
   },
 
@@ -54,10 +49,4 @@ export const Highlight = Mark.create({
         },
     }
   },
-
-  // addKeyboardShortcuts() {
-  //   return {
-  //     'Mod-/': () => this.editor.commands.toggleComment(),
-  //   }
-  // },
 })

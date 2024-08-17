@@ -42,9 +42,9 @@ onMount(() => {
       editor: $editor!,
       element: bubbleMenuElement!,
       // TODO: Them pressing on svelte Component it should hide bubble menu but it doesn't
-      // shouldShow() {
-      //   return false
-      // },
+      shouldShow() {
+        return false
+      },
       ...bubbleSettings,
       tippyOptions: {
         maxWidth: 'none',

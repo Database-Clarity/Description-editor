@@ -2,7 +2,7 @@ type CapitalizeFirstLetter<S extends string> = S extends `${infer FirstLetter}${
   ? `${Uppercase<FirstLetter>}${Rest}`
   : S
 
-export function capitalizeFirstLetter<T extends string>(string: T): CapitalizeFirstLetter<T> {
+export function toNormalText<T extends string>(string: T): CapitalizeFirstLetter<T> {
   return (string.charAt(0).toUpperCase() + string.slice(1)) as CapitalizeFirstLetter<T>
 }
 

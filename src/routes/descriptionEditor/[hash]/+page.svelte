@@ -15,6 +15,8 @@ import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
 import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
 import { cookiesFromString } from '$lib/utils'
 import Link from '$lib/editor/components/Link.svelte'
+import { converter } from '$lib/editor/converter/converter'
+import Tooltip from '$lib/editor/components/Tooltip.svelte'
 
 const { data } = $props()
 
@@ -80,6 +82,20 @@ beforeNavigate(({ from, to }) => {
 const dump = () => {
   console.log($editor?.getHTML())
 }
+
+const getOldDescription = async () => {
+  const hash = data.hash
+  if (hash === undefined) return
+
+  const description = await fetch(
+    `https://raw.githubusercontent.com/Database-Clarity/Live-Clarity-Database/intermediate/intermediateDescriptions.json`
+  )
+    .then((res) => res.json())
+    .then((data) => data.perks[hash]?.editor?.en?.main)
+
+  if (description === undefined) return
+  $editor?.commands.setContent(converter(description))
+}
 </script>
 
 <div class="flex flex-row flex-wrap justify-center gap-2">
@@ -96,17 +112,18 @@ const dump = () => {
       <Images {editor} />
       <Table {editor} />
       <Link {editor} />
+      <Tooltip {editor} />
     </div>
     <div class="editorStyles h-[60vh] bg-tint-dark px-2">
       <SvelteTiptap {editor} {editorSettings}>
         {#snippet bubbleMenu()}
           <div class="bubbleMenu">
-            <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
-            <EditorButton {editor} type="comment" title="CTRL + /" />
-            <EditorButton {editor} type="enhanced" title="" />
-            <EditorButton {editor} type="highlight" title="" />
-            <TextColor {editor} />
-            <Link {editor} />
+            <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" displayText={false} />
+            <EditorButton {editor} type="comment" title="CTRL + /" displayText={false} />
+            <EditorButton {editor} type="enhanced" title="" displayText={false} />
+            <EditorButton {editor} type="highlight" title="" displayText={false} />
+            <TextColor {editor} displayText={false} />
+            <Link {editor} displayText={false} />
           </div>
         {/snippet}
       </SvelteTiptap>
@@ -116,6 +133,7 @@ const dump = () => {
 </div>
 
 <button onclick={dump}>dump</button>
+<button onclick={getOldDescription}>getOldDescription</button>
 
 <svelte:head>
   <!-- {#await data.perksPromise then value} -->

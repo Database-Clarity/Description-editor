@@ -19,6 +19,7 @@ import Text from '@tiptap/extension-text'
 import { TextAlign } from './editor/extensions/alignment'
 import { TextColor } from './editor/extensions/textColor'
 import { Highlight } from './editor/extensions/highlight'
+import { Tooltip } from './editor/extensions/tooltip'
 
 export const extensions = [
   // Non optional extensions required for editor to work properly
@@ -40,6 +41,7 @@ export const extensions = [
   Images,
   Link,
   Highlight,
+  Tooltip,
   Dropcursor.configure({
     width: 2,
     color: '#00cc11',

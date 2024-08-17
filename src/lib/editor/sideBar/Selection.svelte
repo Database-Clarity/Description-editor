@@ -1,7 +1,8 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
+import type { Perk } from '$lib/server/queries'
 import { descriptionTypes, languageCodes, languageNames } from '$lib/types'
-import type { LanguageCode, PendingQuery, Perk, PerkTypes } from '$lib/types'
+import type { LanguageCode, PendingQuery, PerkTypes } from '$lib/types'
 import type { Editor } from '@tiptap/core'
 import type { RowList } from 'postgres'
 import type { ChangeEventHandler } from 'svelte/elements'
@@ -44,6 +45,20 @@ perksPromise.then((perksList) => {
 })
 </script>
 
+{#snippet perkNames(perks: RowList<Perk[]>)}
+  {#each perks.filter((perk) => perk.type === descriptionType) as perk}
+    {#if perk.type === 'Armor Trait Exotic'}
+      {#if perk.itemName === 'Aeon Soul'}
+        <option value={perk.hash}>{perk.itemName + '-' + perk.name}</option>
+      {:else}
+        <option value={perk.hash}>{perk.itemName}</option>
+      {/if}
+    {:else}
+      <option value={perk.hash}>{perk.name}</option>
+    {/if}
+  {/each}
+{/snippet}
+
 <div class="selection">
   <select bind:value={descriptionType} onchange={typeChange}>
     <option value="none">Select description type</option>
@@ -61,9 +76,7 @@ perksPromise.then((perksList) => {
     {#await perksPromise}
       <option>Loading...</option>
     {:then perks}
-      {#each perks.filter((perk) => perk.type === descriptionType) as perk}
-        <option value={perk.hash}>{perk.name}</option>
-      {/each}
+      {@render perkNames(perks)}
     {/await}
   </select>
 </div>

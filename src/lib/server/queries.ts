@@ -57,20 +57,25 @@ export function comment(hash: number) {
 export type Perk = {
   hash: number
   name: string
+  itemName: string
   type: PerkTypes
 }
 
 export function perks(lang: LanguageCode) {
   const name = 'name_' + lang
+  const itemName = 'itemName_' + lang
   return sql<Perk[]>`
     SELECT
       "hash",
       ${sql(name)} as "name",
+      ${sql(itemName)} as "itemName",
       type
     FROM
       "perk"
     ORDER BY
+      ${sql(itemName)} ASC,
       ${sql(name)} ASC;
+       
   `
 }
 

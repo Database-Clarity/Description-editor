@@ -6,7 +6,13 @@ import TextColorSvg from '$lib/assets/TextColorSVG.svelte'
 import { textColors, type TextColors } from '../extensions/textColor'
 import DropDown from '$lib/components/DropDown.svelte'
 
-let { editor }: { editor: Writable<Editor | undefined> } = $props()
+let {
+  editor,
+  displayText = true,
+}: {
+  editor: Writable<Editor | undefined>
+  displayText?: boolean
+} = $props()
 
 let currentColor = $derived<TextColors>($editor?.getAttributes('textColor').class || 'default')
 const setTextColor = (color: TextColors) => {
@@ -18,7 +24,9 @@ const setTextColor = (color: TextColors) => {
   {#snippet button(onclick)}
     <Button {onclick}>
       <TextColorSvg color={currentColor} />
-      <span class={currentColor}>{currentColor}</span>
+      {#if displayText}
+        <span class={currentColor}>{currentColor}</span>
+      {/if}
     </Button>
   {/snippet}
 
