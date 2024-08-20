@@ -2,7 +2,6 @@ import { BulletList, ListItem } from './editor/extensions/bulletList'
 
 import { Bold } from './editor/extensions/bold'
 import { Comment } from './editor/extensions/comment'
-import { DescriptionImportExtension } from './editor/test/descriptionImport'
 import { Div } from '$lib/editor/extensions/div'
 import Document from '@tiptap/extension-document'
 import Dropcursor from '@tiptap/extension-dropcursor'
@@ -52,6 +51,4 @@ export const extensions = [
   TableRow,
   TableHeader,
   TableCell,
-
-  DescriptionImportExtension,
 ]

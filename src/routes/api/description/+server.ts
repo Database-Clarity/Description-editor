@@ -1,7 +1,6 @@
 import type { RequestHandler } from './$types'
 import { sql } from '$lib/server/squeal'
 import { languageCodes, type LanguageCode } from '$lib/types'
-import type postgres from 'postgres'
 import { trimEmptyDivElements } from '$lib/utils'
 
 type Description = {
@@ -10,12 +9,6 @@ type Description = {
   live: boolean
   ready: boolean
   timestamp: number
-}
-
-function fixDescription(descriptionObject: postgres.RowList<Description[]>) {
-  const description = descriptionObject[0]?.description || ''
-
-  return trimEmptyDivElements(description.replace(/<(\/)?descriptionImport.*?>/gi, ''))
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -43,7 +36,7 @@ export const GET: RequestHandler = async ({ url }) => {
       WHERE hash = ${hash}
     )`
 
-    return new Response(fixDescription(description), {
+    return new Response(trimEmptyDivElements(description[0]?.description || ''), {
       headers: {
         'content-type': 'text/plain',
       },

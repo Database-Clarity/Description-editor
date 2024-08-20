@@ -6,7 +6,6 @@ import Bold from '$lib/assets/Bold.svelte'
 import BulletList from '$lib/assets/BulletList.svelte'
 import Comment from '$lib/assets/Comment.svelte'
 import Button from './Button.svelte'
-import DescriptionImport from '$lib/assets/DescriptionImport.svelte'
 import Highlight from '$lib/assets/Highlight.svelte'
 
 const {
@@ -16,7 +15,7 @@ const {
   displayText = true,
 }: {
   editor: Writable<Editor | undefined>
-  type: 'bold' | 'bulletList' | 'comment' | 'import' | 'enhanced' | 'highlight'
+  type: 'bold' | 'bulletList' | 'comment' | 'enhanced' | 'highlight'
   title: string
   displayText?: boolean
 } = $props()
@@ -25,16 +24,11 @@ const SVGs = {
   bold: Bold,
   bulletList: BulletList,
   comment: Comment,
-  import: DescriptionImport,
   enhanced: Bold,
   highlight: Highlight,
 }
 
 const toggle = () => {
-  if (type === 'import') {
-    $editor?.commands.addDescriptionImport()
-    return
-  }
   $editor?.commands[`toggle${toNormalText(type)}`]()
 }
 

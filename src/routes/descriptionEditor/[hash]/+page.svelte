@@ -12,30 +12,28 @@ import Images from '$lib/editor/components/Images.svelte'
 import Table from '$lib/editor/components/Table.svelte'
 import { beforeNavigate, afterNavigate } from '$app/navigation'
 import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
-import { descriptionImportStore } from '$lib/editor/test/descriptionImport'
 import { cookiesFromString } from '$lib/utils'
 import Link from '$lib/editor/components/Link.svelte'
 import { converter } from '$lib/editor/converter/converter'
 import Tooltip from '$lib/editor/components/Tooltip.svelte'
+import Meta from './Meta.svelte'
 
 const { data } = $props()
-
-// Consumed by description import component
-descriptionImportStore.set(data.perksPromise)
 
 const editorSettings: EditorSettings = {
   extensions: extensions,
   content: ``,
 }
 
-const editor = writable<Editor | undefined>()
+const mainEditor = writable<Editor | undefined>()
+const secondEditor = writable<Editor | undefined>()
 
 afterNavigate(({ to }) => {
   const hash = to?.params?.hash
   if (hash === undefined) return
 
   data.descriptionPromise.then((description) => {
-    $editor?.commands.setContent(description[0]?.description ?? '')
+    $mainEditor?.commands.setContent(description[0]?.description ?? '')
   })
 })
 
@@ -48,7 +46,7 @@ beforeNavigate(({ from, to }) => {
   if (
     // Kill it if data is missing
     !hash ||
-    !$editor ||
+    !$mainEditor ||
     !username ||
     !role
   ) {
@@ -71,7 +69,7 @@ beforeNavigate(({ from, to }) => {
     },
     body: JSON.stringify({
       lang: 'en',
-      description: $editor?.getHTML(),
+      description: $mainEditor?.getHTML(),
       live: false,
       ready: false,
       hash: hash,
@@ -80,7 +78,7 @@ beforeNavigate(({ from, to }) => {
 })
 
 const dump = () => {
-  console.log($editor?.getHTML())
+  console.log($mainEditor?.getHTML())
 }
 
 const getOldDescription = async () => {
@@ -94,69 +92,50 @@ const getOldDescription = async () => {
     .then((data) => data.perks[hash]?.editor?.en?.main)
 
   if (description === undefined) return
-  $editor?.commands.setContent(converter(description))
+  $mainEditor?.commands.setContent(converter(description))
 }
 </script>
 
 <div class="flex flex-row flex-wrap justify-center gap-2">
-  <div>
+  <div class="editorContainer">
     <div class="flex flex-row flex-wrap gap-1 p-1">
-      <Alignment {editor} />
-      <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" />
-      <EditorButton {editor} type="bulletList" title="TAB" />
-      <EditorButton {editor} type="comment" title="CTRL + /" />
-      <EditorButton {editor} type="import" title="" />
-      <EditorButton {editor} type="enhanced" title="" />
-      <EditorButton {editor} type="highlight" title="" />
-      <TextColor {editor} />
-      <Images {editor} />
-      <Table {editor} />
-      <Link {editor} />
-      <Tooltip {editor} />
+      <Alignment editor={mainEditor} />
+      <EditorButton editor={mainEditor} type="bold" title="CTRL + B / ⌘ + B" />
+      <EditorButton editor={mainEditor} type="bulletList" title="TAB" />
+      <EditorButton editor={mainEditor} type="comment" title="CTRL + /" />
+      <EditorButton editor={mainEditor} type="enhanced" title="" />
+      <EditorButton editor={mainEditor} type="highlight" title="" />
+      <TextColor editor={mainEditor} />
+      <Images editor={mainEditor} />
+      <Table editor={mainEditor} />
+      <Link editor={mainEditor} />
+      <Tooltip editor={mainEditor} />
     </div>
-    <div class="editorStyles h-[60vh] bg-tint-dark px-2">
-      <SvelteTiptap {editor} {editorSettings}>
+    <div class="editorStyles firstEditor bg-tint-dark px-2">
+      <SvelteTiptap editor={mainEditor} {editorSettings}>
         {#snippet bubbleMenu()}
           <div class="bubbleMenu">
-            <EditorButton {editor} type="bold" title="CTRL + B / ⌘ + B" displayText={false} />
-            <EditorButton {editor} type="comment" title="CTRL + /" displayText={false} />
-            <EditorButton {editor} type="enhanced" title="" displayText={false} />
-            <EditorButton {editor} type="highlight" title="" displayText={false} />
-            <TextColor {editor} displayText={false} />
-            <Link {editor} displayText={false} />
+            <EditorButton editor={mainEditor} type="bold" title="CTRL + B / ⌘ + B" displayText={false} />
+            <EditorButton editor={mainEditor} type="comment" title="CTRL + /" displayText={false} />
+            <EditorButton editor={mainEditor} type="enhanced" title="" displayText={false} />
+            <EditorButton editor={mainEditor} type="highlight" title="" displayText={false} />
+            <TextColor editor={mainEditor} displayText={false} />
+            <Link editor={mainEditor} displayText={false} />
           </div>
         {/snippet}
       </SvelteTiptap>
     </div>
+    <div class="editorStyles secondEditor bg-tint-dark px-2">
+      <SvelteTiptap editor={secondEditor} {editorSettings} />
+    </div>
   </div>
-  <PerkSelection perksPromise={data.perksPromise} lang={data.lang} {editor} hash={data.hash} />
+  <PerkSelection perksPromise={data.perksPromise} lang={data.lang} editor={mainEditor} hash={data.hash} />
 </div>
 
 <button onclick={dump}>dump</button>
 <button onclick={getOldDescription}>getOldDescription</button>
 
-<svelte:head>
-  <!-- {#await data.perksPromise then value} -->
-  <!-- HTML Meta Tags -->
-  <title>Clarity Description Editor</title>
-  <meta name="description" content={`Description for figure out how to add perk name`} />
-
-  <!-- Facebook Meta Tags -->
-  <meta property="og:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Clarity Description Editor" />
-  <meta property="og:description" content={`Description for figure out how to add perk name`} />
-  <meta property="og:image" content="" />
-
-  <!-- Twitter Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta property="twitter:domain" content="description-editor.vercel.app" />
-  <meta property="twitter:url" content={`https://description-editor.vercel.app/descriptionEditor/${data.hash}`} />
-  <meta name="twitter:title" content="Clarity Description Editor" />
-  <meta name="twitter:description" content={`Description for figure out how to add perk name`} />
-  <meta name="twitter:image" content="" />
-  <!-- {/await} -->
-</svelte:head>
+<Meta hash={data.hash} />
 
 <style>
 .bubbleMenu {
@@ -166,6 +145,17 @@ const getOldDescription = async () => {
   background-color: hsla(0, 0%, 30%, 0.7);
   border-radius: 0.3rem;
   box-shadow: 0 0 0.3rem 0 hsla(0, 0%, 0%, 0.2);
+}
+
+.editorContainer {
+  max-width: 1192px;
+  .firstEditor {
+    height: 50vh;
+  }
+  .secondEditor {
+    height: 40vh;
+    border-top: 0.3rem solid hsla(0, 0%, 100%, 0.2);
+  }
 }
 
 @font-face {
