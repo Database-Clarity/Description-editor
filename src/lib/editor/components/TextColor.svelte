@@ -2,7 +2,7 @@
 import type { Writable } from 'svelte/store'
 import type { Editor } from '@tiptap/core'
 import Button from './Button.svelte'
-import TextColorSvg from '$lib/assets/TextColorSVG.svelte'
+import TextColorSvg from '$lib/assets/textFormatting/TextColorSVG.svelte'
 import { textColors, type TextColors } from '../extensions/textColor'
 import DropDown from '$lib/components/DropDown.svelte'
 

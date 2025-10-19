@@ -2,7 +2,7 @@ import { decrypt } from '$lib/server/encryption'
 import { sql } from '$lib/server/squeal'
 import type { LayoutServerLoad } from './$types'
 
-export const load = (async ({ cookies }) => {
+export const load = (async ({ cookies, url }) => {
   const username = cookies.get('username')
   const currentRole = cookies.get('role')
   const decrypted_id = decrypt(cookies.get('membershipId')!)
@@ -19,5 +19,6 @@ export const load = (async ({ cookies }) => {
     }
   }
 
-  return { username: cookies.get('username') }
+  const test = async () => { return 'test'}
+  return { username: cookies.get('username'), test: test() }
 }) satisfies LayoutServerLoad

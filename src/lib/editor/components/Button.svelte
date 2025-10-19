@@ -8,24 +8,26 @@ type Props = {
   class?: string
 } & HTMLButtonAttributes
 
+// can be optional or required
+
 let { children, active, class: className, ...props }: Props = $props()
 </script>
 
-<button class="editor-button" {...props}>
+<button class={className} {...props}>
   {@render children()}
 </button>
 
 <style>
-.editor-button:has(span) {
-  /* Layout properties */
-  display: grid;
+/* .editor-button:has(span) { */
+/* Layout properties */
+/* display: grid;
   grid-template-columns: 1fr 3fr;
   justify-items: center;
-  align-items: center;
+  align-items: center; */
 
-  /* Size properties */
-  width: 6.5rem;
-}
+/* Size properties */
+/* width: 6.5rem;
+} */
 
 .editor-button:not(:has(span)) {
   /* Layout properties */
@@ -67,7 +69,6 @@ let { children, active, class: className, ...props }: Props = $props()
     }
   }
 }
-
 :global(.editor-button > span) {
   /* Flexbox/Grid properties */
   justify-self: baseline;
@@ -81,5 +82,15 @@ let { children, active, class: className, ...props }: Props = $props()
 
   /* Overflow properties */
   overflow: hidden;
+}
+
+:global(.wrapper > .icon) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  height: 50%;
+  object-fit: cover;
 }
 </style>

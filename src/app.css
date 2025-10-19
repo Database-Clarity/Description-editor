@@ -1,15 +1,60 @@
-@config "../tailwind.config.js";
+:root {
+  color-scheme: light dark;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+  /* dark mode colors */
+  --dm_background-color_primary: hsl(0, 0%, 10%);
+  --dm_background-color_secondary: hsl(0, 0%, 15%);
+
+  --dm_text-color_primary: hsl(0, 0%, 85%);
+  --dm_text-color_secondary: hsl(0, 0%, 65%);
+
+  --dm_accent-color_primary: hsl(128, 100%, 50%);
+  --dm_accent-color_secondary: hsl(128, 99%, 38%);
+
+  /* light mode colors */
+  --lm_background-color_primary: hsl(0, 0%, 85%);
+  --lm_background-color_secondary: hsl(0, 0%, 65%);
+
+  --lm_text-color_primary: hsl(0, 0%, 15%);
+  --lm_text-color_secondary: hsl(0, 0%, 25%);
+
+  --lm_accent-color_primary: hsl(128, 100%, 50%);
+  --lm_accent-color_secondary: hsl(128, 99%, 38%);
+}
+@font-face {
+  font-family: "D2 Clarity fonts";
+  src: url(/D2-Clarity-fonts.woff);
+}
 
 body {
-  @apply bg-LM-10 dark:bg-DM-10 text-LM-text dark:text-DM-text;
+  background-color: light-dark(var(--lm_background-color_primary), var(--dm_background-color_primary));
+  color: light-dark(var(--lm_text-color_primary), var(--dm_text-color_primary));
   font-family: 'Open Sans', sans-serif, 'D2 Clarity fonts';
 }
 
+/* CSS reset */
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+li::before {
+  content: '•';
+  padding-right: 0.2rem;
+}
+a {
+  color: inherit;
+}
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 /* Editor styles */
+
+
+
+
 
 .default {
   color: hsl(0, 0%, 85%);
@@ -40,15 +85,21 @@ body {
   background-color: hsla(0, 0%, 100%, 0.20);
 }
 
-.tooltip {
+/* .tooltip {
   color: hsl(38deg, 80%, 56%);
   text-decoration: underline;
-}
+} */
 
 .enhanced {
-  border: 1px solid #f2d164;
-  padding: 2px;
+  border-left: 1px solid hsl(46, 85%, 67%);
+  border-right: 1px solid hsl(46, 85%, 67%);
+  padding: 0 2px;
 }
+.arrow {
+  color: hsl(46, 85%, 67%) !important;
+}
+
+
 .pvp {
   color: hsl(0deg, 100%, 80%);
   stroke: hsl(0deg, 100%, 80%);
@@ -69,45 +120,45 @@ body {
 }
 
 .arc {
-  color: hsl(183, 83%, 72%);
+  color: #7cedf3;
 }
 .solar {
-  color: hsl(21, 88%, 55%);
+  color: #f16e27;
 }
 .void {
-  color: hsl(279, 42%, 66%);
+  color: #b384cd;
 }
 .stasis {
-  color: hsl(220, 100%, 65%);
+  color: #4d88ff;
 }
 .strand {
   color: #35e366;
 }
 
 .special {
-  color: hsl(128, 85%, 72%);
+  color: #7bf48b;
 }
 .heavy {
-  color: hsl(262, 100%, 76%);
+  color: #b185ff;
 }
 
 .hunter {
-  color: hsl(208, 61%, 48%);
+  color: #307fc5;
 }
 .titan {
-  color: hsl(1, 84%, 59%);
+  color: #ee423f;
 }
 .warlock {
-  color: hsl(43, 97%, 46%);
+  color: #e7a704;
 }
 
 .arrow {
-  color: hsl(46, 87%, 64%);
+  color: #f3ce53;
 }
 
 .barrier,
 .overload,
 .unstoppable,
 .primary {
-  @apply text-DM-10 dark:text-LM-10;
+  /* @apply text-DM-10 dark:text-LM-10; */
 }

@@ -6,7 +6,9 @@ import Bold from '$lib/assets/Bold.svelte'
 import BulletList from '$lib/assets/BulletList.svelte'
 import Comment from '$lib/assets/Comment.svelte'
 import Button from './Button.svelte'
-import Highlight from '$lib/assets/Highlight.svelte'
+import Highlight from '$lib/assets/textFormatting/Highlight.svelte'
+
+import './test.css'
 
 const {
   editor,
@@ -28,20 +30,30 @@ const SVGs = {
   highlight: Highlight,
 }
 
-const toggle = () => {
-  $editor?.commands[`toggle${toNormalText(type)}`]()
-}
+const test123 = ['test', 'test2']
+
+$effect(() => console.log($editor?.isActive(type)))
 
 let active = $derived<boolean>($editor?.isActive(type) || false)
 </script>
 
-<Button onclick={toggle} {active} {title}>
-  <svelte:component this={SVGs[type]} />
+<Button class="rounded">
+  {@const Svg = SVGs[type]}
+  <Svg></Svg>
   {#if displayText}
-    <span
-      >{type
+    <span>
+      {type
         .split(/([A-Z]\w+)/)
         .join(' ')
-        .trim()}</span>
+        .trim()}
+    </span>
   {/if}
 </Button>
+
+<style>
+:global(.rounded) {
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  background-color: green;
+}
+</style>

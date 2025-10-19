@@ -1,102 +1,43 @@
 <script lang="ts">
-import './editorStyles.scss'
-import { extensions } from '$lib'
-import Alignment from '$lib/editor/components/Alignment.svelte'
-import SvelteTiptap from '$lib/tiptap/SvelteTiptap.svelte'
-import type { EditorSettings } from '$lib/tiptap/tipTapTypes'
-import type { Editor } from '@tiptap/core'
-import { writable } from 'svelte/store'
-import EditorButton from '$lib/editor/components/EditorButton.svelte'
-import TextColor from '$lib/editor/components/TextColor.svelte'
-import Images from '$lib/editor/components/Images.svelte'
-import Table from '$lib/editor/components/Table.svelte'
-import { beforeNavigate, afterNavigate } from '$app/navigation'
-import PerkSelection from '$lib/editor/sideBar/Selection.svelte'
-import { cookiesFromString } from '$lib/utils'
-import Link from '$lib/editor/components/Link.svelte'
-import { converter } from '$lib/editor/converter/converter'
-import Tooltip from '$lib/editor/components/Tooltip.svelte'
+// import * as monaco from 'monaco-editor'
 import Meta from './Meta.svelte'
 
 const { data } = $props()
 
-const editorSettings: EditorSettings = {
-  extensions: extensions,
-  content: ``,
-}
+let testEditor = $state<HTMLDivElement>()
 
-const mainEditor = writable<Editor | undefined>()
-const secondEditor = writable<Editor | undefined>()
-
-afterNavigate(({ to }) => {
-  const hash = to?.params?.hash
-  if (hash === undefined) return
-
-  data.descriptionPromise.then((description) => {
-    $mainEditor?.commands.setContent(description[0]?.description ?? '')
-  })
-})
-
-// Upload description to server
-beforeNavigate(({ from, to }) => {
-  const hash = from?.params?.hash
-
-  const { username, role } = cookiesFromString(document.cookie, ['username', 'role'])
-
-  if (
-    // Kill it if data is missing
-    !hash ||
-    !$mainEditor ||
-    !username ||
-    !role
-  ) {
-    return
-  }
-
-  if (
-    // Kill it if:
-    hash === to?.params?.hash || // User navigates to the same page
-    hash === '0' || // User navigates to the home page
-    (role !== 'admin' && role !== 'editor') // User is not an admin or editor
-  ) {
-    return
-  }
-
-  fetch('/descriptionEditor', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      lang: 'en',
-      description: $mainEditor?.getHTML(),
-      live: false,
-      ready: false,
-      hash: hash,
-    }),
-  })
-})
-
-const dump = () => {
-  console.log($mainEditor?.getHTML())
-}
-
-const getOldDescription = async () => {
-  const hash = data.hash
-  if (hash === undefined) return
-
-  const description = await fetch(
-    `https://raw.githubusercontent.com/Database-Clarity/Live-Clarity-Database/intermediate/intermediateDescriptions.json`
-  )
-    .then((res) => res.json())
-    .then((data) => data.perks[hash]?.editor?.en?.main)
-
-  if (description === undefined) return
-  $mainEditor?.commands.setContent(converter(description))
-}
+let editor2 = $state()
 </script>
 
-<div class="flex flex-row flex-wrap justify-center gap-2">
+<div bind:this={testEditor}></div>
+
+<!-- <div class="editorWrapper">
+  <div class="editorButtons">
+    <button onclick={editor.toggleBold} class:active={editor.activeStyles.bold} title="CTRL + B / ⌘ + B">
+      <span>Bold</span>
+    </button>
+    {@render colorButtons()}
+    {@render justifyButtons()}
+    {@render imgButtons()}
+    <button onclick={() => editor.setColor('comment')}>comment</button>
+    <button onclick={editor.toggleEnhanced}>enhanced</button>
+    {@render linkButton()}
+    <button onclick={editor.toggleUnorderedList}>ul</button>
+  </div> -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- <div
+    bind:this={editor.editorElement}
+    contenteditable="true"
+    class="mainEditor"
+    onkeydown={(e) => {
+      escapeImgNode_keydown(e)
+      format()
+    }}
+    onpaste={escapeImgNode_paste}>
+  </div>
+</div> -->
+
+<!-- <div class="flex flex-row flex-wrap justify-center gap-4 rounded">
   <div class="editorContainer">
     <div class="flex flex-row flex-wrap gap-1 p-1">
       <Alignment editor={mainEditor} />
@@ -129,11 +70,12 @@ const getOldDescription = async () => {
       <SvelteTiptap editor={secondEditor} {editorSettings} />
     </div>
   </div>
-  <PerkSelection perksPromise={data.perksPromise} lang={data.lang} editor={mainEditor} hash={data.hash} />
-</div>
-
+   <PerkSelection perksPromise={data.perksPromise} lang={data.lang} editor={mainEditor} hash={data.hash} /> 
+  <Search perksPromise={data.perksPromise} />
+</div> -->
+<!-- 
 <button onclick={dump}>dump</button>
-<button onclick={getOldDescription}>getOldDescription</button>
+<button onclick={getOldDescription}>getOldDescription</button> -->
 
 <Meta hash={data.hash} />
 
@@ -147,9 +89,36 @@ const getOldDescription = async () => {
   box-shadow: 0 0 0.3rem 0 hsla(0, 0%, 0%, 0.2);
 }
 
-.editorContainer {
+.editorWrapper {
   max-width: 1192px;
-  .firstEditor {
+
+  > div[contenteditable] {
+    padding: 0.3rem;
+    background-color: light-dark(var(--lm_background-color_secondary), var(--dm_background-color_secondary));
+    color: light-dark(var(--lm_text-color_primary), var(--dm_text-color_primary));
+  }
+  > div:focus-visible {
+    outline: none;
+  }
+
+  .editorButtons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.3rem;
+    padding: 0.3rem 0;
+
+    .dropdown {
+      display: flex;
+      flex-direction: column;
+    }
+
+    > button {
+      display: flex;
+      align-items: flex-end;
+      flex-direction: row;
+    }
+  }
+  .mainEditor {
     height: 50vh;
   }
   .secondEditor {

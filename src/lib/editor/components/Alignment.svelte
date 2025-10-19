@@ -14,7 +14,7 @@ const setTextAlign = (align: Alignments) => {
 }
 </script>
 
-<DropDown class="flex flex-col rounded bg-LM-15 dark:bg-DM-15">
+<DropDown class="rounded">
   {#snippet button(onclick)}
     <Button {onclick}>
       <Alignment align={currentAlignment} />
@@ -29,3 +29,9 @@ const setTextAlign = (align: Alignments) => {
     </Button>
   {/each}
 </DropDown>
+
+<style>
+.rounded {
+  border-radius: 0.5rem;
+}
+</style>

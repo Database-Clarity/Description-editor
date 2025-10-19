@@ -4,11 +4,9 @@ import type { Snippet } from 'svelte'
 let {
   button,
   children,
-  class: dropDownClass,
 }: {
   button: Snippet<[() => void]>
   children: Snippet
-  class?: string
 } = $props()
 
 let dropdownOpen = $state<boolean>(false)
@@ -26,8 +24,15 @@ const buttonPress = () => {
   {@render button(buttonPress)}
 
   {#if dropdownOpen}
-    <div class={'absolute z-50' + (dropDownClass === undefined ? '' : ' ' + dropDownClass)}>
+    <div class="dropdown">
       {@render children()}
     </div>
   {/if}
 </div>
+
+<style>
+.dropdown {
+  position: absolute;
+  z-index: 10;
+}
+</style>

@@ -2,12 +2,14 @@
 import { dev } from '$app/environment'
 import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
+import Search from '$lib/editor/sideBar/Search.svelte'
+import { page } from '$app/stores'
 import '../app.css'
 
 injectSpeedInsights()
 inject({ mode: dev ? 'development' : 'production' })
 
-const { children, data } = $props()
+let { data, children } = $props()
 
 const openLoginPage = () => {
   open(
@@ -18,7 +20,7 @@ const openLoginPage = () => {
 }
 </script>
 
-<header class="bg-DM-15 px-2 py-1">
+<header class="bg-DM-15 px-2 py-1 flex">
   <nav class="flex flex-row justify-between">
     <div class="flex flex-row gap-4">
       <div>Nav bar work in progress</div>
@@ -32,6 +34,7 @@ const openLoginPage = () => {
       <button onclick={openLoginPage}>Log in</button>
     {/if}
   </nav>
+  Logged in 󒰀 as {data.username}
 </header>
 
 <main>

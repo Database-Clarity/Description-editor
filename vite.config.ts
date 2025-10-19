@@ -1,13 +1,25 @@
 import { sveltekit } from '@sveltejs/kit/vite'
 import basicSsl from '@vitejs/plugin-basic-ssl'
-import { defineConfig } from 'vite'
+import { defineConfig, type PluginOption } from 'vite'
+import Inspect from 'vite-plugin-inspect';
 
 export default defineConfig({
-  plugins: [
-    sveltekit(),
-    basicSsl()
-  ],
+  plugins: [Inspect(), sveltekit(), basicSsl()],
   server: {
-    proxy: {}
-  }
+    proxy: {},
+  },
 })
+
+// add type for vite plugin
+
+function something(): PluginOption {
+  return {
+    name: 'something',
+    buildStart() {
+      console.log('buildStart')
+    },
+    transform(code, id) {
+      return code.replace('something', 'something else')
+    }
+  }
+}

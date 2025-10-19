@@ -3,7 +3,7 @@
   "bracketSameLine": false,
   "bracketSpacing": true,
   "printWidth": 120,
-  "quoteProps": "consistent",
+  "quoteProps": "as-needed",
   "semi": false,
   "singleQuote": true,
   "tabWidth": 2,

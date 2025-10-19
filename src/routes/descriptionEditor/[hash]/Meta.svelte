@@ -1,9 +1,5 @@
 <script lang="ts">
-const {
-  hash,
-}: {
-  hash: number
-} = $props()
+const { hash }: { hash: number } = $props()
 </script>
 
 <svelte:head>

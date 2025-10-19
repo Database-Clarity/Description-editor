@@ -14,5 +14,5 @@ export const load = async ({ url, params }) => {
 
   const comments = comment(hash)
 
-  return { descriptionPromise, comments, hash, editor, test: 'test' }
+  return { descriptionPromise, comments, hash, editor }
 }

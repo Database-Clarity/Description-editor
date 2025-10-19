@@ -79,7 +79,7 @@ export const descriptionTypes: { [key: string]: { [key in PerkTypes]?: string } 
     'Armor Trait Exotic': 'Armor',
     'Weapon Frame Exotic': 'Weapon',
   },
-  'Weapon': {
+  'Weapons': {
     'Weapon Trait': 'Trait',
     // 'Weapon Trait Enhanced': 'Enhanced Trait', // removed from database
     'Weapon Perk': 'Perk',

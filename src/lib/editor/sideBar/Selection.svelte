@@ -3,15 +3,14 @@ import { goto } from '$app/navigation'
 import type { Perk } from '$lib/server/queries'
 import { descriptionTypes, languageCodes, languageNames } from '$lib/types'
 import type { LanguageCode, PendingQuery, PerkTypes } from '$lib/types'
-import type { Editor } from '@tiptap/core'
 import type { RowList } from 'postgres'
 import type { ChangeEventHandler } from 'svelte/elements'
-import type { Writable } from 'svelte/store'
+// import type { Writable } from 'svelte/store'
 
 let {
   perksPromise,
   lang,
-  editor,
+  // editor,
   hash,
 }: {
   perksPromise: PendingQuery<Perk[]>
@@ -19,7 +18,7 @@ let {
    * Language code
    */
   lang: LanguageCode
-  editor: Writable<Editor | undefined>
+  // editor: Writable<Editor | undefined>
   hash: number
 } = $props()
 
@@ -81,7 +80,7 @@ perksPromise.then((perksList) => {
   </select>
 </div>
 
-<style lang="scss">
+<style>
 .selection {
   display: flex;
   flex-direction: column;
