@@ -1,10 +1,10 @@
 import { sveltekit } from '@sveltejs/kit/vite'
+import devtoolsJson from 'vite-plugin-devtools-json'
 import basicSsl from '@vitejs/plugin-basic-ssl'
-import { defineConfig, type PluginOption } from 'vite'
-import Inspect from 'vite-plugin-inspect';
+import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [Inspect(), sveltekit(), basicSsl()],
+  plugins: [sveltekit(), basicSsl(), devtoolsJson()],
   server: {
     proxy: {},
   },
