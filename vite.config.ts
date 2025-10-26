@@ -9,17 +9,3 @@ export default defineConfig({
     proxy: {},
   },
 })
-
-// add type for vite plugin
-
-function something(): PluginOption {
-  return {
-    name: 'something',
-    buildStart() {
-      console.log('buildStart')
-    },
-    transform(code, id) {
-      return code.replace('something', 'something else')
-    }
-  }
-}
