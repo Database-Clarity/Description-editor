@@ -1,16 +1,6 @@
 import type { languages } from 'monaco-editor'
 import type Monaco from 'monaco-editor'
 
-const enhanced_tooltip_include = [
-  { include: '@singleLineComment' },
-  { include: '@multiLineComment' },
-  { include: '@variableDeclaration' },
-  { include: '@variableIdentifier' },
-  { include: '@link' },
-  { include: '@images' },
-  { include: '@textModifiers' },
-]
-
 const enhanced: Record<string, languages.IMonarchLanguageRule[]> = {
   enhanced: [
     [
@@ -23,8 +13,14 @@ const enhanced: Record<string, languages.IMonarchLanguageRule[]> = {
   ],
 
   enhanced_bracketClose: [
-    ...enhanced_tooltip_include,
-    { include: '@tooltip_blue' },
+    { include: '@singleLineComment' },
+    { include: '@multiLineComment' },
+    { include: '@variableDeclaration' },
+    { include: '@variableIdentifier' },
+    { include: '@link' },
+    { include: '@images' },
+    { include: '@textStyling' },
+    { include: '@tooltip' },
     [
       /{/,
       { token: 'purple' }, // }
@@ -34,33 +30,11 @@ const enhanced: Record<string, languages.IMonarchLanguageRule[]> = {
       { token: 'purple', next: '@pop' }, // {
     ],
   ],
-
-  // Blue variant for nesting inside tooltip
-  enhanced_blue: [[
-    /^(\s*enhanced\s*)({)/,
-    [
-      { token: 'blue', }, // enhanced
-      { token: 'blue', next: '@enhanced_bracketClose_blue' }, // enhanced
-    ],
-  ]],
-
-  enhanced_bracketClose_blue: [
-    ...enhanced_tooltip_include,
-
-    [
-      /{/,
-      { token: 'blue' }, // }
-    ],
-    [
-      /}/,
-      { token: 'blue', next: '@pop' }, // {
-    ],
-  ]
 }
 
 const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
   tooltip: [[
-    /^(\s*tooltip\s)(.+?)({)/,
+    /^(\s*tooltip\s)(@safeCharacters+)(\s*{)/,
     [
       { token: 'purple' }, // tooltip
       { token: 'lightBlue' }, // name of the tooltip
@@ -69,9 +43,13 @@ const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
   ]],
 
   tooltip_BracketClose: [
-    ...enhanced_tooltip_include,
-    { include: '@enhanced_blue' },
-
+    { include: '@singleLineComment' },
+    { include: '@multiLineComment' },
+    { include: '@variableIdentifier' },
+    { include: '@link' },
+    { include: '@images' },
+    { include: '@textStyling' },
+    { include: '@enhanced' },
     [
       /{/,
       { token: 'purple' }, // }
@@ -81,45 +59,12 @@ const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
       { token: 'purple', next: '@pop' }, // {
     ],
   ],
-
-  // Blue variant for nesting inside enhanced
-  tooltip_blue: [[
-    /^(\s*tooltip\s)(.+?)({)/,
-    [
-      { token: 'blue' }, // tooltip
-      { token: 'lightBlue' }, // name of the tooltip
-      { token: 'blue', next: '@tooltip_BracketClose_blue' }, // name of the tooltip
-    ],
-  ]],
-
-  tooltip_BracketClose_blue: [
-    ...enhanced_tooltip_include,
-
-    [
-      /{/,
-      { token: 'blue' }, // }
-    ],
-    [
-      /}/,
-      { token: 'blue', next: '@pop' }, // {
-    ],
-  ]
 }
 
 const link: Record<string, languages.IMonarchLanguageRule[]> = {
-  // link: [
-  //   [
-  //     /(\[)((?:[^\]]|\\.)*\]\((?:[^)]|\\.)*\))/, // look for link like text
-  //     [
-  //       { token: '' }, // [
-  //       { token: '@rematch', next: '@link_content' },
-  //     ],
-  //   ],
-  // ],
-
   link: [
     [
-      /(<link\s+)(.+{.+}.*\/>)/, // look for link like text
+      /(<link\s+)(.*{\s*[^\s\t]+\s*}.*\/>)/, // look for link like text
       [
         { token: 'green' }, // <link
         { token: '@rematch', next: '@link_content' },
@@ -128,10 +73,10 @@ const link: Record<string, languages.IMonarchLanguageRule[]> = {
   ],
 
   link_content: [
-    { include: '@singleLineComment' },
     { include: '@multiLineComment' },
     { include: '@variableIdentifier' },
     { include: '@images' },
+    { include: '@textStyling' },
 
     [
       /\/>/, { token: 'green', next: '@pop' } // />
@@ -143,32 +88,22 @@ const link: Record<string, languages.IMonarchLanguageRule[]> = {
     [
       /}/, 'green'
     ]
-
-    // [
-    //   /(\]\()((?!\s*[$#])[^)]*)(\))/,
-    //   [
-    //     { token: '' }, // ](
-    //     { token: 'string.link' }, // url
-    //     { token: '', next: '@pop' }, // )
-    //   ],
-    // ],
-
-    // [/\]\(/, ''],
-    // [/\)/, { token: '', next: '@pop' }],
-
-    // [/[^]/, 'string'],
   ],
   urlContent: [
     [
-      /({)(.+?)(})/, [
-        { token: 'green' }, // url
-        { token: 'string.link' }, // url
-        { token: 'green', next: '@pop' } // url
+      /({)(\s*#.+?)(})/, [
+        { token: 'green' }, // {
+        { token: 'img.enhanced' }, // text inside of {}
+        { token: 'green', next: '@pop' } // }
       ]
     ],
-    // [
-    //   /\)/, { token: '', next: '@pop' } // )
-    // ],
+    [
+      /({)(.+?)(})/, [
+        { token: 'green' }, // {
+        { token: 'string.link' }, // text inside of {}
+        { token: 'green', next: '@pop' } // }
+      ]
+    ],
   ],
 }
 
@@ -199,18 +134,49 @@ const perkImport: languages.IMonarchLanguageRule[] = [[
   ],
 ]]
 
-const variableDeclaration: languages.IMonarchLanguageRule[] = [[
-  /^(\s*var\s+)(@safeCharacters+)(\s+=\s+)/,
-  [
-    { token: 'purple' }, // var
-    { token: 'lightBlue' }, // name
-    { token: 'purple' }, // =
-  ],
-]]
+const variableDeclaration: Record<string, languages.IMonarchLanguageRule[]> = {
+  variableDeclaration: [
+    [
+      /^(\s*var\s+)(@safeCharacters+)(\s*=\s*{)/,
+      [
+        { token: 'purple' }, // var
+        { token: 'lightBlue' }, // name
+        { token: 'purple', next: '@variableDeclaration_bracketClose' }, // =
+      ],
+    ],
 
-const variableIdentifier: languages.IMonarchLanguageRule[] = [[
-  /#@safeCharacters+/, { token: 'img.enhanced' }
-]]
+    // [
+    //   /^(\s*var\s+)(@safeCharacters+)(\s*=\s*)/,
+    //   [
+    //     { token: 'purple' }, // var
+    //     { token: 'lightBlue' }, // name
+    //     { token: 'purple' }, // =
+    //   ],
+    // ]
+  ],
+  variableDeclaration_bracketClose: [
+    { include: '@singleLineComment' },
+    { include: '@multiLineComment' },
+    { include: '@variableIdentifier' },
+    { include: '@link' },
+    { include: '@images' },
+    { include: '@textStyling' },
+    { include: '@enhanced' },
+    { include: '@tooltip' },
+
+    [
+      /}/,
+      { token: 'purple', next: '@pop' }, // }
+    ],
+  ]
+
+}
+
+const variableIdentifier: languages.IMonarchLanguageRule[] = [
+  [
+    /#@safeCharacters+/, { token: 'blue' }
+  ]
+]
 
 const images: languages.IMonarchLanguageRule[] = [
   // elements
@@ -239,16 +205,49 @@ const images: languages.IMonarchLanguageRule[] = [
   [/󒱀/, 'img.enhanced'],
 ]
 
-const textModifiers: languages.IMonarchLanguageRule[] = [
-  [
-    /<(?:pvp|pve|bold|yellow|green)\s+.+?>/,
-    ''
+const textStyling: Record<string, languages.IMonarchLanguageRule[]> = {
+  textStyling: [
+    [
+      /<(?:pvp|pve|bold|yellow|green)\s+.+?\/>/,
+      { token: '@rematch', next: '@textStyling_content' }
+    ],
   ],
-]
+
+  textStyling_content: [
+    { include: '@multiLineComment' },
+    { include: '@variableIdentifier' },
+    { include: '@images' },
+    [
+      /<(?:pvp|pve|bold|yellow|green)/,
+      { token: 'green' }
+    ],
+    [
+      /\/>/,
+      { token: 'green' }
+    ],
+  ]
+}
+
+const enhancedNumberValues: Record<string, languages.IMonarchLanguageRule[]> = {
+  enhancedNumberValues: [
+    [
+      /{\s*@number\s*󒱀\s*@number\s*}/,
+      { token: '@rematch', next: '@enhancedNumberValues_content' }
+    ],
+  ],
+  enhancedNumberValues_content: [
+    [/}/, { token: 'img.enhanced', next: '@pop' }],
+    [/{/, { token: 'img.enhanced' }],
+    [/󒱀/, { token: 'img.enhanced' }],
+    [/[^]/, { token: 'lightBlue' }]
+  ],
+}
 
 export const tokensProvider: Monaco.languages.IMonarchLanguage = {
-  // characters what won't break my text formatting used for var names
-  safeCharacters: /[^[\](){}#=\s]/, // /[!-'*-<>-Z\\^-~]+/,
+  // characters safe to use for identifiers
+  safeCharacters: /[^<>{}#=\s]/, // /[!-'*-<>-Z\\^-~]+/,
+  // used for enhanced number values
+  number: /(?:[+~-]?\d+(?:\.\d+)?[x%]?\??|\?)/,
 
   tokenizer: {
     root: [
@@ -262,10 +261,10 @@ export const tokensProvider: Monaco.languages.IMonarchLanguage = {
       { include: '@variableDeclaration' },
       { include: '@variableIdentifier' },
       { include: '@images' },
-      { include: '@textModifiers' },
-
-      [/./, 'string'],
+      { include: '@textStyling' },
+      { include: '@enhancedNumberValues' }
     ],
+
     ...enhanced,
     ...tooltip,
     ...link,
@@ -273,9 +272,10 @@ export const tokensProvider: Monaco.languages.IMonarchLanguage = {
 
     singleLineComment,
     perkImport,
-    variableDeclaration,
+    ...variableDeclaration,
     variableIdentifier,
     images,
-    textModifiers,
+    ...textStyling,
+    ...enhancedNumberValues
   },
 }
