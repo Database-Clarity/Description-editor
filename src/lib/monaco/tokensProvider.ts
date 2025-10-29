@@ -22,10 +22,6 @@ const enhanced: Record<string, languages.IMonarchLanguageRule[]> = {
     { include: '@textStyling' },
     { include: '@tooltip' },
     [
-      /{/,
-      { token: 'purple' }, // }
-    ],
-    [
       /}/,
       { token: 'purple', next: '@pop' }, // {
     ],
@@ -50,10 +46,6 @@ const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
     { include: '@images' },
     { include: '@textStyling' },
     { include: '@enhanced' },
-    [
-      /{/,
-      { token: 'purple' }, // }
-    ],
     [
       /}/,
       { token: 'purple', next: '@pop' }, // {
