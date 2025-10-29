@@ -57,7 +57,7 @@ const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
 const link: Record<string, languages.IMonarchLanguageRule[]> = {
   link: [
     [
-      /(<link\s+)(.*{\s*[^\s\t]+\s*}.*\/>)/, // look for link like text
+      /(<link\s+)(.*?{\s*[^\s\t]+\s*}.*?\/>)/, // look for link like text
       [
         { token: 'green' }, // <link
         { token: '@rematch', next: '@link_content' },
