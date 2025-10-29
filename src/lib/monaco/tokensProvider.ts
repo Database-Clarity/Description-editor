@@ -222,7 +222,7 @@ const textStyling: Record<string, languages.IMonarchLanguageRule[]> = {
     ],
     [
       /\/>/,
-      { token: 'green' }
+      { token: 'green', next: '@pop' } // />
     ],
   ]
 }
