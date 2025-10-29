@@ -41,6 +41,7 @@ const tooltip: Record<string, languages.IMonarchLanguageRule[]> = {
   tooltip_BracketClose: [
     { include: '@singleLineComment' },
     { include: '@multiLineComment' },
+    { include: '@variableDeclaration' },
     { include: '@variableIdentifier' },
     { include: '@link' },
     { include: '@images' },
