@@ -140,7 +140,7 @@ const variableDeclaration: Record<string, languages.IMonarchLanguageRule[]> = {
       [
         { token: 'purple' }, // var
         { token: 'lightBlue' }, // name
-        { token: 'purple', next: '@variableDeclaration_bracketClose' }, // =
+        { token: 'purple', next: '@variableDeclaration_bracketClose' }, // = {
       ],
     ],
 
