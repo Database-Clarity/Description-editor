@@ -113,10 +113,16 @@ const multiLineComment: Record<string, languages.IMonarchLanguageRule[]> = {
   ],
 }
 
-const singleLineComment: languages.IMonarchLanguageRule[] = [[
-  /(?:[^:]\/\/.*$|^\/\/.*$)/,
-  { token: 'comment.line' }, // //
-]]
+const singleLineComment: languages.IMonarchLanguageRule[] = [
+  [
+    /:\/\//,
+    { token: '' }, // ://
+  ],
+  [
+    /\/\/.*$/,
+    { token: 'comment.line' }, // //
+  ]
+]
 
 const perkImport: languages.IMonarchLanguageRule[] = [[
   /^(\s*import\s+)(\d+\s*$)/,
