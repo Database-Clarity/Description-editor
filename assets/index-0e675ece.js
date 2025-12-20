@@ -18425,10 +18425,21 @@ function promisifyRequest(request) {
     });
 }
 function createStore$1(dbName, storeName) {
-    const request = indexedDB.open(dbName);
-    request.onupgradeneeded = () => request.result.createObjectStore(storeName);
-    const dbp = promisifyRequest(request);
-    return (txMode, callback) => dbp.then((db) => callback(db.transaction(storeName, txMode).objectStore(storeName)));
+    let dbp;
+    const getDB = () => {
+        if (dbp)
+            return dbp;
+        const request = indexedDB.open(dbName);
+        request.onupgradeneeded = () => request.result.createObjectStore(storeName);
+        dbp = promisifyRequest(request);
+        dbp.then((db) => {
+            // It seems like Safari sometimes likes to just close the connection.
+            // It's supposed to fire this event when that happens. Let's hope it does!
+            db.onclose = () => (dbp = undefined);
+        }, () => { });
+        return dbp;
+    };
+    return (txMode, callback) => getDB().then((db) => callback(db.transaction(storeName, txMode).objectStore(storeName)));
 }
 let defaultGetStoreFunc;
 function defaultGetStore() {
@@ -122622,7 +122633,7 @@ registerLanguage({
   aliases: ["FreeMarker2", "Apache FreeMarker2"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
     }
   }
 });
@@ -122631,7 +122642,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Angle/Dollar)", "Apache FreeMarker2 (Angle/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationDollar);
     }
   }
 });
@@ -122640,7 +122651,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Bracket/Dollar)", "Apache FreeMarker2 (Bracket/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationDollar);
     }
   }
 });
@@ -122649,7 +122660,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Angle/Bracket)", "Apache FreeMarker2 (Angle/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationBracket);
     }
   }
 });
@@ -122658,7 +122669,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Bracket/Bracket)", "Apache FreeMarker2 (Bracket/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationBracket);
     }
   }
 });
@@ -122667,7 +122678,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Auto/Dollar)", "Apache FreeMarker2 (Auto/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
     }
   }
 });
@@ -122676,7 +122687,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Auto/Bracket)", "Apache FreeMarker2 (Auto/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-2e249b41.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationBracket);
     }
   }
 });
@@ -122711,7 +122722,7 @@ registerLanguage({
   mimetypes: ["text/x-handlebars-template"],
   loader: () => {
     {
-      return __vitePreload(() => import('./handlebars-eeb06d5e.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./handlebars-8590c77a.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -122734,7 +122745,7 @@ registerLanguage({
   mimetypes: ["text/html", "text/x-jshtm", "text/template", "text/ng-template"],
   loader: () => {
     {
-      return __vitePreload(() => import('./html-1fd662da.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./html-d6258dbc.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -122772,7 +122783,7 @@ registerLanguage({
   mimetypes: ["text/javascript"],
   loader: () => {
     {
-      return __vitePreload(() => import('./javascript-d5d2c4a3.js'),true?["./javascript-d5d2c4a3.js","./typescript-cacda1b1.js"]:void 0,import.meta.url);
+      return __vitePreload(() => import('./javascript-6d5f4584.js'),true?["./javascript-6d5f4584.js","./typescript-f8591854.js"]:void 0,import.meta.url);
     }
   }
 });
@@ -122841,7 +122852,7 @@ registerLanguage({
   mimetypes: ["application/liquid"],
   loader: () => {
     {
-      return __vitePreload(() => import('./liquid-058ab5ef.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./liquid-9cd62bd6.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123042,7 +123053,7 @@ registerLanguage({
   firstLine: "^#!/.*\\bpython[0-9.-]*\\b",
   loader: () => {
     {
-      return __vitePreload(() => import('./python-76e0fe13.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./python-945dbfa6.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123076,7 +123087,7 @@ registerLanguage({
   mimetypes: ["text/x-cshtml"],
   loader: () => {
     {
-      return __vitePreload(() => import('./razor-b3be4db8.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./razor-92149606.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123312,7 +123323,7 @@ registerLanguage({
   mimetypes: ["text/typescript"],
   loader: () => {
     {
-      return __vitePreload(() => import('./typescript-cacda1b1.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./typescript-f8591854.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123350,7 +123361,7 @@ registerLanguage({
   mimetypes: ["text/xml", "application/xml", "application/xaml+xml", "application/xml-dtd"],
   loader: () => {
     {
-      return __vitePreload(() => import('./xml-f5b8bfdd.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./xml-77f5a961.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123362,7 +123373,7 @@ registerLanguage({
   mimetypes: ["application/x-yaml", "text/x-yaml"],
   loader: () => {
     {
-      return __vitePreload(() => import('./yaml-77ef5b26.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./yaml-652aa313.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123483,7 +123494,7 @@ var lessDefaults = new LanguageServiceDefaultsImpl$3("less", optionsDefault$1, m
 monaco_editor_core_exports$3.languages.css = { cssDefaults, lessDefaults, scssDefaults };
 function getMode$3() {
   {
-    return __vitePreload(() => import('./cssMode-a4dc340b.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./cssMode-b19567d7.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports$3.languages.onLanguage("less", () => {
@@ -123608,7 +123619,7 @@ monaco_editor_core_exports$2.languages.html = {
 };
 function getMode$2() {
   {
-    return __vitePreload(() => import('./htmlMode-e6ad8ccf.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./htmlMode-174851fe.js'),true?[]:void 0,import.meta.url);
   }
 }
 function registerHTMLLanguageService(languageId, options = optionsDefault, modeConfiguration = getConfigurationDefault(languageId)) {
@@ -123710,7 +123721,7 @@ var jsonDefaults = new LanguageServiceDefaultsImpl$1("json", diagnosticDefault, 
 monaco_editor_core_exports$1.languages.json = { jsonDefaults };
 function getMode$1() {
   {
-    return __vitePreload(() => import('./jsonMode-4a255fe6.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./jsonMode-476523f5.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports$1.languages.register({
@@ -123955,7 +123966,7 @@ monaco_editor_core_exports.languages.typescript = {
 };
 function getMode() {
   {
-    return __vitePreload(() => import('./tsMode-caa98913.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./tsMode-8024b55b.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports.languages.onLanguage("typescript", () => {
@@ -170745,6 +170756,7 @@ const PerkSelectionOptions = ({ displayedPerkList }) => {
       perk.type === "Armor Trait Exotic" ? perk.itemName || perk.name : perk.name,
       Number(perkHash) > 10 && /* @__PURE__ */ jsxs(Fragment, { children: [
         perk.inLiveDatabase ? "" : `❌`,
+        perk.uploadToLive ? "🍕" : `⚠️`,
         language !== "en" && updateTracker[language]?.lastUpdate < updateTracker.en?.lastUpdate ? " ⏳" : ""
       ] })
     ] }, i);

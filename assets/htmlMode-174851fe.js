@@ -1,4 +1,4 @@
-import { m as monaco_editor_core_star } from './index-240943b6.js';
+import { m as monaco_editor_core_star } from './index-0e675ece.js';
 
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -25,7 +25,7 @@ var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "defau
 var monaco_editor_core_exports = {};
 __reExport(monaco_editor_core_exports, monaco_editor_core_star);
 
-// src/language/css/workerManager.ts
+// src/language/html/workerManager.ts
 var STOP_WHEN_IDLE_FOR = 2 * 60 * 1e3;
 var WorkerManager = class {
   _defaults;
@@ -67,12 +67,12 @@ var WorkerManager = class {
     this._lastUsedTime = Date.now();
     if (!this._client) {
       this._worker = monaco_editor_core_exports.editor.createWebWorker({
-        moduleId: "vs/language/css/cssWorker",
-        label: this._defaults.languageId,
+        moduleId: "vs/language/html/htmlWorker",
         createData: {
-          options: this._defaults.options,
+          languageSettings: this._defaults.options,
           languageId: this._defaults.languageId
-        }
+        },
+        label: this._defaults.languageId
       });
       this._client = this._worker.getProxy();
     }
@@ -1947,7 +1947,31 @@ var SelectionRangeAdapter = class {
   }
 };
 
-// src/language/css/cssMode.ts
+// src/language/html/htmlMode.ts
+var HTMLCompletionAdapter = class extends CompletionAdapter {
+  constructor(worker) {
+    super(worker, [".", ":", "<", '"', "=", "/"]);
+  }
+};
+function setupMode1(defaults) {
+  const client = new WorkerManager(defaults);
+  const worker = (...uris) => {
+    return client.getLanguageServiceWorker(...uris);
+  };
+  let languageId = defaults.languageId;
+  monaco_editor_core_exports.languages.registerCompletionItemProvider(languageId, new HTMLCompletionAdapter(worker));
+  monaco_editor_core_exports.languages.registerHoverProvider(languageId, new HoverAdapter(worker));
+  monaco_editor_core_exports.languages.registerDocumentHighlightProvider(languageId, new DocumentHighlightAdapter(worker));
+  monaco_editor_core_exports.languages.registerLinkProvider(languageId, new DocumentLinkAdapter(worker));
+  monaco_editor_core_exports.languages.registerFoldingRangeProvider(languageId, new FoldingRangeAdapter(worker));
+  monaco_editor_core_exports.languages.registerDocumentSymbolProvider(languageId, new DocumentSymbolAdapter(worker));
+  monaco_editor_core_exports.languages.registerSelectionRangeProvider(languageId, new SelectionRangeAdapter(worker));
+  monaco_editor_core_exports.languages.registerRenameProvider(languageId, new RenameAdapter(worker));
+  if (languageId === "html") {
+    monaco_editor_core_exports.languages.registerDocumentFormattingEditProvider(languageId, new DocumentFormattingEditProvider(worker));
+    monaco_editor_core_exports.languages.registerDocumentRangeFormattingEditProvider(languageId, new DocumentRangeFormattingEditProvider(worker));
+  }
+}
 function setupMode(defaults) {
   const disposables = [];
   const providers = [];
@@ -1960,7 +1984,7 @@ function setupMode(defaults) {
     const { languageId, modeConfiguration } = defaults;
     disposeAll(providers);
     if (modeConfiguration.completionItems) {
-      providers.push(monaco_editor_core_exports.languages.registerCompletionItemProvider(languageId, new CompletionAdapter(worker, ["/", "-", ":"])));
+      providers.push(monaco_editor_core_exports.languages.registerCompletionItemProvider(languageId, new HTMLCompletionAdapter(worker)));
     }
     if (modeConfiguration.hovers) {
       providers.push(monaco_editor_core_exports.languages.registerHoverProvider(languageId, new HoverAdapter(worker)));
@@ -1968,11 +1992,8 @@ function setupMode(defaults) {
     if (modeConfiguration.documentHighlights) {
       providers.push(monaco_editor_core_exports.languages.registerDocumentHighlightProvider(languageId, new DocumentHighlightAdapter(worker)));
     }
-    if (modeConfiguration.definitions) {
-      providers.push(monaco_editor_core_exports.languages.registerDefinitionProvider(languageId, new DefinitionAdapter(worker)));
-    }
-    if (modeConfiguration.references) {
-      providers.push(monaco_editor_core_exports.languages.registerReferenceProvider(languageId, new ReferenceAdapter(worker)));
+    if (modeConfiguration.links) {
+      providers.push(monaco_editor_core_exports.languages.registerLinkProvider(languageId, new DocumentLinkAdapter(worker)));
     }
     if (modeConfiguration.documentSymbols) {
       providers.push(monaco_editor_core_exports.languages.registerDocumentSymbolProvider(languageId, new DocumentSymbolAdapter(worker)));
@@ -1980,14 +2001,8 @@ function setupMode(defaults) {
     if (modeConfiguration.rename) {
       providers.push(monaco_editor_core_exports.languages.registerRenameProvider(languageId, new RenameAdapter(worker)));
     }
-    if (modeConfiguration.colors) {
-      providers.push(monaco_editor_core_exports.languages.registerColorProvider(languageId, new DocumentColorAdapter(worker)));
-    }
     if (modeConfiguration.foldingRanges) {
       providers.push(monaco_editor_core_exports.languages.registerFoldingRangeProvider(languageId, new FoldingRangeAdapter(worker)));
-    }
-    if (modeConfiguration.diagnostics) {
-      providers.push(new DiagnosticsAdapter(languageId, worker, defaults.onDidChange));
     }
     if (modeConfiguration.selectionRanges) {
       providers.push(monaco_editor_core_exports.languages.registerSelectionRangeProvider(languageId, new SelectionRangeAdapter(worker)));
@@ -2012,4 +2027,4 @@ function disposeAll(disposables) {
   }
 }
 
-export { CompletionAdapter, DefinitionAdapter, DiagnosticsAdapter, DocumentColorAdapter, DocumentFormattingEditProvider, DocumentHighlightAdapter, DocumentLinkAdapter, DocumentRangeFormattingEditProvider, DocumentSymbolAdapter, FoldingRangeAdapter, HoverAdapter, ReferenceAdapter, RenameAdapter, SelectionRangeAdapter, WorkerManager, fromPosition, fromRange, setupMode, toRange, toTextEdit };
+export { CompletionAdapter, DefinitionAdapter, DiagnosticsAdapter, DocumentColorAdapter, DocumentFormattingEditProvider, DocumentHighlightAdapter, DocumentLinkAdapter, DocumentRangeFormattingEditProvider, DocumentSymbolAdapter, FoldingRangeAdapter, HoverAdapter, ReferenceAdapter, RenameAdapter, SelectionRangeAdapter, WorkerManager, fromPosition, fromRange, setupMode, setupMode1, toRange, toTextEdit };
