@@ -116,7 +116,7 @@ const PerkSelectionOptions = ({ displayedPerkList }: { displayedPerkList: string
         {Number(perkHash) > 10 && (
           <>
             {perk.inLiveDatabase ? '' : `❌`}
-            {perk.uploadToLive ? '🍕' : `⚠️`}
+            {perk.uploadToLive ? '⚠️' : ``}
             {language !== 'en' && updateTracker[language]?.lastUpdate! < updateTracker.en?.lastUpdate! ? ' ⏳' : ''}
           </>
         )}
