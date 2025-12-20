@@ -1,4 +1,4 @@
-import { m as monaco_editor_core_star } from './index-0e675ece.js';
+import { m as monaco_editor_core_star } from './index-8be20f44.js';
 
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.

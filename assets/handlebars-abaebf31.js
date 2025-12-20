@@ -1,4 +1,4 @@
-import { m as monaco_editor_core_star } from './index-0e675ece.js';
+import { m as monaco_editor_core_star } from './index-8be20f44.js';
 
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -25,7 +25,7 @@ var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "defau
 var monaco_editor_core_exports = {};
 __reExport(monaco_editor_core_exports, monaco_editor_core_star);
 
-// src/basic-languages/html/html.ts
+// src/basic-languages/handlebars/handlebars.ts
 var EMPTY_ELEMENTS = [
   "area",
   "base",
@@ -47,11 +47,12 @@ var EMPTY_ELEMENTS = [
 var conf = {
   wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
   comments: {
-    blockComment: ["<!--", "-->"]
+    blockComment: ["{{!--", "--}}"]
   },
   brackets: [
     ["<!--", "-->"],
     ["<", ">"],
+    ["{{", "}}"],
     ["{", "}"],
     ["(", ")"]
   ],
@@ -63,17 +64,14 @@ var conf = {
     { open: "'", close: "'" }
   ],
   surroundingPairs: [
+    { open: "<", close: ">" },
     { open: '"', close: '"' },
-    { open: "'", close: "'" },
-    { open: "{", close: "}" },
-    { open: "[", close: "]" },
-    { open: "(", close: ")" },
-    { open: "<", close: ">" }
+    { open: "'", close: "'" }
   ],
   onEnterRules: [
     {
-      beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join("|")}))([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`, "i"),
-      afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>$/i,
+      beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`, "i"),
+      afterText: /^<\/(\w[\w\d]*)\s*>$/i,
       action: {
         indentAction: monaco_editor_core_exports.languages.IndentAction.IndentOutdent
       }
@@ -82,41 +80,67 @@ var conf = {
       beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`, "i"),
       action: { indentAction: monaco_editor_core_exports.languages.IndentAction.Indent }
     }
-  ],
-  folding: {
-    markers: {
-      start: new RegExp("^\\s*<!--\\s*#region\\b.*-->"),
-      end: new RegExp("^\\s*<!--\\s*#endregion\\b.*-->")
-    }
-  }
+  ]
 };
 var language = {
   defaultToken: "",
-  tokenPostfix: ".html",
-  ignoreCase: true,
+  tokenPostfix: "",
   tokenizer: {
     root: [
-      [/<!DOCTYPE/, "metatag", "@doctype"],
-      [/<!--/, "comment", "@comment"],
-      [/(<)((?:[\w\-]+:)?[\w\-]+)(\s*)(\/>)/, ["delimiter", "tag", "", "delimiter"]],
-      [/(<)(script)/, ["delimiter", { token: "tag", next: "@script" }]],
-      [/(<)(style)/, ["delimiter", { token: "tag", next: "@style" }]],
-      [/(<)((?:[\w\-]+:)?[\w\-]+)/, ["delimiter", { token: "tag", next: "@otherTag" }]],
-      [/(<\/)((?:[\w\-]+:)?[\w\-]+)/, ["delimiter", { token: "tag", next: "@otherTag" }]],
-      [/</, "delimiter"],
-      [/[^<]+/]
+      [/\{\{!--/, "comment.block.start.handlebars", "@commentBlock"],
+      [/\{\{!/, "comment.start.handlebars", "@comment"],
+      [/\{\{/, { token: "@rematch", switchTo: "@handlebarsInSimpleState.root" }],
+      [/<!DOCTYPE/, "metatag.html", "@doctype"],
+      [/<!--/, "comment.html", "@commentHtml"],
+      [/(<)(\w+)(\/>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
+      [/(<)(script)/, ["delimiter.html", { token: "tag.html", next: "@script" }]],
+      [/(<)(style)/, ["delimiter.html", { token: "tag.html", next: "@style" }]],
+      [/(<)([:\w]+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
+      [/(<\/)(\w+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
+      [/</, "delimiter.html"],
+      [/\{/, "delimiter.html"],
+      [/[^<{]+/]
     ],
     doctype: [
-      [/[^>]+/, "metatag.content"],
-      [/>/, "metatag", "@pop"]
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.comment"
+        }
+      ],
+      [/[^>]+/, "metatag.content.html"],
+      [/>/, "metatag.html", "@pop"]
     ],
     comment: [
-      [/-->/, "comment", "@pop"],
-      [/[^-]+/, "comment.content"],
-      [/./, "comment.content"]
+      [/\}\}/, "comment.end.handlebars", "@pop"],
+      [/./, "comment.content.handlebars"]
+    ],
+    commentBlock: [
+      [/--\}\}/, "comment.block.end.handlebars", "@pop"],
+      [/./, "comment.content.handlebars"]
+    ],
+    commentHtml: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.comment"
+        }
+      ],
+      [/-->/, "comment.html", "@pop"],
+      [/[^-]+/, "comment.content.html"],
+      [/./, "comment.content.html"]
     ],
     otherTag: [
-      [/\/?>/, "delimiter", "@pop"],
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.otherTag"
+        }
+      ],
+      [/\/?>/, "delimiter.html", "@pop"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
       [/[\w\-]+/, "attribute.name"],
@@ -124,6 +148,13 @@ var language = {
       [/[ \t\r\n]+/]
     ],
     script: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.script"
+        }
+      ],
       [/type/, "attribute.name", "@scriptAfterType"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
@@ -132,21 +163,31 @@ var language = {
       [
         />/,
         {
-          token: "delimiter",
-          next: "@scriptEmbedded",
+          token: "delimiter.html",
+          next: "@scriptEmbedded.text/javascript",
           nextEmbedded: "text/javascript"
         }
       ],
       [/[ \t\r\n]+/],
-      [/(<\/)(script\s*)(>)/, ["delimiter", "tag", { token: "delimiter", next: "@pop" }]]
+      [
+        /(<\/)(script\s*)(>)/,
+        ["delimiter.html", "tag.html", { token: "delimiter.html", next: "@pop" }]
+      ]
     ],
     scriptAfterType: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.scriptAfterType"
+        }
+      ],
       [/=/, "delimiter", "@scriptAfterTypeEquals"],
       [
         />/,
         {
-          token: "delimiter",
-          next: "@scriptEmbedded",
+          token: "delimiter.html",
+          next: "@scriptEmbedded.text/javascript",
           nextEmbedded: "text/javascript"
         }
       ],
@@ -155,17 +196,10 @@ var language = {
     ],
     scriptAfterTypeEquals: [
       [
-        /"module"/,
+        /\{\{/,
         {
-          token: "attribute.value",
-          switchTo: "@scriptWithCustomType.text/javascript"
-        }
-      ],
-      [
-        /'module'/,
-        {
-          token: "attribute.value",
-          switchTo: "@scriptWithCustomType.text/javascript"
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.scriptAfterTypeEquals"
         }
       ],
       [
@@ -185,8 +219,8 @@ var language = {
       [
         />/,
         {
-          token: "delimiter",
-          next: "@scriptEmbedded",
+          token: "delimiter.html",
+          next: "@scriptEmbedded.text/javascript",
           nextEmbedded: "text/javascript"
         }
       ],
@@ -195,9 +229,16 @@ var language = {
     ],
     scriptWithCustomType: [
       [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.scriptWithCustomType.$S2"
+        }
+      ],
+      [
         />/,
         {
-          token: "delimiter",
+          token: "delimiter.html",
           next: "@scriptEmbedded.$S2",
           nextEmbedded: "$S2"
         }
@@ -210,10 +251,24 @@ var language = {
       [/<\/script\s*>/, { token: "@rematch", next: "@pop" }]
     ],
     scriptEmbedded: [
-      [/<\/script/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }],
-      [/[^<]+/, ""]
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInEmbeddedState.scriptEmbedded.$S2",
+          nextEmbedded: "@pop"
+        }
+      ],
+      [/<\/script/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }]
     ],
     style: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.style"
+        }
+      ],
       [/type/, "attribute.name", "@styleAfterType"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
@@ -222,21 +277,31 @@ var language = {
       [
         />/,
         {
-          token: "delimiter",
-          next: "@styleEmbedded",
+          token: "delimiter.html",
+          next: "@styleEmbedded.text/css",
           nextEmbedded: "text/css"
         }
       ],
       [/[ \t\r\n]+/],
-      [/(<\/)(style\s*)(>)/, ["delimiter", "tag", { token: "delimiter", next: "@pop" }]]
+      [
+        /(<\/)(style\s*)(>)/,
+        ["delimiter.html", "tag.html", { token: "delimiter.html", next: "@pop" }]
+      ]
     ],
     styleAfterType: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.styleAfterType"
+        }
+      ],
       [/=/, "delimiter", "@styleAfterTypeEquals"],
       [
         />/,
         {
-          token: "delimiter",
-          next: "@styleEmbedded",
+          token: "delimiter.html",
+          next: "@styleEmbedded.text/css",
           nextEmbedded: "text/css"
         }
       ],
@@ -244,6 +309,13 @@ var language = {
       [/<\/style\s*>/, { token: "@rematch", next: "@pop" }]
     ],
     styleAfterTypeEquals: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.styleAfterTypeEquals"
+        }
+      ],
       [
         /"([^"]*)"/,
         {
@@ -261,8 +333,8 @@ var language = {
       [
         />/,
         {
-          token: "delimiter",
-          next: "@styleEmbedded",
+          token: "delimiter.html",
+          next: "@styleEmbedded.text/css",
           nextEmbedded: "text/css"
         }
       ],
@@ -271,9 +343,16 @@ var language = {
     ],
     styleWithCustomType: [
       [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.styleWithCustomType.$S2"
+        }
+      ],
+      [
         />/,
         {
-          token: "delimiter",
+          token: "delimiter.html",
           next: "@styleEmbedded.$S2",
           nextEmbedded: "$S2"
         }
@@ -286,8 +365,39 @@ var language = {
       [/<\/style\s*>/, { token: "@rematch", next: "@pop" }]
     ],
     styleEmbedded: [
-      [/<\/style/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }],
-      [/[^<]+/, ""]
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInEmbeddedState.styleEmbedded.$S2",
+          nextEmbedded: "@pop"
+        }
+      ],
+      [/<\/style/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }]
+    ],
+    handlebarsInSimpleState: [
+      [/\{\{\{?/, "delimiter.handlebars"],
+      [/\}\}\}?/, { token: "delimiter.handlebars", switchTo: "@$S2.$S3" }],
+      { include: "handlebarsRoot" }
+    ],
+    handlebarsInEmbeddedState: [
+      [/\{\{\{?/, "delimiter.handlebars"],
+      [
+        /\}\}\}?/,
+        {
+          token: "delimiter.handlebars",
+          switchTo: "@$S2.$S3",
+          nextEmbedded: "$S3"
+        }
+      ],
+      { include: "handlebarsRoot" }
+    ],
+    handlebarsRoot: [
+      [/"[^"]*"/, "string.handlebars"],
+      [/[#/][^\s}]+/, "keyword.helper.handlebars"],
+      [/else\b/, "keyword.helper.handlebars"],
+      [/[\s]+/],
+      [/[^}]/, "variable.parameter.handlebars"]
     ]
   }
 };

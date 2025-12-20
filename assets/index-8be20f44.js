@@ -122633,7 +122633,7 @@ registerLanguage({
   aliases: ["FreeMarker2", "Apache FreeMarker2"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
     }
   }
 });
@@ -122642,7 +122642,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Angle/Dollar)", "Apache FreeMarker2 (Angle/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationDollar);
     }
   }
 });
@@ -122651,7 +122651,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Bracket/Dollar)", "Apache FreeMarker2 (Bracket/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationDollar);
     }
   }
 });
@@ -122660,7 +122660,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Angle/Bracket)", "Apache FreeMarker2 (Angle/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAngleInterpolationBracket);
     }
   }
 });
@@ -122669,7 +122669,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Bracket/Bracket)", "Apache FreeMarker2 (Bracket/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagBracketInterpolationBracket);
     }
   }
 });
@@ -122678,7 +122678,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Auto/Dollar)", "Apache FreeMarker2 (Auto/Dollar)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationDollar);
     }
   }
 });
@@ -122687,7 +122687,7 @@ registerLanguage({
   aliases: ["FreeMarker2 (Auto/Bracket)", "Apache FreeMarker2 (Auto/Bracket)"],
   loader: () => {
     {
-      return __vitePreload(() => import('./freemarker2-77d43f6e.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationBracket);
+      return __vitePreload(() => import('./freemarker2-f3e966f8.js'),true?[]:void 0,import.meta.url).then((m) => m.TagAutoInterpolationBracket);
     }
   }
 });
@@ -122722,7 +122722,7 @@ registerLanguage({
   mimetypes: ["text/x-handlebars-template"],
   loader: () => {
     {
-      return __vitePreload(() => import('./handlebars-8590c77a.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./handlebars-abaebf31.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -122745,7 +122745,7 @@ registerLanguage({
   mimetypes: ["text/html", "text/x-jshtm", "text/template", "text/ng-template"],
   loader: () => {
     {
-      return __vitePreload(() => import('./html-d6258dbc.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./html-38306cfb.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -122783,7 +122783,7 @@ registerLanguage({
   mimetypes: ["text/javascript"],
   loader: () => {
     {
-      return __vitePreload(() => import('./javascript-6d5f4584.js'),true?["./javascript-6d5f4584.js","./typescript-f8591854.js"]:void 0,import.meta.url);
+      return __vitePreload(() => import('./javascript-06f06dad.js'),true?["./javascript-06f06dad.js","./typescript-a5ee577e.js"]:void 0,import.meta.url);
     }
   }
 });
@@ -122852,7 +122852,7 @@ registerLanguage({
   mimetypes: ["application/liquid"],
   loader: () => {
     {
-      return __vitePreload(() => import('./liquid-9cd62bd6.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./liquid-c7f0a02b.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123053,7 +123053,7 @@ registerLanguage({
   firstLine: "^#!/.*\\bpython[0-9.-]*\\b",
   loader: () => {
     {
-      return __vitePreload(() => import('./python-945dbfa6.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./python-0a19f7f8.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123087,7 +123087,7 @@ registerLanguage({
   mimetypes: ["text/x-cshtml"],
   loader: () => {
     {
-      return __vitePreload(() => import('./razor-92149606.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./razor-ea76b203.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123323,7 +123323,7 @@ registerLanguage({
   mimetypes: ["text/typescript"],
   loader: () => {
     {
-      return __vitePreload(() => import('./typescript-f8591854.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./typescript-a5ee577e.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123361,7 +123361,7 @@ registerLanguage({
   mimetypes: ["text/xml", "application/xml", "application/xaml+xml", "application/xml-dtd"],
   loader: () => {
     {
-      return __vitePreload(() => import('./xml-77f5a961.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./xml-c6e8b98e.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123373,7 +123373,7 @@ registerLanguage({
   mimetypes: ["application/x-yaml", "text/x-yaml"],
   loader: () => {
     {
-      return __vitePreload(() => import('./yaml-652aa313.js'),true?[]:void 0,import.meta.url);
+      return __vitePreload(() => import('./yaml-51defcf4.js'),true?[]:void 0,import.meta.url);
     }
   }
 });
@@ -123494,7 +123494,7 @@ var lessDefaults = new LanguageServiceDefaultsImpl$3("less", optionsDefault$1, m
 monaco_editor_core_exports$3.languages.css = { cssDefaults, lessDefaults, scssDefaults };
 function getMode$3() {
   {
-    return __vitePreload(() => import('./cssMode-b19567d7.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./cssMode-436eaf12.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports$3.languages.onLanguage("less", () => {
@@ -123619,7 +123619,7 @@ monaco_editor_core_exports$2.languages.html = {
 };
 function getMode$2() {
   {
-    return __vitePreload(() => import('./htmlMode-174851fe.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./htmlMode-56a35481.js'),true?[]:void 0,import.meta.url);
   }
 }
 function registerHTMLLanguageService(languageId, options = optionsDefault, modeConfiguration = getConfigurationDefault(languageId)) {
@@ -123721,7 +123721,7 @@ var jsonDefaults = new LanguageServiceDefaultsImpl$1("json", diagnosticDefault, 
 monaco_editor_core_exports$1.languages.json = { jsonDefaults };
 function getMode$1() {
   {
-    return __vitePreload(() => import('./jsonMode-476523f5.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./jsonMode-3332e488.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports$1.languages.register({
@@ -123966,7 +123966,7 @@ monaco_editor_core_exports.languages.typescript = {
 };
 function getMode() {
   {
-    return __vitePreload(() => import('./tsMode-8024b55b.js'),true?[]:void 0,import.meta.url);
+    return __vitePreload(() => import('./tsMode-f4c96dfe.js'),true?[]:void 0,import.meta.url);
   }
 }
 monaco_editor_core_exports.languages.onLanguage("typescript", () => {
@@ -170756,7 +170756,7 @@ const PerkSelectionOptions = ({ displayedPerkList }) => {
       perk.type === "Armor Trait Exotic" ? perk.itemName || perk.name : perk.name,
       Number(perkHash) > 10 && /* @__PURE__ */ jsxs(Fragment, { children: [
         perk.inLiveDatabase ? "" : `❌`,
-        perk.uploadToLive ? "🍕" : `⚠️`,
+        perk.uploadToLive ? "⚠️" : ``,
         language !== "en" && updateTracker[language]?.lastUpdate < updateTracker.en?.lastUpdate ? " ⏳" : ""
       ] })
     ] }, i);
