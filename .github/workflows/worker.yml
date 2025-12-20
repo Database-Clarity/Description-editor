@@ -53,8 +53,9 @@ jobs:
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          # folder: 'site'
+          folder: 'site'
           branch: website
+
 
 
 
