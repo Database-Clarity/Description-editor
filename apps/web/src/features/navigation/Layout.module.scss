@@ -1,5 +1,4 @@
 @use '../../data/variables' as theme;
-@use '../../data/globalStyles' as shared;
 
 .layout {
   display: grid;
@@ -8,7 +7,7 @@
 }
 
 .sidebar {
-  padding: 1.5rem 1rem;
+  padding: 0.75rem;
   background: hsl(240, 7%, 14%);
   border-right: 1px solid theme.$button-border-color;
   height: 100vh;
@@ -20,8 +19,8 @@
 
 .tooltipNavigation {
   display: grid;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
   small {
     color: #aaa;
     font-size: 0.75rem;
@@ -31,14 +30,14 @@
 .tooltipNavigation label,
 .pageSelection {
   display: grid;
-  gap: 0.4rem;
-  font-size: 0.9rem;
+  gap: 0.2rem;
+  font-size: 0.8rem;
   input,
   select {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
-    padding: 0.6rem;
+    padding: 0.4rem;
     color: #eee;
     background: #19191d;
     border: 1px solid #666;
@@ -52,56 +51,17 @@
 
 .brand {
   display: grid;
-  gap: 0.4rem;
-  margin-bottom: 1.75rem;
+  gap: 0.2rem;
+  margin-bottom: 1rem;
 
   strong {
     color: theme.$orange-color;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
   }
 
   span {
     color: hsl(0, 0%, 72%);
     font-size: 0.85rem;
-  }
-}
-
-.toggle {
-  @include shared.button;
-  width: 100%;
-  padding: 0.6rem;
-  border-style: solid;
-  border-radius: 0.3rem;
-  margin-bottom: 1rem;
-}
-
-.compact {
-  .sidebar {
-    padding: 0.75rem;
-  }
-  .brand {
-    margin-bottom: 1rem;
-    gap: 0.2rem;
-    strong {
-      font-size: 1.3rem;
-    }
-  }
-  .tooltipNavigation {
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-  }
-  .tooltipNavigation label,
-  .pageSelection {
-    gap: 0.2rem;
-    font-size: 0.8rem;
-    input,
-    select {
-      padding: 0.4rem;
-    }
-  }
-  .toggle {
-    padding: 0.4rem;
-    font-size: 0.8rem;
   }
 }
 

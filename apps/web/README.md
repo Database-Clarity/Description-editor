@@ -11,7 +11,7 @@ be hosted below a GitHub Pages repository path.
 
 - `src/App.tsx`: routes; use router links to preserve browser back/forward history.
 - `src/features/`: one folder for each feature. Empty folders reserve later work.
-- `src/features/navigation/`: compact-by-default category/tooltip dropdowns at the
+- `src/features/navigation/`: one compact layout with category/tooltip dropdowns at the
   top of the sidebar, name/hash search, alias resolution, and history-aware navigation.
   Categories are grouped by their registry group and order. Workspace navigation
   is a secondary dropdown. Wheel/arrow stepping is scoped to the Tooltip dropdown,

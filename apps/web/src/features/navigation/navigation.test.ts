@@ -6,7 +6,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { TooltipNavigation } from './TooltipNavigation';
-import { useNavigationStore } from './navigationStore';
+import { Layout } from './Layout';
 
 const data: EditorData = {
   categories: [
@@ -58,8 +58,7 @@ const data: EditorData = {
 };
 
 describe('tooltip catalog', () => {
-  it('uses compact navigation by default and grouped dropdowns rather than lists or paging buttons', () => {
-    expect(useNavigationStore.getState().compact).toBe(true);
+  it('uses grouped dropdowns rather than lists or paging buttons', () => {
     const markup = renderToStaticMarkup(
       createElement(
         MemoryRouter,
@@ -74,6 +73,12 @@ describe('tooltip catalog', () => {
     expect(markup).not.toContain('<button');
     expect(markup).toContain('value="10" selected=""');
     expect(markup).not.toContain('value="11"');
+  });
+  it('provides one navigation appearance with no density toggle', () => {
+    const markup = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(Layout)));
+    expect(markup).not.toContain('Comfortable navigation');
+    expect(markup).not.toContain('Compact navigation');
+    expect(markup).not.toContain('aria-pressed');
   });
   it('resolves enhanced variants and sandbox aliases to the base', () => {
     expect(canonicalHash(11, data)).toBe(10);

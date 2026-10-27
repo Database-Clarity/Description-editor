@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useNavigationStore } from './navigationStore';
 import { useDataStore } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { AuthStatus } from '../auth/AuthStatus';
@@ -18,8 +17,6 @@ const links = [
 ];
 
 export function Layout() {
-  const compact = useNavigationStore((state) => state.compact);
-  const toggleCompact = useNavigationStore((state) => state.toggleCompact);
   const location = useLocation();
   const navigate = useNavigate();
   const { data, status, error, load } = useDataStore();
@@ -40,7 +37,7 @@ export function Layout() {
   }, [pending, draftError]);
 
   return (
-    <div className={`${styles.layout} ${compact ? styles.compact : ''}`}>
+    <div className={styles.layout}>
       <a
         className={styles.skipLink}
         href="#main-content"
@@ -72,14 +69,6 @@ export function Layout() {
             ))}
           </select>
         </label>
-        <button
-          className={styles.toggle}
-          type="button"
-          aria-pressed={compact}
-          onClick={toggleCompact}
-        >
-          {compact ? 'Comfortable navigation' : 'Compact navigation'}
-        </button>
         <AuthStatus />
         <p className={styles.status}>
           {data && `Data revision ${data.bundle.sourceCommit.slice(0, 8)}`}
