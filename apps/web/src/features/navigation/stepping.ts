@@ -1,5 +1,14 @@
 export type NavigateTo = (path: string, options: { replace: boolean }) => void;
 
+export function stepWithinCategory(
+  current: number,
+  direction: number,
+  hashes: readonly number[],
+): number | undefined {
+  const index = hashes.indexOf(current);
+  return index < 0 ? undefined : hashes[index + direction];
+}
+
 export function shiftScrollDirection(
   event: Pick<WheelEvent, 'shiftKey' | 'ctrlKey' | 'metaKey' | 'deltaX' | 'deltaY'>,
 ): number {

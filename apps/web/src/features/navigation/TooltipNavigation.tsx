@@ -3,39 +3,39 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { EditorData } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { itemFor, navigationGroups, variantHashes } from './catalog';
-import { createStepping, shiftScrollDirection } from './stepping';
+import { createStepping, shiftScrollDirection, stepWithinCategory } from './stepping';
 import styles from './Layout.module.scss';
 
 export function TooltipNavigation({ data }: { data: EditorData }) {
   const [query, setQuery] = useState('');
   const groups = useMemo(() => navigationGroups(data, query), [data, query]);
-  const hashes = useMemo(
-    () =>
-      groups.flatMap((group) =>
-        group.sections.flatMap((category) => category.items.map((item) => item.hash)),
-      ),
-    [groups],
-  );
   const drafts = useDraftStore((state) => state.drafts);
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
   const location = useLocation();
+  const hash = Number(location.pathname.split('/')[2]);
+  const sections = groups.flatMap((group) => group.sections);
+  const selectedCategory =
+    sections.find((category) => category.id === itemFor(hash, data)?.categoryId) ?? sections[0];
+  const items = selectedCategory?.items ?? [];
+  const hashes = items.map((item) => item.hash);
   const path = useRef(location.pathname);
   path.current = location.pathname;
   const select = useRef<HTMLSelectElement>(null);
   const [stepping] = useState(() =>
     createStepping((target, options) => navigateRef.current(target, options)),
   );
-  const step = useRef<(direction: number) => void>(() => {});
+  const step = useRef<(direction: number) => boolean>(() => false);
   step.current = (direction) => {
-    const index = hashes.indexOf(Number(path.current.split('/')[2]));
-    const next = index === -1 ? hashes[0] : hashes[index + direction];
+    const next = stepWithinCategory(Number(path.current.split('/')[2]), direction, hashes);
     if (next !== undefined) {
       const target = `/t/${next}`;
       stepping.step(path.current, target);
       path.current = target;
+      return true;
     }
+    return false;
   };
   useEffect(() => {
     const element = select.current;
@@ -48,8 +48,7 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
     const shiftWheel = (event: WheelEvent) => {
       const direction = shiftScrollDirection(event);
       if (!direction) return;
-      event.preventDefault();
-      step.current(direction);
+      if (step.current(direction)) event.preventDefault();
     };
     const pop = () => stepping.cancel();
     const change = (event: Event) => {
@@ -74,11 +73,6 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
       stepping.cancel();
     };
   }, [stepping]);
-  const hash = Number(location.pathname.split('/')[2]);
-  const sections = groups.flatMap((group) => group.sections);
-  const selectedCategory =
-    sections.find((category) => category.id === itemFor(hash, data)?.categoryId) ?? sections[0];
-  const items = selectedCategory?.items ?? [];
   function choose(hash: number) {
     stepping.commit();
     navigate(`/t/${hash}`);
@@ -142,7 +136,8 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
         </select>
       </label>
       <small id="tooltip-stepping-help">
-        Shift+Scroll anywhere to step; arrow keys on Tooltip also work. * = unsaved draft.
+        Shift+Scroll anywhere steps within this category and stops at its ends. Arrow keys on
+        Tooltip also work. * = unsaved draft.
       </small>
     </section>
   );

@@ -17,6 +17,9 @@ be hosted below a GitHub Pages repository path.
   is a secondary dropdown. Shift+Scroll steps anywhere in the app, including
   inside editors, matching the original site. Unmodified wheel/arrow stepping
   also works on the Tooltip dropdown; ordinary page/editor scrolling is untouched.
+  Stepping stays inside the selected category and stops at either end (no wrap,
+  no category crossing). If the current tooltip is not in the filtered category,
+  choose a tooltip explicitly before stepping.
   Explicit selections push history;
   stepping replaces immediately and commits one entry after a second idle.
 - `src/ui/`: shared components and base styles.

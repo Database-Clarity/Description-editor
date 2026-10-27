@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EditorData } from '../../stores/data';
 import { canonicalHash, navigationGroups, variantHashes } from './catalog';
-import { createStepping, shiftScrollDirection } from './stepping';
+import { createStepping, shiftScrollDirection, stepWithinCategory } from './stepping';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
@@ -109,6 +109,16 @@ describe('tooltip catalog', () => {
 });
 
 describe('stepping history', () => {
+  it('steps only within the selected category and stops at both ends without wrapping', () => {
+    const category = [10, 30, 40];
+    expect(stepWithinCategory(10, -1, category)).toBeUndefined();
+    expect(stepWithinCategory(40, 1, category)).toBeUndefined();
+    expect(stepWithinCategory(10, 1, category)).toBe(30);
+    expect(stepWithinCategory(30, -1, category)).toBe(10);
+    expect(stepWithinCategory(20, 1, category)).toBeUndefined();
+    expect(stepWithinCategory(Number.NaN, 1, category)).toBeUndefined();
+    expect(stepWithinCategory(10, 1, [])).toBeUndefined();
+  });
   it('recognizes Shift+Scroll anywhere, including horizontal wheel deltas, without stealing normal scrolling or zoom', () => {
     const event = { shiftKey: false, ctrlKey: false, metaKey: false, deltaX: 0, deltaY: 100 };
     expect(shiftScrollDirection(event)).toBe(0);
