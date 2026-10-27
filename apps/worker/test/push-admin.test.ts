@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { contentHash, type Permissions } from '@clarity/core';
+import { contentHash, publishableHash, type Permissions } from '@clarity/core';
 import { config, Fixture, makePrivateKey, sha, tooltip } from './fixture.js';
 
 let key: string;
@@ -47,7 +47,7 @@ describe('push-live', () => {
         databaseSettings: { folders: { saved: [] } },
       });
       expect(fixture.current()['live/pushed.json']).toEqual({
-        '123': await contentHash(tooltip()),
+        '123': await publishableHash(tooltip()),
       });
       expect(result.pushed).toEqual(fixture.current()['live/pushed.json']);
     },
@@ -125,10 +125,29 @@ describe('push-live', () => {
     const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
     expect(response.status).toBe(200);
     expect(fixture.current()['live/pushed.json']).toEqual({
-      '123': await contentHash(tooltip()),
+      '123': await publishableHash(tooltip()),
       '999': 'f'.repeat(64),
     });
     expect(fixture.current()['tooltips/123.json']).toEqual(tooltip('changed after export'));
+  });
+
+  it('records publishable hashes without edit metadata or snapshots', async () => {
+    const metadataOnly = tooltip();
+    metadataOnly.text.en = {
+      ...metadataOnly.text.en!,
+      updatedAt: '2026-10-27T00:00:00Z',
+      updatedBy: 'bob',
+    };
+    metadataOnly.legacy = { uploadedBy: 'bob', lastUpload: 1000 };
+    metadataOnly.bungieSnapshot = {
+      description: 'new snapshot',
+      snapshotAt: '2026-10-27T00:00:00Z',
+    };
+    fixture.moveData({ 'tooltips/123.json': metadataOnly });
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+    const expected = await publishableHash(tooltip());
+    expect(expected).not.toBe(await contentHash(metadataOnly));
+    expect(fixture.current()['live/pushed.json']).toEqual({ '123': expected });
   });
 
   it('reports a partial push explicitly if live changes before the marker commit', async () => {

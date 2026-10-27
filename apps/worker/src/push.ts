@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  contentHash,
+  publishableHash,
   exportLegacy,
   hashSchema,
   pushedSchema,
@@ -47,7 +47,7 @@ export async function pushLive(
       const tooltip = tooltipSchema.parse(file.value);
       if (tooltip.hash !== hash) throw new HttpError(502, 'Stored tooltip hash mismatch');
       tooltips.push(tooltip);
-      exportedHashes[hash] = await contentHash(tooltip);
+      exportedHashes[hash] = await publishableHash(tooltip);
     }
     const { facts, aliases } = await catalog(github.env);
     for (const tooltip of tooltips) {

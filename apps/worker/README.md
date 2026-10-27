@@ -20,7 +20,7 @@ never from a request or token. Permissions are read on every request and retry
 | `GET /auth/callback`                      | GitHub `code`, `state` query                                             | 302 to `SITE_URL#/auth/callback?session=<token>`; state cookie cleared |
 | `GET /me`                                 | Bearer token                                                             | `{ id: number, login, role: string \| null, languages: string[] }`     |
 | `POST /save`                              | `{ changes: [{ hash, base: Tooltip \| null, next: Tooltip }], message }` | `{ commit, tooltips: Tooltip[] }`                                      |
-| `POST /push-live`                         | `{ hashes: number[] }`                                                   | `{ commit, liveCommit, pushed: { [hash]: contentHash }, branch }`      |
+| `POST /push-live`                         | `{ hashes: number[] }`                                                   | `{ commit, liveCommit, pushed: { [hash]: publishableHash }, branch }`  |
 | `GET /compendium/:tab`                    | URL-encoded sheet name                                                   | `{ rows: string[][] }`                                                 |
 | `GET /permissions`                        | Maintainer token                                                         | `{ users: { [githubId]: { login, role, languages? } } }`               |
 | `PUT /permissions`                        | Same permissions object; maintainer only                                 | `{ commit, permissions }`                                              |
@@ -64,7 +64,10 @@ receive the inventory item's exported entry with the alias hash. Existing
 unselected perks, database settings and other root fields are preserved.
 The target Contents API PUT checks the file SHA and retries collisions up to
 three times. Then a separate Git Data commit updates `live/pushed.json` with the
-**exported snapshot's** core content hashes, never a later editor save's hashes.
+**exported snapshot's** core `publishableHash` values, never a later editor save's
+hashes. These hash only language text strings, associations and optional custom
+identity, excluding edit/upload metadata and snapshots. Save still uses full
+`contentHash` values for concurrency comparisons.
 
 GitHub has no atomic transaction across two branches. If the live write succeeds
 but the marker cannot be recorded, an explicit error includes
