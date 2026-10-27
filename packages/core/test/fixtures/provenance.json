@@ -1,0 +1,32 @@
+{
+  "downloadedAt": "2026-10-27T10:07:54.551Z",
+  "sources": {
+    "intermediate": {
+      "repository": "Database-Clarity/Live-Clarity-Database",
+      "branch": "intermediate",
+      "commit": "fbb6b2d54720c8abda67eb7c915d7be487b0c087",
+      "path": "intermediateDescriptions.json",
+      "url": "https://raw.githubusercontent.com/Database-Clarity/Live-Clarity-Database/fbb6b2d54720c8abda67eb7c915d7be487b0c087/intermediateDescriptions.json",
+      "bytes": 1973639,
+      "sha256": "9f4109e1454b2cbf0ecb826e26a005a319167419e6d849cad0a30cf60655d9df"
+    },
+    "live": {
+      "repository": "Database-Clarity/Live-Clarity-Database",
+      "branch": "converter",
+      "commit": "0bd5daebe80c1efcbad21d86658ec5d70e4f0da5",
+      "path": "liveDescriptions.json",
+      "url": "https://raw.githubusercontent.com/Database-Clarity/Live-Clarity-Database/0bd5daebe80c1efcbad21d86658ec5d70e4f0da5/liveDescriptions.json",
+      "bytes": 1976169,
+      "sha256": "0ef049b9ee11fbd5ee36f8f9e21020233dcf75e68283c7703794de91e876ae28"
+    },
+    "generator": {
+      "repository": "Database-Clarity/Description-data-generator",
+      "branch": "main",
+      "commit": "d9917f1eb4d1fa8db37b242d283984ffc405625e",
+      "path": "templates/descriptions.json",
+      "url": "https://raw.githubusercontent.com/Database-Clarity/Description-data-generator/d9917f1eb4d1fa8db37b242d283984ffc405625e/templates/descriptions.json",
+      "bytes": 397092,
+      "sha256": "15aa02ecd8ca7753f719ae7e800e7c6e73756d479d4d82bca9a2742ac55ed9d7"
+    }
+  }
+}
