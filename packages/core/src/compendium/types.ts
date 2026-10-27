@@ -30,17 +30,42 @@ export const compendiumCellSchema = z
     'Compendium plain text must match its runs',
   );
 export const compendiumTabSchema = z.object({ gid: z.string().regex(/^-?\d+$/), name: z.string() });
+export const compendiumPositionSchema = z.object({
+  row: z.number().int().min(1).max(20000),
+  col: z.number().int().min(0).max(255),
+});
+export const compendiumGridCellSchema = compendiumPositionSchema.extend({
+  rowSpan: z.number().int().min(1).max(256).optional(),
+  colSpan: z.number().int().min(1).max(256).optional(),
+  cell: compendiumCellSchema,
+});
+export const compendiumCellOffsetSchema = z
+  .object({
+    dRow: z.number().int().min(-20000).max(20000),
+    dCol: z.number().int().min(-255).max(255),
+  })
+  .strict();
+export const compendiumCellOffsetsSchema = z
+  .array(compendiumCellOffsetSchema)
+  .min(1)
+  .max(256)
+  .refine(
+    (cells) => new Set(cells.map(({ dRow, dCol }) => `${dRow}:${dCol}`)).size === cells.length,
+    'Description cells must be distinct',
+  );
 export const compendiumRowSchema = z.object({
   name: z.string(),
   nameNorm: z.string(),
   section: z.string().optional(),
   rowIndex: z.number().int().positive(),
+  anchor: compendiumPositionSchema.optional(),
   cell: compendiumCellSchema,
 });
 export const compendiumSheetSchema = z.object({
   gid: z.string().regex(/^-?\d+$/),
   name: z.string(),
   rows: z.array(compendiumRowSchema),
+  grid: z.array(compendiumGridCellSchema).optional(),
 });
 export const compendiumDataSchema = z.object({
   fetchedAt: z.string().datetime({ offset: true }),
@@ -53,6 +78,7 @@ export const compendiumLinkSchema = z
     section: z.string().optional(),
     snapshot: compendiumCellSchema,
     snapshotAt: z.string().datetime({ offset: true }),
+    cells: compendiumCellOffsetsSchema.optional(),
   })
   .strict();
 export type CompendiumStyle = z.infer<typeof compendiumStyleSchema>;
@@ -63,6 +89,9 @@ export type CompendiumRow = z.infer<typeof compendiumRowSchema>;
 export type CompendiumSheet = z.infer<typeof compendiumSheetSchema>;
 export type CompendiumData = z.infer<typeof compendiumDataSchema>;
 export type CompendiumLink = z.infer<typeof compendiumLinkSchema>;
+export type CompendiumPosition = z.infer<typeof compendiumPositionSchema>;
+export type CompendiumGridCell = z.infer<typeof compendiumGridCellSchema>;
+export type CompendiumCellOffset = z.infer<typeof compendiumCellOffsetSchema>;
 
 export function styleKey(run: CompendiumRun): string {
   return JSON.stringify(

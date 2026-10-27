@@ -17,6 +17,7 @@ import { cssRules, resolveStyle, safeHref } from './styles.js';
 import {
   normaliseRuns,
   type CompendiumCell,
+  type CompendiumGridCell,
   type CompendiumRun,
   type CompendiumSheet,
   type CompendiumStyle,
@@ -42,9 +43,8 @@ export function parseCompendiumTabs(html: string): CompendiumTab[] {
   return [...tabs.values()].filter((tab) => isTrackedCompendiumTab(tab.name));
 }
 
-interface GridCell {
+interface GridCell extends CompendiumGridCell {
   element: HtmlElement;
-  cell: CompendiumCell;
 }
 interface GridRow {
   row: number;
@@ -104,7 +104,14 @@ export function parseCompendiumGrid(html: string): GridRow[] {
         column + width > 256
       )
         throw new Error('Invalid Compendium cell span');
-      const value = { element, cell: cell(element) };
+      const value = {
+        element,
+        cell: cell(element),
+        row,
+        col: column,
+        ...(width > 1 ? { colSpan: width } : {}),
+        ...(height > 1 ? { rowSpan: height } : {}),
+      };
       for (let down = 0; down < height; down++) {
         const target = (occupied[row - 1 + down] ??= []);
         for (let across = 0; across < width; across++) {
@@ -174,8 +181,22 @@ export function parseCompendiumSheet(html: string, tab: string, tabName?: string
   if (!isTrackedCompendiumTab(tabName ?? config?.name ?? tab)) {
     throw new Error(`Ignored Compendium tab: ${tabName ?? config?.name ?? tab}`);
   }
-  if (config?.navigationOnly) return { gid: tab, name: tabName ?? config.name, rows: [] };
   const grid = parseCompendiumGrid(html);
+  const fullGrid = [
+    ...new Set(
+      grid.flatMap(({ cells }) =>
+        cells.filter((cell): cell is GridCell => !!cell && !!cell.cell.plain.trim()),
+      ),
+    ),
+  ].map(({ row, col, rowSpan, colSpan, cell }) => ({
+    row,
+    col,
+    ...(rowSpan ? { rowSpan } : {}),
+    ...(colSpan ? { colSpan } : {}),
+    cell,
+  }));
+  if (config?.navigationOnly)
+    return { gid: tab, name: tabName ?? config.name, rows: [], grid: fullGrid };
   let groups: CompendiumColumns[] | undefined = config?.cards ? config.groups : undefined;
   let section: string | undefined;
   const rows: CompendiumSheet['rows'] = [];
@@ -254,6 +275,7 @@ export function parseCompendiumSheet(html: string, tab: string, tabName?: string
           name: rowKey,
           nameNorm: normaliseCompendiumName(rowKey),
           rowIndex: row,
+          anchor: { row: name.row, col: name.col },
           ...((columns.section ?? section) ? { section: columns.section ?? section } : {}),
           cell: combined,
         };
@@ -266,5 +288,5 @@ export function parseCompendiumSheet(html: string, tab: string, tabName?: string
     throw new Error(
       `Could not detect Compendium name/description headers for ${tabName ?? tab}; configure this tab in core/compendium/config.ts`,
     );
-  return { gid: tab, name: tabName ?? config?.name ?? tab, rows };
+  return { gid: tab, name: tabName ?? config?.name ?? tab, rows, grid: fullGrid };
 }
