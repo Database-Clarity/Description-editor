@@ -6,6 +6,12 @@ index/worktree. Manifest aliases resolve to canonical tooltips. Configured
 category tabs are preferred; all tabs are searched if no name matches there.
 Full names and individual identifiers in multiline name cells are considered,
 including base names for enhanced variants and weapon names for catalysts.
+Conservative category-specific variants cover set-bonus prefixes, elemental or
+Kinetic armor mods, shared ammo mods, shortened grenade names and explicitly
+mapped catalyst host names. Source names with bounded Roman-numeral ranges
+also identify each included rank; ampersands normalize to "and".
+Explicit exotic-trait aliases cover documented host cells and renamed source
+identifiers, not arbitrary description-substring or fuzzy matches.
 Only one exact or normalized name match is auto-linked. Ambiguous and
 similarity-only matches remain unlinked with candidates in the CSV report.
 

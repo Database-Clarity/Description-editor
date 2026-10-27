@@ -13,6 +13,7 @@ export function normaliseCompendiumName(name: string): string {
     .normalize('NFKD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
+    .replace(/&/g, ' and ')
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
 }

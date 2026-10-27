@@ -73,6 +73,17 @@ export function autoLinkCompendium(
     .flatMap((tab) => tab.rows.map((row) => ({ tab, row })));
   const preferred = compendiumPreferredTabs(category, name);
   function matches(rows: CompendiumMatch[]): CompendiumMatch[] {
+    const direct = rows.filter(({ row }) =>
+      compendiumIdentifiers(row.name).some((identifier) => identifier === name),
+    );
+    if (direct.length) return direct;
+    const normalizedName = normaliseCompendiumName(name);
+    const normalizedDirect = rows.filter(({ row }) =>
+      compendiumIdentifiers(row.name).some(
+        (identifier) => normaliseCompendiumName(identifier) === normalizedName,
+      ),
+    );
+    if (normalizedDirect.length) return normalizedDirect;
     const exact = rows.filter(({ row }) =>
       compendiumIdentifiers(row.name).some((identifier) => names.has(identifier)),
     );

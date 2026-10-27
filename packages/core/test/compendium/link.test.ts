@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { autoLinkCompendium } from '../../src/compendium/link.js';
+import { compendiumIdentifiers, compendiumPreferredTabs } from '../../src/compendium/config.js';
 import { normaliseCompendiumName } from '../../src/compendium/resolve.js';
 import { publishableHash } from '../../src/publishableHash.js';
 import type { CompendiumData } from '../../src/compendium/types.js';
@@ -84,4 +85,80 @@ it('never auto-links ambiguous or similarity-only matches and explains global/gh
       now,
     ).reason,
   ).toBe('no-equivalent');
+});
+it.each([
+  ['armor-mod-general', 'Set Bonus: \nWild Anthem', 'Wild Anthem\n\nLegacy Crucible Vendor'],
+  ['armor-mod-general', 'Kinetic Siphon', 'Siphon\n[3 Energy]'],
+  ['armor-mod-general', 'Heavy Ammo Finder', 'Ammo Finder\n[3 Energy]'],
+  ['armor-mod-general', 'Special Ammo Scout', 'Ammo Scout\n[1 Energy]'],
+  ['subclass-super', 'Silence and Squall', 'Silence & Squall'],
+  ['subclass-grenade', 'Slicewire Grenade', 'Slicewire'],
+  ['weapon-catalyst-exotic', 'Jade Rabbit Catalyst', 'The Jade Rabbit'],
+  ['weapon-catalyst-exotic', 'Prometheus Catalyst', 'Prometheus Lens'],
+  ['weapon-catalyst-exotic', 'Wardcliff Coil Catalyst', 'The Wardcliff Coil'],
+  ['weapon-catalyst-exotic', 'Worldline Catalyst', 'Worldline Zero'],
+  ['weapon-catalyst-exotic', 'Whisper Catalyst', 'Whisper of the Worm'],
+  ['weapon-catalyst-exotic', 'Khvostov Catalyst', 'Khvostov 7G-0X'],
+  ['weapon-catalyst-exotic', 'Acrius Catalyst', 'Legend of Acrius'],
+  ['weapon-catalyst-exotic', 'Skyburner Catalyst', 'Skyburner\u2019s Oath'],
+  ['weapon-catalyst-exotic', 'Colony Catalyst', 'The Colony'],
+  ['weapon-catalyst-exotic', 'Prospector Catalyst', 'The Prospector'],
+  ['weapon-frame-exotic', 'Cranial Spike', 'Dead Man\u2019s Tale\nCranial Spike I\u2013IV'],
+  ['weapon-frame-exotic', 'Cranial Spike III', 'Dead Man\u2019s Tale\nCranial Spike I\u2013IV'],
+  ['weapon-trait-exotic', 'Spinning Up', 'SUROS Regime\nSUROS Legacy\nSelectable Trait'],
+  ['weapon-trait-exotic', 'Dual Speed Receiver', 'SUROS Regime\nSUROS Legacy\nSelectable Trait'],
+  ['weapon-trait-exotic', 'Time-Slip', 'No Time to Explain\nRewind Again'],
+  ['weapon-trait-exotic', 'Restorative Turret', 'Edge of Intent\nHealing Turret'],
+  ['weapon-trait-exotic', 'The Scientific Method', 'Tractor Cannon\nScientific Method'],
+  ['weapon-frame-exotic', 'Tri-Planar Mass Driver', 'Third Iteration\nTri-Planar Mass'],
+  ['weapon-frame-exotic', 'Resurgence Directive III', 'Wolfsbane\nResurgence Directive'],
+])('links evidenced category/name variants: %s / %s', (categoryId, name, sourceName) => {
+  const result = autoLinkCompendium(
+    tooltip,
+    { 123: { hash: 123, name, categoryId } },
+    {},
+    { ...data, tabs: [{ ...data.tabs[0], rows: [row(sourceName)] }] },
+    now,
+  );
+  expect(result.reason).toBe('linked');
+  expect(result.next?.compendium?.rowKey).toBe(sourceName);
+});
+it('keeps bounded name variants conservative and prioritizes armor sets over ordinary mods', () => {
+  expect(compendiumPreferredTabs('armor-mod-general', 'Set Bonus: \nWild Anthem')).toEqual([
+    '1287885342',
+  ]);
+  expect(compendiumIdentifiers('Cranial Spike I\u2013IV')).not.toContain('Cranial Spike V');
+  expect(compendiumIdentifiers('Cranial Spike IV\u2013I')).not.toContain('Cranial Spike');
+  const source = { ...data, tabs: [{ ...data.tabs[0], rows: [row('Prometheus Lens')] }] };
+  expect(
+    autoLinkCompendium(
+      tooltip,
+      { 123: { hash: 123, name: 'Prometheus Catalyst', categoryId: 'weapon-perk' } },
+      {},
+      source,
+      now,
+    ).reason,
+  ).toBe('unmatched');
+});
+it('prefers the full item name over shortened variants without hiding genuine ambiguity', () => {
+  const items = { 123: { hash: 123, name: 'Storm Grenade', categoryId: 'subclass-grenade' } };
+  const source = {
+    ...data,
+    tabs: [{ ...data.tabs[0], rows: [row('Storm Grenade'), row('Storm')] }],
+  };
+  const result = autoLinkCompendium(tooltip, items, {}, source, now);
+  expect(result.reason).toBe('linked');
+  expect(result.next?.compendium?.rowKey).toBe('Storm Grenade');
+  expect(
+    autoLinkCompendium(
+      tooltip,
+      items,
+      {},
+      {
+        ...source,
+        tabs: [{ ...source.tabs[0], rows: [row('Storm Grenade'), row('Storm Grenade')] }],
+      },
+      now,
+    ).reason,
+  ).toBe('ambiguous');
 });

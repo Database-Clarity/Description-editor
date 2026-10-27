@@ -148,6 +148,7 @@ const fragmentTabs: Record<string, string> = {
   'Facet of ': '1918152785',
 };
 export function compendiumPreferredTabs(category: string, name: string): string[] {
+  if (category === 'armor-mod-general' && /^Set Bonus:\s*/.test(name)) return ['1287885342'];
   const fragment =
     category === 'subclass-fragment' &&
     Object.entries(fragmentTabs).find(([prefix]) => name.startsWith(prefix))?.[1];
@@ -160,17 +161,68 @@ export function compendiumNameVariants(category: string, name: string): string[]
     if (prefix) names.push(name.slice(prefix.length));
   }
   if (category === 'armor-mod-general') {
-    names.push(name.replace(/\b(?:Arc|Solar|Void|Stasis|Strand|Harmonic)\s+/g, ''));
+    names.push(name.replace(/^Set Bonus:\s*/, ''));
+    names.push(name.replace(/\b(?:Arc|Solar|Void|Stasis|Strand|Harmonic|Kinetic)\s+/g, ''));
+    if (/^(?:Heavy|Special) Ammo (?:Finder|Scout)$/.test(name)) {
+      names.push(name.replace(/^(?:Heavy|Special) /, ''));
+    }
   }
-  if (category === 'weapon-catalyst-exotic') names.push(name.replace(/\s+catalyst$/i, ''));
+  if (category === 'subclass-grenade') names.push(name.replace(/\s+Grenade$/, ''));
+  if (category === 'weapon-catalyst-exotic') {
+    names.push(name.replace(/\s+catalyst$/i, ''));
+    const weapon = Object.hasOwn(catalystWeapons, name) ? catalystWeapons[name] : undefined;
+    if (weapon) names.push(weapon);
+  }
+  if (category === 'weapon-trait-exotic' || category === 'weapon-frame-exotic') {
+    const source = Object.hasOwn(exoticSourceNames, name) ? exoticSourceNames[name] : undefined;
+    if (source) names.push(source);
+  }
   return [...new Set(names)];
 }
+// These traits share a named weapon cell or use the source's older trait name.
+const exoticSourceNames: Record<string, string> = {
+  'Spinning Up': 'SUROS Regime',
+  'Dual Speed Receiver': 'SUROS Regime',
+  'Time-Slip': 'No Time to Explain',
+  'Restorative Turret': 'Healing Turret',
+  'The Scientific Method': 'Scientific Method',
+  'Tri-Planar Mass Driver': 'Tri-Planar Mass',
+  'Resurgence Directive II': 'Resurgence Directive',
+  'Resurgence Directive III': 'Resurgence Directive',
+  'Resurgence Directive IV': 'Resurgence Directive',
+};
+const catalystWeapons: Record<string, string> = {
+  'Jade Rabbit Catalyst': 'The Jade Rabbit',
+  'Prometheus Catalyst': 'Prometheus Lens',
+  'Wardcliff Coil Catalyst': 'The Wardcliff Coil',
+  'Worldline Catalyst': 'Worldline Zero',
+  'Whisper Catalyst': 'Whisper of the Worm',
+  'Khvostov Catalyst': 'Khvostov 7G-0X',
+  'Acrius Catalyst': 'Legend of Acrius',
+  'Skyburner Catalyst': "Skyburner's Oath",
+  'Colony Catalyst': 'The Colony',
+  'Prospector Catalyst': 'The Prospector',
+};
 export function compendiumIdentifiers(name: string): string[] {
-  return [
+  const identifiers = [
     name,
     ...name
       .split('\n')
       .map((line) => line.replace(/^[↑+\s]+/u, '').trim())
       .filter(Boolean),
   ];
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+  return identifiers.flatMap((identifier) => {
+    const range = /^(.*?) ([IVX]+)[–-]([IVX]+)$/.exec(identifier);
+    if (!range) return [identifier];
+    const start = roman.indexOf(range[2]);
+    const end = roman.indexOf(range[3]);
+    return start < 0 || end < start
+      ? [identifier]
+      : [
+          identifier,
+          range[1],
+          ...roman.slice(start, end + 1).map((suffix) => `${range[1]} ${suffix}`),
+        ];
+  });
 }

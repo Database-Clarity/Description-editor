@@ -108,16 +108,16 @@ export function TooltipPage() {
                 />
               </section>
               <div>
-              <TooltipPreview
-                text={value}
-                lang={lang}
-                name={entry?.name ?? `Tooltip ${variant}`}
-                icon={entry?.icon || undefined}
-                categoryLabel={category?.label ?? entry?.categoryId}
-                globals={globals}
-                tooltipHash={variant}
-              />
-              <CompendiumPanel base={base} />
+                <TooltipPreview
+                  text={value}
+                  lang={lang}
+                  name={entry?.name ?? `Tooltip ${variant}`}
+                  icon={entry?.icon || undefined}
+                  categoryLabel={category?.label ?? entry?.categoryId}
+                  globals={globals}
+                  tooltipHash={variant}
+                />
+                <CompendiumPanel base={base} />
               </div>
             </div>
             <AssociationsPanel hash={variant} />
