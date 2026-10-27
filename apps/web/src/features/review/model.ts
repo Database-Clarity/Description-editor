@@ -1,6 +1,6 @@
 import { publishableHash, resolveAlias, type Tooltip } from '@clarity/core';
-import type { User } from '../../services/api';
 import type { EditorData } from '../../stores/data';
+export { canPushLive as canPush } from '../auth/permissions';
 
 export interface PendingTooltip {
   tooltip: Tooltip;
@@ -52,10 +52,6 @@ export function selectedPending(
   return pending
     .filter(({ tooltip }) => selected.has(tooltip.hash))
     .map(({ tooltip }) => tooltip.hash);
-}
-
-export function canPush(user: User | null): boolean {
-  return user?.role === 'maintainer' || user?.role === 'editor';
 }
 
 export function stepIndex(index: number, delta: number, length: number): number {

@@ -1,6 +1,6 @@
 import { pushedSchema, tooltipSchema } from '@clarity/core';
 import { z } from 'zod';
-import { apiUrl } from './api';
+import { apiRequest } from './api';
 
 const commitSchema = z.object({
   commit: z.string().regex(/^[0-9a-f]{40}$/),
@@ -29,15 +29,10 @@ async function request(
   signal?: AbortSignal,
   push?: { hashes: number[]; expected: Record<string, string> },
 ): Promise<unknown> {
-  if (!apiUrl)
-    throw new Error('VITE_API_URL is not configured. History and publishing are unavailable.');
-  const token = sessionStorage.getItem('clarity-editor-session');
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await apiRequest(path, {
     method: push ? 'POST' : 'GET',
-    credentials: 'omit',
     signal,
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(push ? { 'Content-Type': 'application/json' } : {}),
     },
     ...(push ? { body: JSON.stringify(push) } : {}),

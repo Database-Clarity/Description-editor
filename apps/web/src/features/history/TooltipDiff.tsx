@@ -1,4 +1,5 @@
 import { languages, type Tooltip } from '@clarity/core';
+import { WordDiff } from '../../ui/diff';
 import styles from './History.module.scss';
 
 export function TooltipDiff({ before, current }: { before: Tooltip | null; current: Tooltip }) {
@@ -13,6 +14,7 @@ export function TooltipDiff({ before, current }: { before: Tooltip | null; curre
               <strong>Previous / live</strong>
               <pre>{before?.text[lang]?.text ?? '(not present)'}</pre>
             </div>
+            <WordDiff before={before?.text[lang]?.text ?? ''} after={current.text[lang]?.text ?? ''} />
             <div>
               <strong>Current</strong>
               <pre>{current.text[lang]?.text ?? '(not present)'}</pre>
