@@ -23,33 +23,37 @@ function mainOnly(perks: Record<string, LegacyPerk>) {
   }
   return normalized;
 }
-const fingerprint = (value: unknown) =>
-  createHash('sha256').update(stableStringify(value)).digest('hex');
-
 test('every live hash roundtrips exactly except the intentional secondary replacement', () => {
   const live = database('live');
   expect(exportLegacy(migrateLegacy(live), 0, catalog(live.perks))).toEqual(mainOnly(live.perks));
 });
-test('intermediate export covers every live hash; every branch difference is pinned explicitly', async () => {
+test('every intermediate field survives independently of the documented live-branch drift', () => {
   const intermediate = database('intermediate');
   const live = database('live');
   const exported = exportLegacy(migrateLegacy(intermediate), 0, catalog(intermediate.perks));
-  const expected = mainOnly(live.perks);
-  expect(Object.keys(exported).sort()).toEqual(Object.keys(expected).sort());
+  const expectedIntermediate = mainOnly(intermediate.perks);
+  const expectedLive = mainOnly(live.perks);
+  expect(exported).toEqual(expectedIntermediate);
+  expect(Object.keys(exported).sort()).toEqual(Object.keys(expectedLive).sort());
+  const authoredFields = ['editor', 'stats', 'importStatsFrom', 'duration', 'activationCondition'] as const;
   const differences = [];
-  for (const hash of Object.keys(expected)) {
-    if (stableStringify(exported[hash]) === stableStringify(expected[hash])) continue;
+  for (const hash of Object.keys(expectedLive)) {
+    const source = expectedIntermediate[hash];
+    const target = expectedLive[hash];
+    const fields = authoredFields.filter((field) =>
+      stableStringify({ value: source[field] }) !== stableStringify({ value: target[field] }),
+    );
+    if (fields.length === 0) continue;
+    const select = (perk: LegacyPerk) =>
+      Object.fromEntries(fields.map((field) => [field, perk[field] ?? null]));
     differences.push({
       hash: Number(hash),
-      fields: Object.keys({ ...exported[hash], ...expected[hash] }).filter((key) =>
-        stableStringify({ value: exported[hash][key as keyof LegacyPerk] }) !==
-        stableStringify({ value: expected[hash][key as keyof LegacyPerk] }),
-      ).sort(),
-      intermediate: fingerprint(exported[hash]),
-      live: fingerprint(expected[hash]),
+      reason: `Existing source-branch differences in ${fields.join(', ')}; preserve intermediate authored values.`,
+      intermediate: select(source),
+      live: select(target),
     });
   }
-  await expect(`${JSON.stringify(differences, null, 2)}\n`).toMatchFileSnapshot('./fixtures/branch-drift.json');
+  expect(differences).toEqual(fixture('branch-drift'));
 });
 test('generator confirms exactly four non-manifest tooltips and English-only stored content', () => {
   const generator = fixture('generator') as { perks: Record<string, unknown> };

@@ -93,12 +93,12 @@ file pins source commits and SHA-256 checksums. Refresh from this directory:
 
 ```powershell
 node test\refresh-fixtures.mjs
-npm test -- --update test\golden.test.ts
 npm test
 ```
 
-Review the changed fixtures and branch-drift snapshot before committing; never
-use snapshot updates to waive unexplained mapper failures. Refresh refuses a
+Review the changed fixtures and explicit branch-drift values before committing.
+The refresh utility derives drift from the two raw inputs, never the mapper.
+Refresh refuses a
 fixture over 5 MB so gzip support must be added explicitly before larger data is
 committed.
 
@@ -110,12 +110,15 @@ The golden tests therefore:
 
 1. Assert live -> v2 -> live equals every original field for every hash,
    changing **only secondary := main**.
-2. Assert intermediate -> v2 -> export covers every live hash and matches a
-   pinned, exhaustive per-hash list of differing top-level fields and SHA-256
-   fingerprints of **both complete entries** in
-   [branch-drift.json](test/fixtures/branch-drift.json). There is no wildcard
-   ignore for timestamps, metadata, or authored content.
-3. Confirm only reserved hashes 0-3 are absent from the generator template.
+2. Independently assert intermediate -> v2 -> export equals **every original
+   intermediate field** for every hash, changing only secondary. No exception
+   file can waive a migration/export failure, even if all metadata differs.
+3. Compare authored text/stats/links against live, with explicit before/after
+   values and a reason per hash in
+   [branch-drift.json](test/fixtures/branch-drift.json). Upload metadata and
+   generated facts are excluded only from this cross-branch comparison, never
+   from the two exact full-field roundtrip assertions.
+4. Confirm only reserved hashes 0-3 are absent from the generator template.
 
 Schemas and unit tests additionally cover optional authored fields not currently
 present in the intermediate fixture (`stats`, `duration`, `activationCondition`)
