@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { resolveAlias } from '@clarity/core';
 import type { EditorData } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
-import { itemFor, navigationGroups, variantHashes } from './catalog';
+import { frameGroupSize, itemFor, navigationGroups, variantHashes } from './catalog';
 import { createStepping, shiftScrollDirection, stepWithinCategory } from './stepping';
 import styles from './Layout.module.scss';
 
@@ -10,6 +11,10 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
   const [query, setQuery] = useState('');
   const groups = useMemo(() => navigationGroups(data, query), [data, query]);
   const drafts = useDraftStore((state) => state.drafts);
+  const discard = useDraftStore((state) => state.discard);
+  const staleDrafts = Object.entries(drafts).filter(
+    ([hash]) => resolveAlias(Number(hash), data.aliases) !== Number(hash),
+  );
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
@@ -79,6 +84,32 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
   }
   return (
     <section aria-label="Tooltip navigation" className={styles.tooltipNavigation}>
+      {staleDrafts.map(([hash, draft]) => {
+        const canonical = resolveAlias(Number(hash), data.aliases);
+        return (
+          <details key={hash}>
+            <summary role="alert">
+              Recovered draft conflict: {hash} now shares tooltip {canonical}
+            </summary>
+            <p>
+              This draft is preserved, but cannot be saved separately. Copy any text you want to
+              keep into the shared tooltip before discarding it.
+            </p>
+            <button type="button" onClick={() => choose(canonical)}>
+              Open shared tooltip {canonical}
+            </button>
+            {Object.entries(draft.next.text).map(([language, value]) => (
+              <div key={language}>
+                <strong>{language}</strong>
+                <pre className={styles.recoveredText}>{value.text}</pre>
+              </div>
+            ))}
+            <button type="button" onClick={() => discard(Number(hash))}>
+              Discard recovered draft {hash}
+            </button>
+          </details>
+        );
+      })}
       <label>
         Search name or hash
         <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -130,6 +161,7 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
               <option key={item.hash} value={item.hash}>
                 {dirty ? '* ' : ''}
                 {item.name} ({item.hash})
+                {frameGroupSize(item.hash, data) > 1 && ` ×${frameGroupSize(item.hash, data)}`}
               </option>
             );
           })}

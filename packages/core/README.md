@@ -49,7 +49,12 @@ npx tsc --noEmit
   Associations use set merge: union additions, remove an original member if
   either side removed it. All other top-level fields are atomic, including
   snapshots and legacy metadata. A hash mismatch is an error.
-- `exportLegacy(tooltips, now, catalog?)` returns legacy entries keyed by hash.
+- `aliasesSchema` validates generic `{ to, kind: 'sandbox' | 'frame' }` aliases;
+  `resolveAlias(hash, aliases)` follows chains and rejects cycles.
+- `exportLegacy(tooltips, now, catalog?, aliases?)` returns legacy entries keyed by hash.
+  Supply canonical tooltips only. Shared text is emitted under every frame and
+  sandbox alias; each frame keeps its own catalog facts (required when a catalog
+  is supplied). Alias tooltips and cycles fail explicitly.
   `now` is nonnegative integer epoch milliseconds, used only when no legacy upload
   timestamp exists; export does not manufacture new edit authorship. Main text
   supplies **both** legacy editor fields. A translation with known
@@ -72,8 +77,8 @@ const entries = exportLegacy(tooltips, Date.now(), {
 
 With a catalog, any missing manifest record throws (custom tooltip facts can
 supply their own name/category). Without one, export returns authored entries,
-not a complete converter database. Caller owns `databaseSettings`, manifest
-aliases, and selection of tooltips to publish.
+not a complete converter database. Caller owns `databaseSettings`, loading manifest
+aliases, and selection of canonical tooltips to publish.
 
 ## Legacy field inventory
 

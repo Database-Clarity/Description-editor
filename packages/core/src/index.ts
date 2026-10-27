@@ -5,5 +5,6 @@ export * from './contentHash.js';
 export * from './publishableHash.js';
 export * from './migrateLegacy.js';
 export * from './exportLegacy.js';
+export * from './aliases.js';
 export * from './merge3.js';
 export * from './markup/index.js';

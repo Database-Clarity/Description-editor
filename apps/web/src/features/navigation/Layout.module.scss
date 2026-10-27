@@ -43,6 +43,11 @@
     border: 1px solid #666;
     border-radius: 0.2rem;
   }
+
+  .recoveredText {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }
 
 .pageSelection {

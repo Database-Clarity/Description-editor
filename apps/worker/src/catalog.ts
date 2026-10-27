@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { hashSchema, type LegacyCatalog } from '@clarity/core';
+import { aliasesSchema, hashSchema, type Aliases, type LegacyCatalog } from '@clarity/core';
 import { HttpError, upstreamJson } from './http.js';
 import type { Env } from './types.js';
 
@@ -17,21 +17,24 @@ const categoriesSchema = z.array(
     legacyType: z.string().optional(),
   }),
 );
-const aliasesSchema = z.record(
-  z
-    .string()
-    .regex(/^(0|[1-9]\d*)$/)
-    .refine((value) => Number(value) <= 0xffffffff),
-  hashSchema,
-);
+function source(env: Env): string {
+  return (
+    `https://raw.githubusercontent.com/${encodeURIComponent(env.GENERATOR_OWNER)}/` +
+    `${encodeURIComponent(env.GENERATOR_REPO)}/${encodeURIComponent(env.GENERATOR_BRANCH)}/templates/v2`
+  );
+}
+
+export async function loadAliases(env: Env): Promise<Aliases> {
+  return fetch(`${source(env)}/aliases.json`)
+    .then(upstreamJson)
+    .then((value) => aliasesSchema.parse(value));
+}
 
 export async function catalog(env: Env): Promise<{
   facts: LegacyCatalog;
-  aliases: Record<string, number>;
+  aliases: Aliases;
 }> {
-  const root =
-    `https://raw.githubusercontent.com/${encodeURIComponent(env.GENERATOR_OWNER)}/` +
-    `${encodeURIComponent(env.GENERATOR_REPO)}/${encodeURIComponent(env.GENERATOR_BRANCH)}/templates/v2`;
+  const root = source(env);
   const [items, categories, aliases] = await Promise.all([
     fetch(`${root}/items.json`)
       .then(upstreamJson)
@@ -39,9 +42,7 @@ export async function catalog(env: Env): Promise<{
     fetch(`${root}/categories.json`)
       .then(upstreamJson)
       .then((value) => categoriesSchema.parse(value)),
-    fetch(`${root}/sandboxAliases.json`)
-      .then(upstreamJson)
-      .then((value) => aliasesSchema.parse(value)),
+    loadAliases(env),
   ]);
   const categoriesById = new Map(categories.map((category) => [category.id, category]));
   const facts: LegacyCatalog = {};

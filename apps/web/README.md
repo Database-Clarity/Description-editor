@@ -32,6 +32,13 @@ be hosted below a GitHub Pages repository path.
   drafts changed elsewhere; retain both tabs if that warning appears.
 - `src/features/tooltip/`: selected language, base and all enhanced variants,
   editor/preview composition. Enhanced and sandbox URLs replace to the base route.
+  Generic `aliases.json` also redirects same-name weapon frames to their canonical
+  tooltip. Frame groups have one editor (no separate enhanced text), one navigation
+  entry in the canonical member's category and a small `×N` member count.
+  Imports by any alias hash use canonical text, including current drafts. Recovered
+  drafts for former member hashes appear as explicit conflicts in navigation:
+  open the shared tooltip, copy the text to keep, then discard the old draft.
+  They are never applied automatically or silently dropped.
 - `src/data/`: original SCSS theme variables and mixins, copied from legacy.
 - `src/assets/`: the original DestinySymbols font.
 

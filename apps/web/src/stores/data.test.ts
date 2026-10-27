@@ -12,7 +12,7 @@ describe('editor data loading', () => {
     useDataStore.setState({ status: 'idle', data: null, error: null });
   });
   it('exposes loading and ready only after both sources finish, deduplicating in-flight loads', async () => {
-    const catalog = { categories: [], items: {}, sandboxAliases: {} };
+    const catalog = { categories: [], items: {}, aliases: {} };
     const bundle = {
       sourceCommit: 'abc',
       generatedAt: '2026-10-27T00:00:00Z',
@@ -41,7 +41,7 @@ describe('editor data loading', () => {
     });
   });
   it('surfaces source errors instead of showing an empty success and allows retry', async () => {
-    vi.mocked(loadGenerator).mockResolvedValue({ categories: [], items: {}, sandboxAliases: {} });
+    vi.mocked(loadGenerator).mockResolvedValue({ categories: [], items: {}, aliases: {} });
     vi.mocked(loadBundle).mockRejectedValueOnce(new Error('bundle HTTP404'));
     await useDataStore.getState().load();
     expect(useDataStore.getState()).toMatchObject({

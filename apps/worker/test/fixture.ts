@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { vi } from 'vitest';
-import { type Permissions, type Tooltip } from '@clarity/core';
+import { type Aliases, type Permissions, type Tooltip } from '@clarity/core';
 import worker from '../src/index.js';
 import { signToken } from '../src/crypto.js';
 import type { Env } from '../src/types.js';
@@ -55,6 +55,8 @@ export class Fixture {
   googleCalls = 0;
   csv = 'Perk,Description\r\n"Thing","Line 1\nLine 2, ""quoted"""\r\n';
   failGoogle = false;
+  aliases: Aliases = { 789: { to: 123, kind: 'sandbox' } };
+  extraItems: Record<string, unknown> = {};
   history = [
     {
       sha: sha(1),
@@ -154,6 +156,7 @@ export class Fixture {
     if (url.hostname === 'raw.githubusercontent.com') {
       if (url.pathname.endsWith('/items.json'))
         return this.response({
+          ...this.extraItems,
           '123': {
             hash: 123,
             name: 'Demo perk',
@@ -164,7 +167,7 @@ export class Fixture {
         });
       if (url.pathname.endsWith('/categories.json'))
         return this.response([{ id: 'perk', legacyType: 'Weapon Perk' }]);
-      if (url.pathname.endsWith('/sandboxAliases.json')) return this.response({ '789': 123 });
+      if (url.pathname.endsWith('/aliases.json')) return this.response(this.aliases);
     }
     if (url.hostname === 'github.com' && url.pathname === '/login/oauth/access_token') {
       return this.response({ access_token: 'oauth-user-token' });

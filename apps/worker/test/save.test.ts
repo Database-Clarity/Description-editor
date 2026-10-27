@@ -19,6 +19,20 @@ const change = (base = tooltip(), next = tooltip('mine')) => ({
 });
 
 describe('save permission matrix', () => {
+  it('rejects stale alias drafts and creates with a clear canonical target and no writes', async () => {
+    fixture.aliases[123] = { to: 456, kind: 'frame' };
+    const response = await fixture.request('/save', 'POST', change());
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: 'Tooltip 123 is an alias; edit canonical tooltip 456',
+    });
+    const created = await fixture.request('/save', 'POST', {
+      changes: [{ hash: 123, base: null, next: tooltip('new alias') }],
+      message: 'Create',
+    });
+    expect(created.status).toBe(422);
+    expect(fixture.commits).toHaveLength(0);
+  });
   it.each([1, 2, 3])('allows role id %s and credits the editor, not the bot', async (id) => {
     const response = await fixture.request('/save', 'POST', change(), id);
     expect(response.status).toBe(200);

@@ -15,6 +15,32 @@ afterEach(() => {
 });
 
 describe('push-live', () => {
+  it('publishes canonical frame text under every member and sandbox hash with member facts', async () => {
+    fixture.aliases = {
+      456: { to: 123, kind: 'frame' },
+      789: { to: 456, kind: 'sandbox' },
+    };
+    fixture.extraItems = {
+      456: { hash: 456, name: 'Another frame', categoryId: 'perk', itemHash: 222 },
+    };
+    const response = await fixture.request('/push-live', 'POST', { hashes: [123, 456, 789] });
+    expect(response.status).toBe(200);
+    expect(fixture.live).toMatchObject({
+      perks: {
+        123: { hash: 123, editor: { en: { main: 'original' } } },
+        456: {
+          hash: 456,
+          name: 'Another frame',
+          itemHash: 222,
+          editor: { en: { main: 'original' } },
+        },
+        789: { hash: 789, editor: { en: { main: 'original' } } },
+      },
+    });
+    expect(fixture.current()['live/pushed.json']).toEqual({
+      123: await publishableHash(tooltip()),
+    });
+  });
   it.each([1, 2])(
     'lets role id %s export selected entries and aliases without replacing other entries',
     async (id) => {

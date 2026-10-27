@@ -52,3 +52,22 @@ https://raw.githubusercontent.com/Database-Clarity/Live-Clarity-Database/editor-
 
 The returned `sourceCommit` must match the `editor-data` source commit.
 No bot-generated commit is added to the authored branch.
+
+## Same-name frame folding
+
+After generating the new generic aliases, run from this directory:
+
+```powershell
+npm exec tsx -- foldFramesCli.ts --data <isolated-editor-data-checkout> --aliases <aliases.json> --items <items.json> --conflicts <review-notes.md>
+```
+
+This defaults to a dry run. Add `--write` only after inspecting its folded hashes
+and conflict count. Equal per-language texts retain canonical credits; different
+texts take the newest per-language revision (ties prefer canonical, then lowest
+hash). Missing canonical tooltips are created. Every replaced text is archived
+losslessly with its hash, language, author and date before any deletion; complete
+original metadata remains in git history. Associations are unioned and resolved
+through aliases. Other canonical metadata is retained. Group pushed markers are
+cleared so each group's new live aliases must be published once. Review and commit
+the data changes with the folded hash list, push only to `editor-data`, then
+verify its bundle Action. This command never commits or pushes.

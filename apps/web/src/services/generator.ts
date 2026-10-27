@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { hashSchema } from '@clarity/core';
+import { aliasesSchema, hashSchema } from '@clarity/core';
 import { fetchJson } from './http';
 
 const source =
@@ -34,10 +34,10 @@ export type Category = z.infer<typeof categorySchema>;
 export type Item = z.infer<typeof itemSchema>;
 
 export async function loadGenerator(signal?: AbortSignal) {
-  const [categories, items, sandboxAliases] = await Promise.all([
+  const [categories, items, aliases] = await Promise.all([
     fetchJson(`${source}/categories.json`, z.array(categorySchema), { signal }),
     fetchJson(`${source}/items.json`, itemsSchema, { signal }),
-    fetchJson(`${source}/sandboxAliases.json`, z.record(z.string(), hashSchema), { signal }),
+    fetchJson(`${source}/aliases.json`, aliasesSchema, { signal }),
   ]);
-  return { categories, items, sandboxAliases };
+  return { categories, items, aliases };
 }

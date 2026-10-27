@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { languages, langSchema, type Lang, type MarkupGlobals } from '@clarity/core';
 import { apiUrl } from '../../services/api';
+import { tooltipImports } from '../../services/tooltipImports';
 import { useDataStore } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { useAuthStore } from '../../stores/auth';
@@ -20,13 +21,7 @@ export function TooltipPage() {
   const hydrated = useDraftStore((state) => state.hydrated);
   const user = useAuthStore((state) => state.user);
   const sharedGlobals = useMemo<MarkupGlobals>(() => {
-    const imports: Record<string, string> = {};
-    for (const [hash, tooltip] of Object.entries(data?.bundle.tooltips ?? {})) {
-      imports[hash] = tooltip.text[lang]?.text ?? '';
-    }
-    for (const [hash, draft] of Object.entries(drafts)) {
-      imports[hash] = draft.next.text[lang]?.text ?? '';
-    }
+    const imports = tooltipImports(data?.bundle.tooltips ?? {}, drafts, lang, data?.aliases ?? {});
     return { variables: imports[2] ?? '', titles: imports[3] ?? '', imports };
   }, [data, drafts, lang]);
   if (!data) return null;

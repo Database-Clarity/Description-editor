@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { contentHash, hashSchema, merge3, tooltipSchema, type Tooltip } from '@clarity/core';
+import {
+  contentHash,
+  hashSchema,
+  merge3,
+  resolveAlias,
+  tooltipSchema,
+  type Tooltip,
+} from '@clarity/core';
+import { loadAliases } from './catalog.js';
 import { RefRace, type GitHub } from './github.js';
 import { body, HttpError, json } from './http.js';
 import { checkEdit, permissions, requireAccess } from './permissions.js';
@@ -47,7 +55,15 @@ export async function save(request: Request, github: GitHub, user: Identity): Pr
       fields: string[];
     }[] = [];
     const tooltips: Tooltip[] = [];
+    const aliases = await loadAliases(github.env);
     for (const change of input.changes) {
+      const canonical = resolveAlias(change.hash, aliases);
+      if (canonical !== change.hash) {
+        throw new HttpError(
+          422,
+          `Tooltip ${change.hash} is an alias; edit canonical tooltip ${canonical}`,
+        );
+      }
       checkEdit(access, change.base, change.next);
       const file = await github.file(`tooltips/${change.hash}.json`, headCommit);
       const head = file ? tooltipSchema.parse(file.value) : null;

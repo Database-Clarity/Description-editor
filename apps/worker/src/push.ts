@@ -5,6 +5,7 @@ import {
   hashSchema,
   pushedSchema,
   tooltipSchema,
+  resolveAlias,
   type Tooltip,
 } from '@clarity/core';
 import { catalog } from './catalog.js';
@@ -40,8 +41,10 @@ export async function pushLive(
   for (let attempt = 0; attempt < 3; attempt++) {
     const head = await github.head();
     requireAccess(await permissions(github, head), user, ['maintainer', 'editor']);
+    const { facts, aliases } = await catalog(github.env);
+    const canonicalHashes = [...new Set(hashes.map((hash) => resolveAlias(hash, aliases)))];
     const tooltips: Tooltip[] = [];
-    for (const hash of hashes) {
+    for (const hash of canonicalHashes) {
       const file = await github.file(`tooltips/${hash}.json`, head);
       if (!file) throw new HttpError(404, `Tooltip ${hash} does not exist`);
       const tooltip = tooltipSchema.parse(file.value);
@@ -49,21 +52,12 @@ export async function pushLive(
       tooltips.push(tooltip);
       exportedHashes[hash] = await publishableHash(tooltip);
     }
-    const { facts, aliases } = await catalog(github.env);
     for (const tooltip of tooltips) {
       if (!facts[tooltip.hash] && !tooltip.custom) {
         throw new HttpError(422, `Missing generator facts for tooltip ${tooltip.hash}`);
       }
     }
-    const entries = exportLegacy(tooltips, Date.now(), facts);
-    for (const [alias, item] of Object.entries(aliases)) {
-      if (entries[item]) {
-        if (entries[alias] && Number(alias) !== item) {
-          throw new HttpError(422, `Sandbox alias ${alias} collides with a selected tooltip`);
-        }
-        entries[alias] = { ...entries[item], hash: Number(alias) };
-      }
-    }
+    const entries = exportLegacy(tooltips, Date.now(), facts, aliases);
     const liveHead = await github.head(github.env.LIVE_BRANCH);
     const file = await github.requiredFile('liveDescriptions.json', liveHead);
     const live = liveSchema.parse(file.value);

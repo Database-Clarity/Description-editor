@@ -7,6 +7,19 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { TooltipNavigation } from './TooltipNavigation';
 import { Layout } from './Layout';
+import { useDraftStore } from '../../stores/drafts';
+
+vi.mock('../../stores/drafts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../stores/drafts')>();
+  return {
+    ...actual,
+    useDraftStore: Object.assign(
+      (selector?: (state: ReturnType<typeof actual.useDraftStore.getState>) => unknown) =>
+        selector ? selector(actual.useDraftStore.getState()) : actual.useDraftStore.getState(),
+      actual.useDraftStore,
+    ),
+  };
+});
 
 const data: EditorData = {
   categories: [
@@ -40,7 +53,7 @@ const data: EditorData = {
     },
     20: { hash: 20, name: 'Armor', icon: '', categoryId: 'first', inGameDescription: '' },
   },
-  sandboxAliases: { 99: 11 },
+  aliases: { 99: { to: 11, kind: 'sandbox' } },
   bundle: {
     sourceCommit: 'abc',
     generatedAt: '2026-10-27T00:00:00Z',
@@ -58,6 +71,44 @@ const data: EditorData = {
 };
 
 describe('tooltip catalog', () => {
+  it('surfaces stale alias drafts as recoverable conflicts instead of hiding their text', () => {
+    const previous = useDraftStore.getState();
+    const base = { hash: 11, text: {}, associated: [] };
+    useDraftStore.setState({
+      drafts: {
+        11: {
+          base,
+          next: {
+            ...base,
+            text: {
+              en: {
+                text: 'Recovered work to keep',
+                updatedAt: '2026-10-27T00:00:00Z',
+                updatedBy: 'owner',
+              },
+            },
+          },
+        },
+      },
+    });
+    try {
+      const markup = renderToStaticMarkup(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(TooltipNavigation, {
+            data: { ...data, aliases: { 11: { to: 10, kind: 'frame' } } },
+          }),
+        ),
+      );
+      expect(markup).toContain('Recovered draft conflict');
+      expect(markup).toContain('Recovered work to keep');
+      expect(markup).toContain('Open shared tooltip 10');
+      expect(markup).toContain('Discard recovered draft 11');
+    } finally {
+      useDraftStore.setState(previous);
+    }
+  });
   it('uses grouped dropdowns rather than lists or paging buttons', () => {
     const markup = renderToStaticMarkup(
       createElement(
@@ -102,9 +153,41 @@ describe('tooltip catalog', () => {
     expect(navigationGroups(data, 'missing')).toEqual([]);
   });
   it('reports alias cycles rather than looping', () => {
-    expect(() => canonicalHash(98, { ...data, sandboxAliases: { 98: 99, 99: 98 } })).toThrow(
-      'Cyclic',
+    expect(() =>
+      canonicalHash(98, {
+        ...data,
+        aliases: {
+          98: { to: 99, kind: 'sandbox' },
+          99: { to: 98, kind: 'sandbox' },
+        },
+      }),
+    ).toThrow('Cyclic');
+  });
+  it('lists a frame group once, counts all members and edits no alias variants', () => {
+    const frames: EditorData = {
+      ...data,
+      aliases: {
+        11: { to: 10, kind: 'frame' },
+        12: { to: 10, kind: 'frame' },
+        99: { to: 11, kind: 'sandbox' },
+      },
+    };
+    expect(canonicalHash(11, frames)).toBe(10);
+    expect(canonicalHash(99, frames)).toBe(10);
+    expect(variantHashes(10, frames)).toEqual([10]);
+    expect(navigationGroups(frames, '12')[0]?.sections[0]?.items.map((item) => item.hash)).toEqual([
+      10,
+    ]);
+    const markup = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        { initialEntries: ['/t/10'] },
+        createElement(TooltipNavigation, { data: frames }),
+      ),
     );
+    expect(markup).toContain('×3');
+    expect(markup).not.toContain('value="11"');
+    expect(markup).not.toContain('value="12"');
   });
 });
 

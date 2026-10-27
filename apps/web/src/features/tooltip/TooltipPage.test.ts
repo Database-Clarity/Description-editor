@@ -90,7 +90,7 @@ const data: EditorData = {
       baseHash: 10,
     },
   },
-  sandboxAliases: {},
+  aliases: {},
   bundle: {
     sourceCommit: 'abc',
     generatedAt: '2026-10-27T00:00:00Z',
@@ -183,5 +183,21 @@ describe('tooltip screen composition', () => {
       'Edited enhanced',
       'alice',
     );
+  });
+  it('composes one frame editor and projects shared imports into both editor and preview', () => {
+    useDataStore.setState({
+      data: {
+        ...data,
+        aliases: { 11: { to: 10, kind: 'frame' } },
+      },
+    });
+    render();
+    const editors = vi.mocked(ClarityEditor).mock.calls.map(([props]) => props);
+    const previews = vi.mocked(TooltipPreview).mock.calls.map(([props]) => props);
+    expect(editors).toHaveLength(1);
+    expect(previews).toHaveLength(1);
+    for (const props of [...editors, ...previews]) {
+      expect(props.globals.imports?.[11]).toBe(base.text.en?.text);
+    }
   });
 });

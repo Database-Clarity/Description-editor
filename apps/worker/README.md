@@ -40,6 +40,9 @@ committer. The installation token is restricted to the configured repository.
 Maximum 100 distinct changes per save; message length 1–500; JSON body <=2 MB.
 `base: null` creates a tooltip only if its path does not exist. Hashes must agree
 with their record and filenames. Deletion is not exposed.
+Saving an alias hash returns 422 naming its canonical tooltip; old drafts cannot
+recreate folded frame or sandbox tooltip files. Alias loading failures block
+saves rather than bypassing that guard.
 
 Maintainers, editors and trial users can edit. Translators can change only
 `text[lang]` in their configured languages, not associations, snapshots, custom
@@ -59,8 +62,11 @@ contain a copy of `liveDescriptions.json`. No endpoint creates branches.
 
 Selected tooltips are read from one immutable data commit; generator `v2`
 items/categories supply the core export catalog, including optional item facts.
-Categories without a legacy type (verbs) retain their category id. Sandbox aliases
-receive the inventory item's exported entry with the alias hash. Existing
+Categories without a legacy type (verbs) retain their category id. Generic
+`aliases.json` resolves requested frame/sandbox aliases to canonical tooltips and
+deduplicates selections. Core export emits the shared text for every member;
+frame aliases retain their own manifest identity/category. Pushed markers refer
+only to canonical authored tooltips. Existing
 unselected perks, database settings and other root fields are preserved.
 The target Contents API PUT checks the file SHA and retries collisions up to
 three times. Then a separate Git Data commit updates `live/pushed.json` with the
