@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { langSchema } from './languages.js';
-import { statsSchema } from './stats.js';
+import { legacyStatsSchema } from './legacyStats.js';
 
 export const hashSchema = z.number().int().min(0).max(0xffffffff);
 export const trackerEntrySchema = z.object({
@@ -14,7 +14,6 @@ export const legacyMetadataSchema = z.object({
   uploadToLive: z.boolean().optional(),
   updateTracker: z.object({
     descriptions: z.partialRecord(langSchema, trackerEntrySchema),
-    stats: trackerEntrySchema.optional(),
   }).strict().optional(),
 }).strict();
 export const legacyPerkSchema = legacyMetadataSchema.extend({
@@ -26,7 +25,11 @@ export const legacyPerkSchema = legacyMetadataSchema.extend({
   editor: z.partialRecord(langSchema, z.object({
     main: z.string(), secondary: z.string(),
   }).strict()),
-  stats: statsSchema.optional(),
+  updateTracker: z.object({
+    descriptions: z.partialRecord(langSchema, trackerEntrySchema),
+    stats: trackerEntrySchema.optional(),
+  }).strict().optional(),
+  stats: legacyStatsSchema.optional(),
   importStatsFrom: hashSchema.optional(),
   duration: z.array(z.number().finite()).optional(),
   activationCondition: z.string().optional(),

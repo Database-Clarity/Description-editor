@@ -33,7 +33,7 @@ await writeFile(
 await writeBranchDrift(databases.intermediate, databases.live);
 
 async function writeBranchDrift(intermediate, live) {
-  const authoredFields = ['editor', 'stats', 'importStatsFrom', 'duration', 'activationCondition'];
+  const authoredFields = ['editor'];
   const mainOnly = (perk) => {
     const result = structuredClone(perk);
     for (const text of Object.values(result.editor)) text.secondary = text.main;

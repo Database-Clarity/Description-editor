@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { statsSchema } from '../src/stats.js';
+import { legacyStatsSchema as statsSchema } from '../src/legacyStats.js';
 import { database } from './helpers.js';
 
 test('precisely preserves the real legacy stat shape', () => {

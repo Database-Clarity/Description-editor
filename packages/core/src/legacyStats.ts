@@ -20,6 +20,4 @@ export const statSchema = z.object({
   active: modifiers.optional(),
   passive: modifiers.optional(),
 }).strict();
-export const statsSchema = z.partialRecord(z.enum(statNames), z.array(statSchema));
-export type Stat = z.infer<typeof statSchema>;
-export type Stats = z.infer<typeof statsSchema>;
+export const legacyStatsSchema = z.partialRecord(z.enum(statNames), z.array(statSchema));

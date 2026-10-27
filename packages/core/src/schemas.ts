@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { hashSchema, legacyMetadataSchema } from './legacy.js';
 import { langSchema } from './languages.js';
-import { statsSchema } from './stats.js';
 
 export const timestampSchema = z.string().datetime({ offset: true });
 export const langTextSchema = z.object({
@@ -17,10 +16,6 @@ export const tooltipSchema = z.object({
   associated: z.array(hashSchema).refine(
     (values) => new Set(values).size === values.length, 'Associations must be unique',
   ),
-  stats: statsSchema.optional(),
-  importStatsFrom: hashSchema.optional(),
-  duration: z.array(z.number().finite()).optional(),
-  activationCondition: z.string().optional(),
   compendium: z.object({
     tab: z.string(), key: z.string(), column: z.string(),
     snapshot: z.string(), snapshotAt: timestampSchema,

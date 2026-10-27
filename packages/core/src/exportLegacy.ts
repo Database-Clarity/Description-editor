@@ -1,9 +1,10 @@
 import { languages } from './languages.js';
-import type { LegacyCatalog, LegacyPerk } from './legacy.js';
+import type { LegacyCatalog, LegacyMetadata, LegacyPerk } from './legacy.js';
 import { tooltipSchema, type Tooltip } from './schemas.js';
 
 export const translationMaxAge = 90 * 24 * 60 * 60 * 1000;
-export type LegacyEntry = Omit<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'> &
+export type LegacyEntry = LegacyMetadata &
+  Pick<LegacyPerk, 'hash' | 'editor'> &
   Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>>;
 
 export function exportLegacy(
@@ -43,10 +44,6 @@ export function exportLegacy(
       ...facts,
       hash: tooltip.hash,
       editor,
-      ...(tooltip.stats !== undefined ? { stats: tooltip.stats } : {}),
-      ...(tooltip.importStatsFrom !== undefined ? { importStatsFrom: tooltip.importStatsFrom } : {}),
-      ...(tooltip.duration !== undefined ? { duration: tooltip.duration } : {}),
-      ...(tooltip.activationCondition !== undefined ? { activationCondition: tooltip.activationCondition } : {}),
       uploadedBy: tooltip.legacy?.uploadedBy ?? '',
       lastUpload: tooltip.legacy?.lastUpload ?? now,
       inLiveDatabase: tooltip.legacy?.inLiveDatabase ?? false,

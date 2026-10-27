@@ -1,5 +1,4 @@
 export * from './languages.js';
-export * from './stats.js';
 export * from './legacy.js';
 export * from './schemas.js';
 export * from './contentHash.js';

@@ -8,7 +8,7 @@ test('independent language and atomic-field edits merge without mutating input',
   const next = structuredClone(base);
   head.text.de = { ...head.text.en!, text: 'Deutsch' };
   next.text.en!.text = 'Changed';
-  next.importStatsFrom = 100;
+  next.custom = { name: 'Verb', categoryId: 'verbs' };
   const original = structuredClone([base, head, next]);
   expect(merge3(base, head, next)).toEqual({
     ok: true, merged: { ...next, text: { ...next.text, de: head.text.de } },
@@ -17,7 +17,7 @@ test('independent language and atomic-field edits merge without mutating input',
 });
 test('identical edits and unchanged branches merge', () => {
   const base = tooltip();
-  const head = { ...tooltip(), duration: [5] };
+  const head = { ...tooltip(), custom: { name: 'Verb', categoryId: 'verbs' } };
   expect(merge3(base, head, head)).toEqual({ ok: true, merged: head });
   expect(merge3(base, head, base)).toEqual({ ok: true, merged: head });
   expect(merge3(base, base, head)).toEqual({ ok: true, merged: head });
@@ -28,11 +28,11 @@ test('reports all same-language and atomic conflicts, not partial success', () =
   const next = structuredClone(base);
   head.text.en!.text = 'Theirs';
   next.text.en!.text = 'Mine';
-  head.stats = { Damage: [{ active: { stat: [1] } }] };
-  next.stats = { Damage: [{ active: { stat: [2] } }] };
+  head.custom = { name: 'Theirs', categoryId: 'verbs' };
+  next.custom = { name: 'Mine', categoryId: 'verbs' };
   const result = merge3(base, head, next);
   expect(result.ok).toBe(false);
-  if (!result.ok) expect(result.conflicts.map((conflict) => conflict.field).sort()).toEqual(['stats', 'text.en']);
+  if (!result.ok) expect(result.conflicts.map((conflict) => conflict.field).sort()).toEqual(['custom', 'text.en']);
   expect(result).not.toHaveProperty('merged');
 });
 test('association additions union and removals win for existing members', () => {
@@ -44,10 +44,10 @@ test('association additions union and removals win for existing members', () => 
   });
 });
 test('deletion merges with unchanged but conflicts with editing the deleted field', () => {
-  const base = { ...tooltip(), duration: [5] };
+  const base = { ...tooltip(), custom: { name: 'Verb', categoryId: 'verbs' } };
   const head = tooltip();
   expect(merge3(base, head, base)).toEqual({ ok: true, merged: head });
-  expect(merge3(base, head, { ...base, duration: [10] }).ok).toBe(false);
+  expect(merge3(base, head, { ...base, custom: { name: 'Changed', categoryId: 'verbs' } }).ok).toBe(false);
   const removedLanguage = { ...base, text: {} };
   expect(merge3(base, removedLanguage, base).ok).toBe(true);
   const edited = structuredClone(base);

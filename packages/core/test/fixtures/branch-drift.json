@@ -20,26 +20,6 @@
     }
   },
   {
-    "hash": 95934356,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 96682422,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
     "hash": 124726504,
     "reason": "Existing source-branch differences in editor; preserve intermediate authored values.",
     "intermediate": {
@@ -57,26 +37,6 @@
           "secondary": "<void/>Void Grenade Ability damage applies <void/>Weaken for <pve 6 /> <pvp [?] /> seconds.\n\n<arc/>Arc Grenade Ability damage applies <arc/>Jolt."
         }
       }
-    }
-  },
-  {
-    "hash": 331268185,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
-    "hash": 411014648,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
     }
   },
   {
@@ -120,36 +80,6 @@
     }
   },
   {
-    "hash": 634608391,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 703902595,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 1017385934,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 2059068466
-    },
-    "live": {
-      "importStatsFrom": 1677180919
-    }
-  },
-  {
     "hash": 1048183818,
     "reason": "Existing source-branch differences in editor; preserve intermediate authored values.",
     "intermediate": {
@@ -167,36 +97,6 @@
           "secondary": "Hits against Barrier Champion or non-matching Elemental Shields deal increasingly higher damage.\n\nBuff is removed upon hitting a matching shield or an unshielded enemy.\n\nDamage increase by Weapon Archetype:\n• Fusion Rifles: untested //#e${ * #d}% per hit, up to #e${ * #d}%\n• Machine Guns, Auto/Pulse/Trace Rifles: #e${10 * #d}% per hit, up to #e${50 * #d}%\n• Linear Fusion Rifles: #e${22 * #d}% per hit, up to #e${44 * #d}%\n• Bows, Glaives, Hand Cannons, Scout Rifles: #e${25 * #d}% per hit, up to #e${50 * #d}%\n\nenhanced (\nvar d = 1.4\n#e The damage buff is increased by ~40%.\n)"
         }
       }
-    }
-  },
-  {
-    "hash": 1103878128,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 1669792723,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 1702273159,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
     }
   },
   {
@@ -220,16 +120,6 @@
     }
   },
   {
-    "hash": 1801153435,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
     "hash": 1870851715,
     "reason": "Existing source-branch differences in editor; preserve intermediate authored values.",
     "intermediate": {
@@ -250,16 +140,6 @@
     }
   },
   {
-    "hash": 1891463783,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
     "hash": 2152442764,
     "reason": "Existing source-branch differences in editor; preserve intermediate authored values.",
     "intermediate": {
@@ -277,86 +157,6 @@
           "secondary": ""
         }
       }
-    }
-  },
-  {
-    "hash": 2214424583,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
-    "hash": 2237975061,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 2267311547,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 2059068466
-    },
-    "live": {
-      "importStatsFrom": 1677180919
-    }
-  },
-  {
-    "hash": 2303417969,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 2305736470,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 2413278875,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 2479297167,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 2059068466
-    },
-    "live": {
-      "importStatsFrom": 1677180919
-    }
-  },
-  {
-    "hash": 2526773280,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
     }
   },
   {
@@ -400,76 +200,6 @@
     }
   },
   {
-    "hash": 2794359402,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 2059068466
-    },
-    "live": {
-      "importStatsFrom": 1677180919
-    }
-  },
-  {
-    "hash": 2888195476,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
-    "hash": 3013778406,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 967052942
-    },
-    "live": {
-      "importStatsFrom": 1305536863
-    }
-  },
-  {
-    "hash": 3046678542,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 3224649746,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 1125523126
-    },
-    "live": {
-      "importStatsFrom": 2657604783
-    }
-  },
-  {
-    "hash": 3294892432,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
-    "hash": 3462414552,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
-    }
-  },
-  {
     "hash": 3636300852,
     "reason": "Existing source-branch differences in editor; preserve intermediate authored values.",
     "intermediate": {
@@ -486,35 +216,6 @@
           "main": "Only usable while on the ground.\n\nPerforms a front flip in your movement input's direction and slams down the ground with a <solar/>Solar Knife.\n\nUpon landing after using <solar/>Acrobat's Dodge:\n• Grants you and allies within ? meters <solar/>Radiant for 10 seconds (15 with <solar/>Ember of Solace)\n• Deals up to <pve 40 /> <pvp [20] /> damage to targets in a ? meter radius",
           "secondary": "Only usable while on the ground.\n\nPerforms a front flip in your movement input's direction and slams down the ground with a <solar/>Solar Knife.\n\nUpon landing after using <solar/>Acrobat's Dodge:\n• Grants you and allies within ? meters <solar/>Radiant for 10 seconds (15 with <solar/>Ember of Solace)\n• Deals up to <pve 40 /> <pvp [20] /> damage to targets in a ? meter radius"
         }
-      }
-    }
-  },
-  {
-    "hash": 3721627275,
-    "reason": "Existing source-branch differences in stats; preserve intermediate authored values.",
-    "intermediate": {
-      "stats": null
-    },
-    "live": {
-      "stats": {
-        "Ready": [
-          {
-            "passive": {
-              "multiplier": [
-                0.9
-              ]
-            }
-          }
-        ],
-        "Stow": [
-          {
-            "passive": {
-              "multiplier": [
-                0.9
-              ]
-            }
-          }
-        ]
       }
     }
   },
@@ -536,26 +237,6 @@
           "secondary": "Triggering Sacred Flame explosions grants one stack of 'Causality Quiver' for 5.5 seconds. Marking enemies with Sacred Flame refreshes the buff. Maximum of 6 stacks.\n\nCausality Quiver increases the impact damage of your arrows (not the explosion) at 1|2|3|4|5|6 stacks:\n• PvE: 16%|31%|49%|67.5%|87%|87%\n• PvP: 3.6%|11%|12%|16%|23%|23%\n\n//DDC's stack numbers are wrong? Tested at 0 PL Shooting Range Carl\n//Base|Causality x1|...| gives me 209|242|274|311|350|391|391\n//-30 PL Training Dummy gives same %, 140|163|184|209|235|262\n//DDC reports 17%|37%|57%|79%|105%|105%\n//Just gonna use their PvP numbers though lmao, but something to look at"
         }
       }
-    }
-  },
-  {
-    "hash": 3979300428,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 2059068466
-    },
-    "live": {
-      "importStatsFrom": 1677180919
-    }
-  },
-  {
-    "hash": 4283953067,
-    "reason": "Existing source-branch differences in importStatsFrom; preserve intermediate authored values.",
-    "intermediate": {
-      "importStatsFrom": 450381139
-    },
-    "live": {
-      "importStatsFrom": null
     }
   }
 ]

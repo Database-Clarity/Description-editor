@@ -14,28 +14,33 @@ function catalog(perks: Record<string, LegacyPerk>): LegacyCatalog {
     ...(perk.itemName !== undefined ? { itemName: perk.itemName } : {}),
   }]));
 }
-function mainOnly(perks: Record<string, LegacyPerk>) {
+function withoutDroppedFields(perks: Record<string, LegacyPerk>) {
   const normalized = structuredClone(perks);
   for (const perk of Object.values(normalized)) {
+    delete perk.stats;
+    delete perk.importStatsFrom;
+    delete perk.duration;
+    delete perk.activationCondition;
+    if (perk.updateTracker) delete perk.updateTracker.stats;
     for (const text of Object.values(perk.editor)) {
       if (text) text.secondary = text.main;
     }
   }
   return normalized;
 }
-test('every live hash roundtrips exactly except the intentional secondary replacement', () => {
+test('every live hash roundtrips except intentional secondary replacement and stat removal', () => {
   const live = database('live');
-  expect(exportLegacy(migrateLegacy(live), 0, catalog(live.perks))).toEqual(mainOnly(live.perks));
+  expect(exportLegacy(migrateLegacy(live), 0, catalog(live.perks))).toEqual(withoutDroppedFields(live.perks));
 });
 test('every intermediate field survives independently of the documented live-branch drift', () => {
   const intermediate = database('intermediate');
   const live = database('live');
   const exported = exportLegacy(migrateLegacy(intermediate), 0, catalog(intermediate.perks));
-  const expectedIntermediate = mainOnly(intermediate.perks);
-  const expectedLive = mainOnly(live.perks);
+  const expectedIntermediate = withoutDroppedFields(intermediate.perks);
+  const expectedLive = withoutDroppedFields(live.perks);
   expect(exported).toEqual(expectedIntermediate);
   expect(Object.keys(exported).sort()).toEqual(Object.keys(expectedLive).sort());
-  const authoredFields = ['editor', 'stats', 'importStatsFrom', 'duration', 'activationCondition'] as const;
+  const authoredFields = ['editor'] as const;
   const differences = [];
   for (const hash of Object.keys(expectedLive)) {
     const source = expectedIntermediate[hash];

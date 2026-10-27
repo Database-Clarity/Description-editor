@@ -6,9 +6,15 @@ export function migrateLegacy(intermediate: unknown): Tooltip[] {
   const database = legacyDatabaseSchema.parse(intermediate);
   return Object.values(database.perks).map((perk) => {
     const {
-      hash, name, type, editor, stats, importStatsFrom, duration, activationCondition,
-      itemHash: _itemHash, itemName: _itemName, ...legacy
+      hash, name, type, editor, updateTracker,
+      stats: _stats, importStatsFrom: _importStatsFrom,
+      duration: _duration, activationCondition: _activationCondition,
+      itemHash: _itemHash, itemName: _itemName, ...metadata
     } = perk;
+    const legacy = {
+      ...metadata,
+      ...(updateTracker ? { updateTracker: { descriptions: updateTracker.descriptions } } : {}),
+    };
     const text: Tooltip['text'] = {};
     for (const language of languages) {
       const entry = editor[language];
@@ -22,7 +28,7 @@ export function migrateLegacy(intermediate: unknown): Tooltip[] {
       // Old data has no reliable English-source revision; do not invent one.
     }
     return tooltipSchema.parse({
-      hash, text, associated: [], stats, importStatsFrom, duration, activationCondition,
+      hash, text, associated: [],
       ...(hash <= 3 ? { custom: { name, categoryId: type } } : {}),
       legacy,
     });

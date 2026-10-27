@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { exportLegacy, translationMaxAge } from '../src/exportLegacy.js';
-import { tooltip } from './helpers.js';
+import { migrateLegacy } from '../src/migrateLegacy.js';
+import { database, tooltip } from './helpers.js';
 
 test('exports main into both editor fields, including explicitly empty text', () => {
   const value = tooltip();
@@ -55,4 +56,24 @@ test('preserves historical tracker authorship even when that language has no edi
     lastUpdate: 1000, updatedBy: 'translator',
   });
   expect(exportLegacy([value], 0)['42'].editor.ko).toBeUndefined();
+});
+test('all legacy stat fields and tracker credits are omitted from export', () => {
+  const source = database('live');
+  const perk = source.perks['0'];
+  perk.stats = { Damage: [{ active: { stat: [10] } }] };
+  perk.importStatsFrom = 123;
+  perk.duration = [2, 5];
+  perk.activationCondition = 'On hit';
+  perk.updateTracker = {
+    descriptions: { en: { lastUpdate: 1000, updatedBy: 'author' } },
+    stats: { lastUpdate: 2000, updatedBy: 'stat-author' },
+  };
+  const result = exportLegacy(migrateLegacy(source), 0);
+  for (const entry of Object.values(result)) {
+    for (const field of ['stats', 'importStatsFrom', 'duration', 'activationCondition']) {
+      expect(entry).not.toHaveProperty(field);
+    }
+    expect(entry.updateTracker).not.toHaveProperty('stats');
+  }
+  expect(result['0'].updateTracker?.descriptions.en?.updatedBy).toBe('author');
 });

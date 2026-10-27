@@ -18,6 +18,6 @@ test('key order and associated set order do not affect hash; authored changes do
   const a = { ...tooltip(), associated: [9, 2] };
   const b = { associated: [2, 9], text: a.text, hash: a.hash };
   expect(await contentHash(a)).toBe(await contentHash(b));
-  expect(await contentHash({ ...a, activationCondition: 'On hit' })).not.toBe(await contentHash(a));
+  expect(await contentHash({ ...a, custom: { name: 'Verb', categoryId: 'verbs' } })).not.toBe(await contentHash(a));
   expect(a.associated).toEqual([9, 2]);
 });

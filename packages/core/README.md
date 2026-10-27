@@ -28,7 +28,7 @@ npx tsc --noEmit
   complete `LangText` is atomic, preventing text and author/timestamp mismatches.
   Associations use set merge: union additions, remove an original member if
   either side removed it. All other top-level fields are atomic, including
-  stats, snapshots and legacy metadata. A hash mismatch is an error.
+  snapshots and legacy metadata. A hash mismatch is an error.
 - `exportLegacy(tooltips, now, catalog?)` returns legacy entries keyed by hash.
   `now` is nonnegative integer epoch milliseconds, used only when no legacy upload
   timestamp exists; export does not manufacture new edit authorship. Main text
@@ -42,7 +42,7 @@ npx tsc --noEmit
 
 Tooltips do not store generated `name`, `type`, `itemHash`, `itemName`, folders,
 or enhanced pairing. Provide the optional third `catalog` argument to
-`exportLegacy` to restore the full converter entry shape:
+`exportLegacy` to restore converter manifest fields (stat fields remain omitted):
 
 ```ts
 const entries = exportLegacy(tooltips, Date.now(), {
@@ -63,16 +63,19 @@ aliases, and selection of tooltips to publish.
 | `editor[lang].main` | `text[lang].text` |
 | `editor[lang].secondary` | deliberately discarded; export uses main |
 | `updateTracker.descriptions[lang]` | `text[lang].updatedAt/updatedBy`; original also retained in `legacy.updateTracker` |
-| `updateTracker.stats` | `legacy.updateTracker.stats`, including absent `updatedBy` |
+| `updateTracker.stats` | deliberately discarded with the unused stat editor |
 | `uploadedBy`, `lastUpload`, `inLiveDatabase`, `uploadToLive` | `legacy` compatibility metadata |
-| `stats` | precise stat-name/weapon-type/modifier schema; arrays preserved |
-| `importStatsFrom`, `duration`, `activationCondition` | same-named optional authored fields |
+| `stats`, `importStatsFrom`, `duration`, `activationCondition` | deliberately discarded; no v2 schema fields or export output |
 | `name`, `type` | excluded manifest facts; reserved custom hashes 0-3 preserve these as `custom.name/categoryId` |
 | `itemHash`, `itemName` | excluded manifest facts, supplied at export by caller |
 | `databaseSettings.folders/enhancedPerks` | excluded manifest structure; caller-owned |
 
-Migration keeps stats links and upload flags without interpreting them as v2
-permissions or pushed state. Missing edit timestamps/authors become epoch/empty
+Migration keeps upload flags without interpreting them as v2 permissions or
+pushed state. All stat data, links, calculation parameters and stat tracker
+credits are intentionally dropped by owner decision; the legacy input-only
+validator still recognizes their original shapes so real fixtures remain
+validated without silently accepting unknown fields. Missing edit
+timestamps/authors become epoch/empty
 author, not guessed upload metadata. Legacy has no reliable source revision:
 `sourceUpdatedAt` is intentionally absent after migration. Orphan language
 trackers without editor text remain in compatibility metadata, retaining credits.
@@ -110,17 +113,18 @@ intermediate can reproduce those live values would silently discard newer work.
 The golden tests therefore:
 
 1. Assert live -> v2 -> live equals every original field for every hash,
-   changing **only secondary := main**.
+   changing **secondary := main and removing all stat fields/stat trackers**.
 2. Independently assert intermediate -> v2 -> export equals **every original
-   intermediate field** for every hash, changing only secondary. No exception
+   intermediate field** for every hash, except the same explicit secondary and
+   stat-removal changes. No exception
    file can waive a migration/export failure, even if all metadata differs.
-3. Compare authored text/stats/links against live, with explicit before/after
+3. Compare remaining authored text against live (12 differing hashes), with explicit before/after
    values and a reason per hash in
    [branch-drift.json](test/fixtures/branch-drift.json). Upload metadata and
    generated facts are excluded only from this cross-branch comparison, never
    from the two exact full-field roundtrip assertions.
 4. Confirm only reserved hashes 0-3 are absent from the generator template.
 
-Schemas and unit tests additionally cover optional authored fields not currently
-present in the intermediate fixture (`stats`, `duration`, `activationCondition`)
-and synthetic translations including the exact 90-day boundary.
+Schemas and unit tests additionally prove removed stat fields (including optional
+`duration` and `activationCondition`) cannot persist in v2 or leak into export,
+and cover synthetic translations including the exact 90-day boundary.

@@ -17,9 +17,10 @@ test('migrates every real record; drops secondary and manifest facts', () => {
   }
   expect(migrated.find((entry) => entry.hash === 2)?.custom?.name).toBe('Global variables');
 });
-test('preserves authored optional fields and tracker authors without inventing provenance', () => {
+test('drops stat-only fields and credits while preserving text authors without inventing provenance', () => {
   const source = database('intermediate');
   const perk = source.perks['42'] = { ...source.perks['0'], hash: 42 };
+  perk.importStatsFrom = 123;
   perk.duration = [2, 5];
   perk.activationCondition = 'On hit';
   perk.stats = { Damage: [{ active: { stat: [10] } }] };
@@ -33,14 +34,17 @@ test('preserves authored optional fields and tracker authors without inventing p
   };
   const result = migrateLegacy(source).find((entry) => entry.hash === 42)!;
   expect(result).toMatchObject({
-    duration: [2, 5], activationCondition: 'On hit', stats: perk.stats,
     text: {
       en: { updatedAt: '1970-01-01T00:00:01.000Z', updatedBy: 'alice' },
       de: { text: 'Deutsch', updatedAt: '1970-01-01T00:00:02.000Z', updatedBy: 'bob' },
     },
   });
   expect(result.text.de).not.toHaveProperty('sourceUpdatedAt');
-  expect(result.legacy?.updateTracker?.stats).toEqual(perk.updateTracker.stats);
+  for (const field of ['stats', 'importStatsFrom', 'duration', 'activationCondition']) {
+    expect(result).not.toHaveProperty(field);
+    expect(result.legacy).not.toHaveProperty(field);
+  }
+  expect(result.legacy?.updateTracker).not.toHaveProperty('stats');
 });
 test('missing tracker dates use explicit epoch/empty author, not upload dates', () => {
   const source = database('intermediate');

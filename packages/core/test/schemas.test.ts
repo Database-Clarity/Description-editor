@@ -20,6 +20,14 @@ test('validates hashes, associations, timestamps, custom names and snapshots', (
     bungieSnapshot: { description: '', snapshotAt: '2026-01-01T00:00:00Z' },
   }).custom?.name).toBe('Verb');
 });
+test('v2 rejects removed stat fields, including nested legacy stat trackers', () => {
+  for (const extra of [
+    { stats: {} }, { importStatsFrom: 1 }, { duration: [2] }, { activationCondition: 'On hit' },
+    { legacy: { updateTracker: { descriptions: {}, stats: { lastUpdate: 0 } } } },
+  ]) {
+    expect(tooltipSchema.safeParse({ ...tooltip(), ...extra }).success).toBe(false);
+  }
+});
 test('validates permissions and language restrictions', () => {
   expect(permissionsSchema.parse({
     users: { '123': { login: 'alice', role: 'translator', languages: ['de'] } },
