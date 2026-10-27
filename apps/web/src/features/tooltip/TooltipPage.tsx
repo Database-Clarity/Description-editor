@@ -9,6 +9,8 @@ import { useAuthStore } from '../../stores/auth';
 import { canonicalHash, itemFor, tooltipFor, variantHashes } from '../navigation/catalog';
 import { ClarityEditor } from '../editor';
 import { TooltipPreview } from '../preview';
+import { canEditLanguage } from '../auth/permissions';
+import { useSaveState } from '../../services/save/state';
 import styles from './TooltipPage.module.scss';
 
 export function TooltipPage() {
@@ -20,6 +22,7 @@ export function TooltipPage() {
   const discard = useDraftStore((state) => state.discard);
   const hydrated = useDraftStore((state) => state.hydrated);
   const user = useAuthStore((state) => state.user);
+  const saving = useSaveState((state) => state.locked);
   const sharedGlobals = useMemo<MarkupGlobals>(() => {
     const imports = tooltipImports(data?.bundle.tooltips ?? {}, drafts, lang, data?.aliases ?? {});
     return { variables: imports[2] ?? '', titles: imports[3] ?? '', imports };
@@ -71,7 +74,7 @@ export function TooltipPage() {
               </h2>
               <small>{variant}</small>
               {drafts[variant] && (
-                <button type="button" onClick={() => discard(variant)}>
+                <button type="button" disabled={saving} onClick={() => discard(variant)}>
                   Discard this tooltip's draft
                 </button>
               )}
@@ -84,7 +87,8 @@ export function TooltipPage() {
                   value={value}
                   lang={lang}
                   globals={globals}
-                  readOnly={!apiUrl || !hydrated}
+                  requireEnglish={variant > 3}
+                  readOnly={!apiUrl || !hydrated || saving || !canEditLanguage(user, lang)}
                   onChange={(text) => edit(base, lang, text, user?.login ?? 'local draft')}
                 />
               </section>

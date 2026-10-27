@@ -15,6 +15,13 @@ npx tsc --noEmit
 
 ## Public API
 
+- `validateText(text, lang, globals?, requireEnglish?)` returns source-ranged
+  `{severity,message,from,to}` issues using the same markup parser as preview.
+  Unknown variables/titles warn; parser/import errors and empty English block saves.
+  `validateTooltip(tooltip, globalsForLanguage)` checks every stored language and
+  missing English, attaching hash/language to each issue. Reserved declaration
+  tooltips 0-3 are exempt from the English-description requirement.
+
 - `parseMarkup(text, globals?)` returns `{ lines, diagnostics }`. `lines` uses the
   converter's structured line/span/table format; editor validation and preview use
   the same parser. `globals` holds raw selected-language `variables` (hash 2),

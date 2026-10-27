@@ -1,8 +1,18 @@
 import { useEffect } from 'react';
 import { apiUrl, loginUrl } from '../../services/api';
 import { useAuthStore } from '../../stores/auth';
+import { SavePanel } from '../../services/save/SavePanel';
 
 export function AuthStatus() {
+  return (
+    <>
+      <AuthIdentity />
+      <SavePanel />
+    </>
+  );
+}
+
+function AuthIdentity() {
   const { user, loading, error, load, logout } = useAuthStore();
   useEffect(() => {
     void load();
@@ -25,10 +35,21 @@ export function AuthStatus() {
     return (
       <p>
         Signed in as {user.login} ({user.role ?? 'no editing role'}){' '}
+        {!user.role && <span>Read-only: ask a maintainer for an editing role. </span>}
+        {user.role === 'translator' && (
+          <span>
+            Editable languages: {user.languages?.join(', ') || 'none'}. Other fields are
+            read-only.{' '}
+          </span>
+        )}
         <button type="button" onClick={logout}>
           Sign out
         </button>
       </p>
     );
-  return <a href={loginUrl()}>Sign in with GitHub</a>;
+  return (
+    <p role="status">
+      Read-only: sign in to edit. <a href={loginUrl()}>Sign in with GitHub</a>
+    </p>
+  );
 }

@@ -9,18 +9,20 @@ const userSchema = z.object({
   languages: z.array(langSchema).optional(),
 });
 export type User = z.infer<typeof userSchema>;
+export type Me = User;
 export interface Change {
   hash: number;
-  base: Tooltip;
+  base: Tooltip | null;
   next: Tooltip;
 }
 const conflictSchema = z.object({
   hash: hashSchema,
-  base: tooltipSchema,
-  head: tooltipSchema,
+  base: tooltipSchema.nullable(),
+  head: tooltipSchema.nullable(),
   next: tooltipSchema,
   fields: z.array(z.string()),
 });
+export type SaveConflict = z.infer<typeof conflictSchema>;
 export type SaveResult =
   | { kind: 'saved'; commit: string; tooltips: Tooltip[] }
   | { kind: 'conflicts'; conflicts: z.infer<typeof conflictSchema>[] }
@@ -41,6 +43,12 @@ function authorization(): Record<string, string> {
 function endpoint(path: string): string {
   if (!apiUrl) throw new Error('VITE_API_URL is not configured. This app is read-only.');
   return `${apiUrl}${path}`;
+}
+
+export function apiRequest(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  for (const [name, value] of Object.entries(authorization())) headers.set(name, value);
+  return fetch(endpoint(path), { ...init, credentials: 'omit', headers });
 }
 
 async function failure(response: Response): Promise<never> {

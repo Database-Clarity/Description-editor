@@ -1,0 +1,17 @@
+.diff {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  padding: 0.75rem;
+  background: #17171b;
+
+  del {
+    color: #ffb4b4;
+    background: #652929;
+  }
+
+  ins {
+    color: #b8efc6;
+    background: #1d5030;
+  }
+}

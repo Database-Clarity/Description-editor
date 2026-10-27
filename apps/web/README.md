@@ -71,8 +71,44 @@ The worker client redirects login to `/auth/login`; the worker returns to
 `#/auth/callback?session=…`. The callback immediately removes the token from the URL,
 keeps it in tab-scoped sessionStorage (survives reload, not tab closure), and sends
 it as `Authorization: Bearer …` on `/me` and `/save`. Sign out clears that session.
-A 409 save result carries typed field-conflict data or a distinct retryable race error;
-the conflict/save UI is a later batch. No client role replaces server authorization.
+A signed-out user or an account without a role is read-only. Translators can edit only
+their assigned languages; other languages remain visible but read-only. Trial users
+may edit but cannot push live. Shared role helpers live in `features/auth/permissions.ts`;
+server authorization remains authoritative.
+
+## Saving and conflicts
+
+The sidebar's **Review and save drafts** opens a modal before any `/save` request.
+It lists every changed tooltip with per-language word diffs and an optional commit
+message. Core validation runs against the prospective save (including simultaneous
+global changes and canonicalized alias imports), not unrelated unsaved drafts.
+Empty English descriptions and parser/import errors block saving; unknown
+variables/titles are warnings. Declaration-only global tooltips (reserved hashes 0-3)
+do not require an English description. The editor underlines issues and lists them
+under Markup help; the save summary lists issues from every stored language.
+
+Enrichers in `services/save/enrichers/` run sequentially just before the request.
+Changed languages receive the signed-in login and save timestamp; changed translations
+record the current English revision. English changes leave translations untouched.
+Bungie/Compendium snapshots refresh only on English edits or an explicit editor+
+Mark reviewed action; translation-only saves do not refresh either snapshot.
+An enrichment failure stops the request and leaves all local drafts intact.
+
+A 409 opens a field-by-field base/theirs/mine dialog. Choose either version or edit
+merged text (other fields use validated JSON), then review again. Automatic merges
+of other languages and association sets survive resolution. Resubmission uses the
+returned head as base. Retryable branch races and API failures are explicit; drafts
+are removed only after a validated successful response, never on a conflict.
+
+Feature actions that save one tooltip without unrelated drafts call
+`reviewSaveChanges([{hash, base, next}])` from `services/save/state.ts`.
+The shared UI performs validation, enrichment, review, and conflict resolution and
+updates the in-memory bundle on success. Existing unrelated drafts stay intact.
+`replaceDraft(base, next)` in `services/save/drafts.ts` loads a full-tooltip restore
+as a persisted draft while preserving its original dirty base.
+`ui/diff` exports `WordDiff({before,after})` and `diffWords(before,after)` for other
+feature views. `apiRequest(path, init?)` provides an authenticated raw response;
+feature services must validate its body and handle non-success statuses.
 
 Run root `npm test` for catalog/history/draft/API tests, including actual IndexedDB
 transactions via fake-indexeddb. Put component styles in `*.module.scss` and shared

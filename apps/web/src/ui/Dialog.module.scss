@@ -1,0 +1,36 @@
+.dialog {
+  color: inherit;
+  background: #242429;
+  border: 1px solid #74747e;
+  border-radius: 0.5rem;
+  width: min(60rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1rem;
+
+  &::backdrop {
+    background: #000a;
+  }
+
+  button,
+  textarea,
+  input {
+    font: inherit;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 6rem;
+  }
+
+  section {
+    margin-block: 1rem;
+  }
+}
+
+.header {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}

@@ -45,3 +45,12 @@
     margin: 6px 0;
   }
 }
+.editor :global(.clarity-validation-error) {
+  text-decoration: underline wavy #ff9595;
+  text-underline-offset: 3px;
+}
+
+.editor :global(.clarity-validation-warning) {
+  text-decoration: underline dotted #f2ce7e;
+  text-underline-offset: 3px;
+}
