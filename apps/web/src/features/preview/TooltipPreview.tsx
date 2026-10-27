@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   markupLanguage,
   parseMarkup,
@@ -7,7 +8,11 @@ import {
   type MarkupGlobals,
   type MarkupLine,
   type MarkupSpan,
+  resolveAlias,
 } from '@clarity/core';
+import { useDataStore } from '../../stores/data';
+import { useDraftStore } from '../../stores/drafts';
+import { canonicalHash, itemFor, tooltipFor } from '../navigation/catalog';
 import styles from './TooltipPreview.module.scss';
 
 export interface TooltipPreviewProps {
@@ -17,6 +22,7 @@ export interface TooltipPreviewProps {
   icon?: string;
   categoryLabel?: string;
   globals: MarkupGlobals;
+  tooltipHash?: number;
 }
 
 function classNames(names?: (string | undefined)[]) {
@@ -95,6 +101,7 @@ export function TooltipPreview({
   icon,
   categoryLabel,
   globals,
+  tooltipHash,
 }: TooltipPreviewProps) {
   const parsed = useMemo(() => parseMarkup(text, globals), [text, globals]);
   const [weapon, setWeapon] = useState(markupWeaponTypes[0]);
@@ -137,6 +144,58 @@ export function TooltipPreview({
           </ul>
         </details>
       )}
+      {tooltipHash !== undefined && (
+        <AssociatedTooltips hash={tooltipHash} lang={lang} globals={globals} />
+      )}
+    </section>
+  );
+}
+
+function AssociatedTooltips({
+  hash,
+  lang,
+  globals,
+}: {
+  hash: number;
+  lang: Lang;
+  globals: MarkupGlobals;
+}) {
+  const data = useDataStore((state) => state.data);
+  const drafts = useDraftStore((state) => state.drafts);
+  if (!data) return null;
+  const tooltip = drafts[hash]?.next ?? tooltipFor(hash, data);
+  const associated = [
+    ...new Set(tooltip.associated.map((target) => resolveAlias(target, data.aliases))),
+  ].filter((target) => target !== hash);
+  if (!associated.length) return null;
+  return (
+    <section className={styles.associated} aria-label="Associated tooltip previews">
+      {associated.map((target) => {
+        const item = itemFor(target, data);
+        const next = drafts[target]?.next ?? tooltipFor(target, data);
+        const name = item?.name ?? `Tooltip ${target}`;
+        const category = data.categories.find((entry) => entry.id === item?.categoryId);
+        return (
+          <details key={target}>
+            <summary>
+              {item?.icon && <img src={`https://www.bungie.net${item.icon}`} alt="" />}
+              <Link to={`/t/${canonicalHash(target, data)}`}>{name}</Link>
+            </summary>
+            {next.text[lang] ? (
+              <TooltipPreview
+                text={next.text[lang].text}
+                lang={lang}
+                name={name}
+                icon={item?.icon}
+                categoryLabel={category?.label}
+                globals={{ ...globals, type: category?.legacyType }}
+              />
+            ) : (
+              <p>No {lang} text yet.</p>
+            )}
+          </details>
+        );
+      })}
     </section>
   );
 }

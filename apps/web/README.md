@@ -44,6 +44,18 @@ be hosted below a GitHub Pages repository path.
 
 ## Editor and preview
 
+`#/globals` lists variable/title definitions and distinct-tooltip usage counts, including
+references in reusable exports and local titles. Detail links carry the language, variant,
+and original line number; the editor selects and scrolls to that source line. Counts update
+with local drafts. Reserved tooltips 2 and 3 also show their total usage count.
+
+Each tooltip variant has an ordered associated-tooltip picker (name/hash search, including
+verbs and alias hashes). Editors, trial editors and maintainers may add/remove/reorder
+entries; these edits use the same persistent draft and save flow as text. Aliases resolve
+to canonical hashes, self/duplicate additions are excluded. Previews show compact
+expandable associated entries with navigation links; nested associations are not expanded
+recursively.
+
 `features/editor` exports `<ClarityEditor value lang onChange globals readOnly? />`.
 `features/preview` exports `<TooltipPreview text lang name icon? categoryLabel? globals />`.
 Both accept raw `text[lang].text` and the core `MarkupGlobals` shape:

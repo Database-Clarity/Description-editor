@@ -12,6 +12,26 @@
     sans-serif;
   overflow-wrap: anywhere;
 }
+.associated {
+  border-top: 1px solid #485362;
+  padding: 8px;
+  details {
+    margin: 4px 0;
+  }
+  summary {
+    cursor: pointer;
+    padding: 6px 0;
+  }
+  img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  a {
+    color: #b7dcff;
+  }
+}
 .header {
   display: flex;
   gap: 8px;

@@ -28,6 +28,7 @@ export interface ClarityEditorProps {
   onChange: (value: string) => void;
   globals: MarkupGlobals;
   readOnly?: boolean;
+  highlightLine?: number;
 }
 
 function configuration(lang: Lang, globals: MarkupGlobals, readOnly: boolean) {
@@ -52,6 +53,7 @@ export function ClarityEditor({
   onChange,
   globals,
   readOnly = false,
+  highlightLine,
 }: ClarityEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -124,6 +126,21 @@ export function ClarityEditor({
       effects: config.current.reconfigure(configuration(lang, globals, readOnly)),
     });
   }, [lang, globals, readOnly]);
+
+  useEffect(() => {
+    const editor = view.current;
+    if (
+      !editor ||
+      !highlightLine ||
+      !Number.isInteger(highlightLine) ||
+      highlightLine < 1 ||
+      highlightLine > editor.state.doc.lines
+    )
+      return;
+    const line = editor.state.doc.line(highlightLine);
+    editor.dispatch({ selection: { anchor: line.from, head: line.to }, scrollIntoView: true });
+    editor.focus();
+  }, [highlightLine]);
 
   return (
     <div className={styles.editor}>
