@@ -1,0 +1,43 @@
+@use '../data/variables' as theme;
+
+@font-face {
+  font-family: DestinySymbols;
+  src: url('../assets/DestinySymbols.woff2') format('woff2');
+  font-display: swap;
+}
+
+:root {
+  font-family: Arial, Helvetica, DestinySymbols, sans-serif;
+  color: hsl(0, 0%, 94%);
+  background: hsl(240, 7%, 10%);
+  color-scheme: dark;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+a {
+  color: theme.$orange-color;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid theme.$orange-color;
+  outline-offset: 4px;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}

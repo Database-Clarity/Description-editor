@@ -1,3 +1,9 @@
 node_modules
 .vscode
 dist
+coverage
+*.tsbuildinfo
+.agents/
+.env
+.env.*
+!.env.example

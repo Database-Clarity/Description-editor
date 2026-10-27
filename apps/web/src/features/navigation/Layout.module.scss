@@ -1,0 +1,105 @@
+@use '../../data/variables' as theme;
+@use '../../data/globalStyles' as shared;
+
+.layout {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 1.5rem 1rem;
+  background: hsl(240, 7%, 14%);
+  border-right: 1px solid theme.$button-border-color;
+}
+
+.brand {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.75rem;
+
+  strong {
+    color: theme.$orange-color;
+    font-size: 1.8rem;
+  }
+
+  span {
+    color: hsl(0, 0%, 72%);
+    font-size: 0.85rem;
+  }
+}
+
+.toggle {
+  @include shared.button;
+  width: 100%;
+  padding: 0.6rem;
+  border-style: solid;
+  border-radius: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.link {
+  display: block;
+  padding: 0.8rem;
+  margin: 0.25rem 0;
+  border-left: 3px solid transparent;
+  border-radius: 0.2rem;
+  color: hsl(0, 0%, 88%);
+  text-decoration: none;
+
+  &:hover {
+    background: theme.$button-background-color;
+  }
+}
+
+.active {
+  border-left-color: theme.$orange-color;
+  background: theme.$button-background-color;
+  color: theme.$orange-color;
+}
+
+.compact .link {
+  padding-block: 0.4rem;
+}
+
+.status {
+  margin-top: 2rem;
+  color: hsl(0, 0%, 68%);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.main {
+  padding: clamp(1.25rem, 4vw, 3rem);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.skipLink {
+  position: absolute;
+  top: -5rem;
+  left: 1rem;
+  padding: 0.8rem;
+  background: hsl(240, 7%, 10%);
+  z-index: 1;
+
+  &:focus {
+    top: 1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid theme.$button-border-color;
+  }
+
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
