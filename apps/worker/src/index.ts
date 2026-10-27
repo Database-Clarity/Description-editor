@@ -22,7 +22,7 @@ async function route(request: Request, env: Env, context: Context): Promise<Resp
     } catch {
       throw new HttpError(400, 'Invalid tab encoding');
     }
-    return compendium(decoded, context);
+    return compendium(request, decoded, context);
   }
   const user = await identity(request, env);
   const github = new GitHub(env);

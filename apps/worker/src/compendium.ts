@@ -2,16 +2,20 @@ import { parseCsv } from './csv.js';
 import { HttpError, json } from './http.js';
 import type { Context } from './types.js';
 
-export async function compendium(tab: string, context: Context): Promise<Response> {
+export async function compendium(
+  request: Request,
+  tab: string,
+  context: Context,
+): Promise<Response> {
   if (!tab.trim() || tab.length > 200) throw new HttpError(400, 'Invalid Compendium tab');
   const url = new URL(
     'https://docs.google.com/spreadsheets/d/1WaxvbLx7UoSZaBqdFr1u32F2uWVLo-CJunJB4nlGUE4/gviz/tq',
   );
   url.searchParams.set('tqx', 'out:csv');
   url.searchParams.set('sheet', tab);
-  const key = new Request(
-    `https://clarity-cache.invalid/compendium?tab=${encodeURIComponent(tab)}`,
-  );
+  const keyUrl = new URL('/__clarity_cache/compendium', request.url);
+  keyUrl.searchParams.set('tab', tab);
+  const key = new Request(keyUrl);
   const cache = await caches.open('clarity-compendium-v1');
   const cached = await cache.match(key);
   if (cached) return cached;

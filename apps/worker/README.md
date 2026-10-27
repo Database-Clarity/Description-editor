@@ -79,6 +79,10 @@ Compendium uses the gviz CSV URL, not authenticated Google export URLs. The pars
 handles BOMs, escaped quotes, CRLF and quoted multiline fields. Only successful
 JSON row responses enter Cloudflare's Cache API, with `max-age=900`; CORS headers
 are added after retrieval so one origin's headers cannot contaminate another.
+Cache keys use the Worker hostname and each sheet name. Cache contents are local
+to a Cloudflare data center, not globally replicated; dashboard/Playground
+previews do not exercise production caching. Production Cache API behavior needs
+an owner smoke check after deployment.
 
 ## Development and verification
 

@@ -184,6 +184,15 @@ describe('quoted multiline CSV and caching', () => {
     await Promise.all(fixture.pending);
     expect((await fixture.request('/compendium/Weapon%20Perks')).status).toBe(200);
     expect(fixture.googleCalls).toBe(1);
+    const local = await worker.fetch(
+      new Request('https://api.example/compendium/Weapon%20Perks', {
+        headers: { Origin: 'http://localhost:5173' },
+      }),
+      fixture.env,
+      context,
+    );
+    expect(local.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+    expect(fixture.googleCalls).toBe(1);
     await fixture.request('/compendium/Other');
     await Promise.all(fixture.pending);
     expect(fixture.googleCalls).toBe(2);
