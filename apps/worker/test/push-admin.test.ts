@@ -252,6 +252,8 @@ describe('permissions and history', () => {
         {
           commit: sha(1),
           author: 'alice',
+          login: 'alice',
+          avatar: null,
           date: '2026-10-01T00:00:00Z',
           message: 'initial',
         },

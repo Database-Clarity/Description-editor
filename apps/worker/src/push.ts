@@ -21,6 +21,7 @@ const pushSchema = z
       .min(1)
       .max(100)
       .refine((hashes) => new Set(hashes).size === hashes.length, 'Duplicate tooltip hash'),
+    expected: z.record(z.string(), z.string().regex(/^[0-9a-f]{64}$/)).optional(),
   })
   .strict();
 const liveSchema = z
@@ -35,10 +36,13 @@ export async function pushLive(
   github: GitHub,
   user: Identity,
 ): Promise<Response> {
-  const { hashes } = await body(request, pushSchema);
+  const { hashes, expected } = await body(request, pushSchema);
   let liveCommit: string | undefined;
-  const exportedHashes: Record<string, string> = {};
+  let exportedHashes: Record<string, string> = {};
+  let snapshots: Record<string, Tooltip> = {};
   for (let attempt = 0; attempt < 3; attempt++) {
+    exportedHashes = {};
+    snapshots = {};
     const head = await github.head();
     requireAccess(await permissions(github, head), user, ['maintainer', 'editor']);
     const { facts, aliases } = await catalog(github.env);
@@ -50,7 +54,11 @@ export async function pushLive(
       const tooltip = tooltipSchema.parse(file.value);
       if (tooltip.hash !== hash) throw new HttpError(502, 'Stored tooltip hash mismatch');
       tooltips.push(tooltip);
+      snapshots[`live/tooltips/${hash}.json`] = tooltip;
       exportedHashes[hash] = await publishableHash(tooltip);
+      if (expected && expected[hash] !== exportedHashes[hash]) {
+        throw new HttpError(409, `Tooltip ${hash} changed since review; refresh saved changes`);
+      }
     }
     for (const tooltip of tooltips) {
       if (!facts[tooltip.hash] && !tooltip.custom) {
@@ -90,6 +98,7 @@ export async function pushLive(
           head,
           {
             'live/pushed.json': { ...pushed, ...exportedHashes },
+            ...snapshots,
           },
           `Record push to ${github.env.LIVE_BRANCH} at ${liveCommit}`,
           user,

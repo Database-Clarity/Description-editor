@@ -1,9 +1,9 @@
-import { z } from 'zod';
 import { permissionsSchema, tooltipSchema } from '@clarity/core';
 import { RefRace, type GitHub } from './github.js';
 import { body, hashParam, HttpError, json } from './http.js';
 import { permissions, requireAccess } from './permissions.js';
 import type { Identity } from './types.js';
+import { historySchema, pushedVersion } from './history.js';
 
 export async function managePermissions(
   request: Request,
@@ -36,17 +36,6 @@ export async function managePermissions(
   throw new HttpError(409, 'Data branch kept moving; reload permissions and retry');
 }
 
-const historySchema = z.array(
-  z.object({
-    sha: z.string(),
-    commit: z.object({
-      author: z.object({ name: z.string(), date: z.string() }).nullable(),
-      message: z.string(),
-    }),
-    author: z.object({ login: z.string() }).nullable(),
-  }),
-);
-
 export async function history(
   request: Request,
   github: GitHub,
@@ -56,12 +45,14 @@ export async function history(
   const hash = hashParam(rawHash);
   const url = new URL(request.url);
   const commit = url.searchParams.get('commit');
-  requireAccess(await permissions(github, await github.head()), user, [
+  const head = await github.head();
+  requireAccess(await permissions(github, head), user, [
     'maintainer',
     'editor',
     'trial',
     'translator',
   ]);
+  if (url.searchParams.get('live') === '1') return pushedVersion(github, hash, head);
   if (commit) {
     if (!/^[0-9a-f]{40}$/.test(commit)) throw new HttpError(400, 'Invalid commit SHA');
     const file = await github.file(`tooltips/${hash}.json`, commit);
@@ -84,6 +75,8 @@ export async function history(
     commits: commits.map((entry) => ({
       commit: entry.sha,
       author: entry.author?.login ?? entry.commit.author?.name ?? null,
+      login: entry.author?.login ?? null,
+      avatar: entry.author?.avatar_url ?? null,
       date: entry.commit.author?.date ?? null,
       message: entry.commit.message,
     })),

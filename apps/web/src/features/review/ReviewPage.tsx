@@ -1,9 +1,233 @@
-import { PlaceholderPage } from '../../ui/PlaceholderPage';
+import { useEffect, useState } from 'react';
+import { publishableHash } from '@clarity/core';
+import { apiUrl } from '../../services/api';
+import { pushSelected } from '../../services/history';
+import { errorMessage } from '../../services/http';
+import { useAuthStore } from '../../stores/auth';
+import { useDataStore } from '../../stores/data';
+import { useDraftStore } from '../../stores/drafts';
+import {
+  canPush,
+  pendingTooltips,
+  selectedPending,
+  stepIndex,
+  toggleSelection,
+  type PendingTooltip,
+} from './model';
+import { ReviewDetail } from './ReviewDetail';
+import { ReviewRow } from './ReviewRow';
+import styles from './Review.module.scss';
+
+const pageSize = 15;
 
 export function ReviewPage() {
+  const data = useDataStore((state) => state.data);
+  const load = useDataStore((state) => state.load);
+  const user = useAuthStore((state) => state.user);
+  const drafts = useDraftStore((state) => state.drafts);
+  const [entries, setEntries] = useState<PendingTooltip[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [pushing, setPushing] = useState(false);
+  const [error, setError] = useState<string>();
+  const [notice, setNotice] = useState<string>();
+  const [pushed, setPushed] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let active = true;
+    if (!data) return;
+    setLoading(true);
+    void pendingTooltips(data, { ...data.bundle.pushed, ...pushed }).then(
+      (result) => {
+        if (!active) return;
+        setEntries(result);
+        setIndex((value) => stepIndex(value, 0, result.length));
+        setLoading(false);
+      },
+      (reason: unknown) => {
+        if (active) {
+          setError(errorMessage(reason));
+          setLoading(false);
+        }
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [data, pushed]);
+  useEffect(() => {
+    function keydown(event: KeyboardEvent) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || pushing) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('input, textarea, select, button, a, [contenteditable="true"]')
+      )
+        return;
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      event.preventDefault();
+      setIndex((value) => stepIndex(value, event.key === 'ArrowDown' ? 1 : -1, entries.length));
+    }
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [entries.length, pushing]);
+  const hashes = selectedPending(selected, entries);
+  const start = Math.floor(index / pageSize) * pageSize;
+  const page = entries.slice(start, start + pageSize);
+  const groups = [...new Set(page.map((entry) => entry.category))];
+
+  async function publish() {
+    if (!canPush(user) || !hashes.length || hashes.length > 100 || pushing) return;
+    setPushing(true);
+    setError(undefined);
+    setNotice(undefined);
+    try {
+      const expected = Object.fromEntries(
+        await Promise.all(
+          entries
+            .filter(({ tooltip }) => hashes.includes(tooltip.hash))
+            .map(async ({ tooltip }) => [tooltip.hash, await publishableHash(tooltip)] as const),
+        ),
+      );
+      const result = await pushSelected(hashes, expected);
+      setPushed((previous) => ({ ...previous, ...result.pushed }));
+      setSelected(new Set());
+      setNotice(`Pushed ${hashes.length} tooltip(s) to ${result.branch}. Refreshing saved data.`);
+      await load();
+    } catch (reason) {
+      setError(
+        `${errorMessage(reason)} A failed push may have written live data; check the error details before retrying.`,
+      );
+    } finally {
+      setPushing(false);
+    }
+  }
+
   return (
-    <PlaceholderPage title="Review changes">
-      Review and selectively publish pending tooltip changes here.
-    </PlaceholderPage>
+    <article>
+      <h1>Review changes</h1>
+      <p>
+        Saved changes waiting to go live, grouped by category. Use Up/Down outside controls, or
+        Previous/Next, to walk through them.
+      </p>
+      {Object.keys(drafts).length > 0 && (
+        <p>Local drafts are not included. Save them through the tooltip editor first.</p>
+      )}
+      {!apiUrl || !user?.role ? (
+        <p>
+          Sign in as a configured member to compare live versions and browse history. Only editors
+          and maintainers may push.
+        </p>
+      ) : null}
+      {error && <p role="alert">{error}</p>}
+      {notice && <p role="status">{notice}</p>}
+      <div className={styles.toolbar}>
+        <button type="button" disabled={pushing || loading} onClick={() => void load()}>
+          Refresh saved changes
+        </button>
+        <span>
+          {entries.length} pending / {hashes.length} selected
+        </span>
+        {canPush(user) && (
+          <button
+            type="button"
+            disabled={pushing || loading || !hashes.length || hashes.length > 100}
+            onClick={() => void publish()}
+          >
+            {pushing ? 'Pushing...' : 'Push selected'}
+          </button>
+        )}
+        {hashes.length > 100 && <span role="alert">Select at most 100 tooltips per push.</span>}
+      </div>
+      {loading ? (
+        <p role="status">Comparing publishable content...</p>
+      ) : !entries.length ? (
+        <p>No saved changes are waiting to go live.</p>
+      ) : (
+        <>
+          <div className={styles.toolbar}>
+            <button
+              type="button"
+              disabled={!index || pushing}
+              onClick={() => setIndex((value) => stepIndex(value, -1, entries.length))}
+            >
+              Previous
+            </button>
+            <span>
+              {index + 1} of {entries.length}
+            </span>
+            <button
+              type="button"
+              disabled={index >= entries.length - 1 || pushing}
+              onClick={() => setIndex((value) => stepIndex(value, 1, entries.length))}
+            >
+              Next
+            </button>
+          </div>
+          <div className={styles.workspace}>
+            <section aria-label="Pending changes">
+              <div className={styles.toolbar}>
+                <button
+                  type="button"
+                  disabled={pushing}
+                  onClick={() =>
+                    setSelected(
+                      (previous) =>
+                        new Set([...previous, ...page.map(({ tooltip }) => tooltip.hash)]),
+                    )
+                  }
+                >
+                  Select page
+                </button>
+                <button type="button" disabled={pushing} onClick={() => setSelected(new Set())}>
+                  Clear selection
+                </button>
+              </div>
+              {groups.map((category) => (
+                <section key={category}>
+                  <h2>{category}</h2>
+                  <ul className={styles.list}>
+                    {page
+                      .filter((entry) => entry.category === category)
+                      .map((entry) => (
+                        <ReviewRow
+                          key={entry.tooltip.hash}
+                          entry={entry}
+                          checked={selected.has(entry.tooltip.hash)}
+                          active={entries[index]?.tooltip.hash === entry.tooltip.hash}
+                          disabled={pushing}
+                          historyAvailable={Boolean(apiUrl && user?.role)}
+                          onToggle={() =>
+                            setSelected((previous) => toggleSelection(previous, entry.tooltip.hash))
+                          }
+                          onOpen={() => setIndex(entries.indexOf(entry))}
+                        />
+                      ))}
+                  </ul>
+                </section>
+              ))}
+              <div className={styles.toolbar}>
+                <button
+                  type="button"
+                  disabled={!start || pushing}
+                  onClick={() => setIndex(start - pageSize)}
+                >
+                  Previous page
+                </button>
+                <button
+                  type="button"
+                  disabled={start + pageSize >= entries.length || pushing}
+                  onClick={() => setIndex(start + pageSize)}
+                >
+                  Next page
+                </button>
+              </div>
+            </section>
+            {entries[index] && user?.role && apiUrl && (
+              <ReviewDetail key={entries[index].tooltip.hash} entry={entries[index]} />
+            )}
+          </div>
+        </>
+      )}
+    </article>
   );
 }

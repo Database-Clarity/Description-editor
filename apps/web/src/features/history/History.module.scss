@@ -1,0 +1,53 @@
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.diff pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  background: #17171c;
+  padding: 0.75rem;
+  border: 1px solid #444;
+}
+
+.panel {
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #555;
+  border-radius: 0.5rem;
+  min-width: 0;
+}
+
+.commits {
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+
+  button {
+    text-align: left;
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.author {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 700px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

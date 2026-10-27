@@ -9,6 +9,7 @@ import { useAuthStore } from '../../stores/auth';
 import { canonicalHash, itemFor, tooltipFor, variantHashes } from '../navigation/catalog';
 import { ClarityEditor } from '../editor';
 import { TooltipPreview } from '../preview';
+import { HistoryPanel } from '../history/HistoryPanel';
 import { canEditLanguage } from '../auth/permissions';
 import { useSaveState } from '../../services/save/state';
 import styles from './TooltipPage.module.scss';
@@ -101,6 +102,7 @@ export function TooltipPage() {
                 globals={globals}
               />
             </div>
+            <HistoryPanel hash={variant} />
           </section>
         );
       })}

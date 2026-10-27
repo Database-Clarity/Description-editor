@@ -26,6 +26,16 @@ never from a request or token. Permissions are read on every request and retry
 | `PUT /permissions`                        | Same permissions object; maintainer only                                 | `{ commit, permissions }`                                              |
 | `GET /history/:hash?page=1`               | Authorized member token                                                  | `{ page, commits: [{ commit, author, date, message }] }`, 30 per page  |
 | `GET /history/:hash?commit=<40-char SHA>` | Authorized member token                                                  | `{ commit, tooltip }`                                                  |
+| `GET /history/:hash?live=1`               | Authorized member token                                                  | `{ pushedHash: string \| null, tooltip: Tooltip \| null }`             |
+
+History entries additionally include `login` and `avatar` (nullable); `author`
+retains the git-name fallback. Push-live accepts an optional `expected` map of
+reviewed publishable digests and rejects changed selections with 409 before writing.
+It records each exported tooltip in `live/tooltips/<hash>.json` atomically with
+its pushed marker. The live-history query validates this snapshot against its marker.
+For older markers it searches up to 300 historical versions for matching publishable
+content; missing history is an explicit 409, never a guessed baseline. No marker
+returns nulls. The snapshot represents authored text before export-time fallbacks.
 
 The web app must consume the session from the callback **fragment**, remove it
 from browser history immediately, and use it in the bearer header. It must not
