@@ -3,7 +3,8 @@
 Pure TypeScript shared by browser and Cloudflare Worker. Runtime imports use only
 Zod and Web APIs (Web Crypto SHA-256); Node imports are confined to tests and the
 fixture refresh utility. Source exports are intended for the web/worker bundlers.
-Node >=22.12 is required for the standalone test toolchain.
+The standalone test toolchain supports Node 20.19+, Node 22.12+, or Node 24+.
+Node 20 is the batch-1 CI runtime; patched Vitest 4 retains that support.
 
 ```powershell
 cd packages\core
