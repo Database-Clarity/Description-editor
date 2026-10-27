@@ -6,9 +6,11 @@ Manifest-backed tooltips without snapshots are counted separately; custom toolti
 without manifest facts and aliases are excluded.
 
 Maintainers, editors and trial editors can mark a description reviewed. The save
-contains the saved tooltip with only `bungieSnapshot` replaced, never a local
-draft or new language timestamps. Conflicts are reported explicitly and require
-reloading/reviewing before retrying. Snapshot-only changes are not publishable.
+opens the shared save review with only `bungieSnapshot` replaced, never a local
+draft or new language timestamps. Shared validation and conflict resolution apply.
+Unrelated local drafts are neither submitted nor cleared. Snapshot-only changes
+are not publishable. Normal English edits also create snapshots; translation-only
+saves do not.
 
 Pure selectors are in `packages/core/src/status`. Run the root test command with
 `packages/core/src/status/status.test.ts` and this folder's `review.test.ts`.

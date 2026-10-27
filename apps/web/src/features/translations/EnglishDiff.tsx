@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getHistory, getVersion } from '../../services/history';
 import { errorMessage } from '../../services/http';
-import { WordDiff } from '../drift/WordDiff';
+import { WordDiff } from '../../ui/diff';
 import { findTranslationSource, type TranslationSource } from './source';
 import styles from '../drift/Status.module.scss';
 
