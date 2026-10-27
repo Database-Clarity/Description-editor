@@ -5,14 +5,12 @@ import { tooltipSchema, type Tooltip } from './schemas.js';
 export function migrateLegacy(intermediate: unknown): Tooltip[] {
   const database = legacyDatabaseSchema.parse(intermediate);
   return Object.values(database.perks).map((perk) => {
-    const {
-      hash, name, type, editor, updateTracker,
-      stats: _stats, importStatsFrom: _importStatsFrom,
-      duration: _duration, activationCondition: _activationCondition,
-      itemHash: _itemHash, itemName: _itemName, ...metadata
-    } = perk;
+    const { hash, name, type, editor, updateTracker } = perk;
     const legacy = {
-      ...metadata,
+      uploadedBy: perk.uploadedBy,
+      lastUpload: perk.lastUpload,
+      inLiveDatabase: perk.inLiveDatabase,
+      uploadToLive: perk.uploadToLive,
       ...(updateTracker ? { updateTracker: { descriptions: updateTracker.descriptions } } : {}),
     };
     const text: Tooltip['text'] = {};
