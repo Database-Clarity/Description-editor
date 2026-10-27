@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AdminPage } from './features/admin/AdminPage';
 import { CompendiumPage } from './features/compendium/CompendiumPage';
-import { TooltipPage } from './features/editor/TooltipPage';
+import { TooltipPage } from './features/tooltip/TooltipPage';
+import { useDataStore } from './stores/data';
+import { navigationGroups } from './features/navigation/catalog';
+import { AuthCallback } from './features/auth/AuthCallback';
 import { GlobalDetailPage, GlobalsPage } from './features/globals/GlobalsPage';
 import { Layout } from './features/navigation/Layout';
 import { ReviewPage } from './features/review/ReviewPage';
@@ -12,8 +15,9 @@ import { PlaceholderPage } from './ui/PlaceholderPage';
 export function App() {
   return (
     <Routes>
+      <Route path="auth/callback" element={<AuthCallback />} />
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/t/123" replace />} />
+        <Route index element={<StartPage />} />
         <Route path="t/:hash" element={<TooltipPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="compendium" element={<CompendiumPage />} />
@@ -33,4 +37,10 @@ export function App() {
       </Route>
     </Routes>
   );
+}
+
+function StartPage() {
+  const data = useDataStore((state) => state.data);
+  const first = data && navigationGroups(data, '')[0]?.sections[0]?.items[0];
+  return first ? <Navigate to={`/t/${first.hash}`} replace /> : <p>No tooltips available.</p>;
 }

@@ -6,6 +6,6 @@ interface NavigationState {
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
-  compact: false,
+  compact: true,
   toggleCompact: () => set((state) => ({ compact: !state.compact })),
 }));

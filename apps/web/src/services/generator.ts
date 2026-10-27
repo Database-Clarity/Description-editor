@@ -1,0 +1,43 @@
+import { z } from 'zod';
+import { hashSchema } from '@clarity/core';
+import { fetchJson } from './http';
+
+const source =
+  'https://raw.githubusercontent.com/Database-Clarity/Description-data-generator/v2/templates/v2';
+
+export const categorySchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  group: z.string(),
+  order: z.number(),
+  legacyType: z.string().optional(),
+});
+export const itemSchema = z.object({
+  hash: hashSchema,
+  name: z.string(),
+  icon: z.string(),
+  categoryId: z.string(),
+  inGameDescription: z.string(),
+  itemHash: hashSchema.optional(),
+  enhancedHash: hashSchema.optional(),
+  enhancedHashes: z.array(hashSchema).optional(),
+  baseHash: hashSchema.optional(),
+  sandboxPerkHashes: z.array(hashSchema).optional(),
+});
+export const itemsSchema = z
+  .record(z.string(), itemSchema)
+  .refine(
+    (items) => Object.entries(items).every(([key, item]) => key === String(item.hash)),
+    'Item keys must match their hashes',
+  );
+export type Category = z.infer<typeof categorySchema>;
+export type Item = z.infer<typeof itemSchema>;
+
+export async function loadGenerator(signal?: AbortSignal) {
+  const [categories, items, sandboxAliases] = await Promise.all([
+    fetchJson(`${source}/categories.json`, z.array(categorySchema), { signal }),
+    fetchJson(`${source}/items.json`, itemsSchema, { signal }),
+    fetchJson(`${source}/sandboxAliases.json`, z.record(z.string(), hashSchema), { signal }),
+  ]);
+  return { categories, items, sandboxAliases };
+}
