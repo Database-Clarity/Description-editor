@@ -35,8 +35,10 @@ describe('history and publishing client', () => {
     ]);
     expect(fetch.mock.calls[0][1]).toMatchObject({
       credentials: 'omit',
-      headers: { Authorization: 'Bearer test-session' },
     });
+    expect(new Headers(fetch.mock.calls[0][1].headers).get('Authorization')).toBe(
+      'Bearer test-session',
+    );
   });
   it('sends selections and reviewed digests, validates push success', async () => {
     const pushed = { 123: 'b'.repeat(64) };

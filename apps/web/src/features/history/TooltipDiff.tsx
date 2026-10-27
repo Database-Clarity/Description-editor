@@ -14,12 +14,15 @@ export function TooltipDiff({ before, current }: { before: Tooltip | null; curre
               <strong>Previous / live</strong>
               <pre>{before?.text[lang]?.text ?? '(not present)'}</pre>
             </div>
-            <WordDiff before={before?.text[lang]?.text ?? ''} after={current.text[lang]?.text ?? ''} />
             <div>
               <strong>Current</strong>
               <pre>{current.text[lang]?.text ?? '(not present)'}</pre>
             </div>
           </div>
+          <WordDiff
+            before={before?.text[lang]?.text ?? ''}
+            after={current.text[lang]?.text ?? ''}
+          />
         </section>
       ))}
       {!changed.length && <p>No language text changes.</p>}
