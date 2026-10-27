@@ -1,0 +1,15 @@
+# Copy to .dev.vars (ignored). Use a separately installed App and scratch repository.
+SITE_ORIGIN=http://localhost:5173
+SITE_URL=http://localhost:5173/
+GITHUB_OWNER=YOUR-LOGIN
+GITHUB_REPO=clarity-editor-scratch
+DATA_BRANCH=editor-data
+LIVE_BRANCH=converter-v2-test
+GITHUB_APP_ID=123456
+GITHUB_APP_SLUG=your-scratch-app
+GITHUB_INSTALLATION_ID=12345678
+GITHUB_CLIENT_ID=Iv1.REPLACE
+GITHUB_CLIENT_SECRET=REPLACE
+GITHUB_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nREPLACE_WITH_PKCS8\n-----END PRIVATE KEY-----"
+SESSION_SECRET=REPLACE_WITH_AT_LEAST_32_RANDOM_CHARACTERS
+OAUTH_CALLBACK_URL=http://localhost:8787/auth/callback

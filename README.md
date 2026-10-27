@@ -6,7 +6,7 @@ The production editor remains unchanged on `main`.
 
 ## Get started
 
-1. Install Node.js 20.19 or newer (Node 20 is used in CI).
+1. Install Node.js 24 LTS (Node 24 is used in CI; `.nvmrc` selects it).
 2. Open a terminal in this repository's top-level folder.
 3. Run `npm ci` to install all workspace dependencies.
 4. Run `npm run dev -- --port 5173 --strictPort`.
@@ -24,7 +24,7 @@ If port 5173 is busy, stop your own old server or choose a different port.
 | `apps/web/src/ui/`                | Shared UI components and styles.                                                                                                                           |
 | `apps/web/src/services/`          | Future data access, kept separate from components.                                                                                                         |
 | `packages/*`                      | Shared packages, including the separately developed pure TypeScript `core` package.                                                                        |
-| `apps/worker/` (planned)          | Future server-side authentication and GitHub writes.                                                                                                       |
+| `apps/worker/`                    | Cloudflare authentication and GitHub writes; see its [README](./apps/worker/README.md) and [owner setup](./apps/worker/OWNER-SETUP.md). Root build only dry-run bundles it, never deploys. |
 | `legacy/`                         | Untouched old app, kept as **read-only reference** while porting. Not a workspace; excluded from lint, tests, formatting, and builds. Deleted at cut-over. |
 | `tsconfig.json`                   | Shared strict TypeScript settings; workspace configs extend these.                                                                                         |
 | `eslint.config.js`                | Shared lint rules, including React hooks and no explicit `any`.                                                                                            |

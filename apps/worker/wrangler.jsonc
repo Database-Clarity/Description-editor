@@ -1,0 +1,18 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "clarity-editor-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "workers_dev": true,
+  "vars": {
+    "SITE_ORIGIN": "https://database-clarity.github.io",
+    "SITE_URL": "https://database-clarity.github.io/Description-editor/",
+    "GITHUB_OWNER": "Database-Clarity",
+    "GITHUB_REPO": "Live-Clarity-Database",
+    "DATA_BRANCH": "editor-data",
+    "LIVE_BRANCH": "converter-v2-test",
+    "GENERATOR_OWNER": "Database-Clarity",
+    "GENERATOR_REPO": "Description-data-generator",
+    "GENERATOR_BRANCH": "v2",
+  },
+}

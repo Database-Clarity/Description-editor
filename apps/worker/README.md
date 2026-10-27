@@ -1,0 +1,119 @@
+# Clarity editor API
+
+Cloudflare Worker for GitHub App sign-in, permission-checked editing and publishing.
+There is no database: authored data lives on a Git branch, and sessions are signed
+30-day bearer tokens. Follow [OWNER-SETUP.md](./OWNER-SETUP.md) before deployment.
+This package does not deploy as part of the root build.
+
+## Endpoints
+
+All errors are JSON `{ error, details? }`. Send `Authorization: Bearer <session>`
+except for OAuth and Compendium requests. CORS allows `SITE_ORIGIN` and
+`http://localhost:5173`; other browser origins are rejected, including on writes.
+Roles always come from `config/permissions.json` on the current data-branch head,
+never from a request or token. Permissions are read on every request and retry
+(no stale permission cache).
+
+| Method / path                             | Request                                                                  | Success                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `GET /auth/login`                         | Browser navigation                                                       | 302 to GitHub; signed, browser-bound OAuth state cookie (10 minutes)   |
+| `GET /auth/callback`                      | GitHub `code`, `state` query                                             | 302 to `SITE_URL#/auth/callback?session=<token>`; state cookie cleared |
+| `GET /me`                                 | Bearer token                                                             | `{ id: number, login, role: string \| null, languages: string[] }`     |
+| `POST /save`                              | `{ changes: [{ hash, base: Tooltip \| null, next: Tooltip }], message }` | `{ commit, tooltips: Tooltip[] }`                                      |
+| `POST /push-live`                         | `{ hashes: number[] }`                                                   | `{ commit, liveCommit, pushed: { [hash]: contentHash }, branch }`      |
+| `GET /compendium/:tab`                    | URL-encoded sheet name                                                   | `{ rows: string[][] }`                                                 |
+| `GET /permissions`                        | Maintainer token                                                         | `{ users: { [githubId]: { login, role, languages? } } }`               |
+| `PUT /permissions`                        | Same permissions object; maintainer only                                 | `{ commit, permissions }`                                              |
+| `GET /history/:hash?page=1`               | Authorized member token                                                  | `{ page, commits: [{ commit, author, date, message }] }`, 30 per page  |
+| `GET /history/:hash?commit=<40-char SHA>` | Authorized member token                                                  | `{ commit, tooltip }`                                                  |
+
+The web app must consume the session from the callback **fragment**, remove it
+from browser history immediately, and use it in the bearer header. It must not
+send the token in URLs or logs. OAuth user access tokens are used only to fetch
+GitHub identity and are not persisted. A signed-in, unconfigured user gets
+`role: null` and cannot read history or write. All data commits name the editor
+as author (`login`, `<id>+<login>@users.noreply.github.com`) and the App bot as
+committer. The installation token is restricted to the configured repository.
+
+### Save and conflicts
+
+Maximum 100 distinct changes per save; message length 1–500; JSON body <=2 MB.
+`base: null` creates a tooltip only if its path does not exist. Hashes must agree
+with their record and filenames. Deletion is not exposed.
+
+Maintainers, editors and trial users can edit. Translators can change only
+`text[lang]` in their configured languages, not associations, snapshots, custom
+fields or legacy metadata. Both the client delta and final merged delta are
+checked. Core `merge3` merges concurrent language/field edits. A real conflict
+returns **409** `{ conflicts: [{ hash, base, head, next, fields: string[] }] }`
+without committing any of the changes. A create/delete race uses field
+`"$exists"`. Resolve against `head` and resubmit it as `base`. A ref-update race
+restarts permissions, reads and merging up to three times. Exhaustion returns
+409 `{ error }`; clients must distinguish this from a field-conflict response.
+
+### Push-live safety
+
+Only editors and maintainers may push. `LIVE_BRANCH` defaults to
+**`converter-v2-test`**, not production `converter`. The target branch must already
+contain a copy of `liveDescriptions.json`. No endpoint creates branches.
+
+Selected tooltips are read from one immutable data commit; generator `v2`
+items/categories supply the core export catalog, including optional item facts.
+Categories without a legacy type (verbs) retain their category id. Sandbox aliases
+receive the inventory item's exported entry with the alias hash. Existing
+unselected perks, database settings and other root fields are preserved.
+The target Contents API PUT checks the file SHA and retries collisions up to
+three times. Then a separate Git Data commit updates `live/pushed.json` with the
+**exported snapshot's** core content hashes, never a later editor save's hashes.
+
+GitHub has no atomic transaction across two branches. If the live write succeeds
+but the marker cannot be recorded, an explicit error includes
+`details: { liveCommit, pushedRecorded: false }`. Retry push-live to reconcile.
+A competing target-branch update detected before marking also returns that
+partial-push error. Avoid simultaneous push-live operations; ordinary concurrent
+saves are supported. Do not equate any failed push with “nothing was written.”
+`pushed.json` has no branch namespace: use a scratch data branch/repo when testing
+publishing, and rerun migration/refresh markers when cutting over to production.
+
+Compendium uses the gviz CSV URL, not authenticated Google export URLs. The parser
+handles BOMs, escaped quotes, CRLF and quoted multiline fields. Only successful
+JSON row responses enter Cloudflare's Cache API, with `max-age=900`; CORS headers
+are added after retrieval so one origin's headers cannot contaminate another.
+
+## Development and verification
+
+From the repository root, install with `npm ci`. Copy
+[.dev.vars.example](./.dev.vars.example) to `.dev.vars` in this directory and fill
+in a separately installed test App, a scratch repository and scratch branches.
+Use real GitHub OAuth locally; there is **no authentication bypass**. Add the
+local callback `http://localhost:8787/auth/callback` to the test App.
+
+```powershell
+npm run dev --workspace @clarity/worker
+# Browser sign-in: http://localhost:8787/auth/login
+# Web app: VITE_API_URL=http://localhost:8787 (web origin http://localhost:5173)
+
+npm run typecheck
+npm run lint
+npm test
+npx vitest run apps/worker/test
+Set-Location apps\worker
+npx wrangler deploy --dry-run
+```
+
+Tests generate a temporary in-memory RSA key and mock GitHub/Google fetches. They
+cover the permission matrix, signed sessions and OAuth state, CORS, merge/409
+atomicity, ref and file-SHA races, permission revocation during retries, actual
+author/committer payloads, catalog projection/aliases, partial publishing,
+history, and multiline CSV/cache expiry. They do not require secrets, an account,
+or a network connection. A dry run bundles only; it does not deploy.
+
+Modules are organized by endpoint; `github.ts` owns installation authentication
+and Git operations, `permissions.ts` owns access checks. Core owns tooltip and
+permission schemas, content hashing, merging and legacy export. Upstream failures
+return an explicit non-success response; unexpected failures are logged without
+request tokens or private keys.
+
+Wrangler is pinned to 4.153.0. The v2 workspace and CI use Node 24 LTS (see root
+`.nvmrc`). Root `build` builds the web app and dry-run bundles the Worker; it
+never deploys the Worker.

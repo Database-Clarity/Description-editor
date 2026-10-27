@@ -1,0 +1,225 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { contentHash, type Permissions } from '@clarity/core';
+import { config, Fixture, makePrivateKey, sha, tooltip } from './fixture.js';
+
+let key: string;
+let fixture: Fixture;
+beforeAll(async () => {
+  key = await makePrivateKey();
+});
+beforeEach(() => {
+  fixture = new Fixture(key);
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('push-live', () => {
+  it.each([1, 2])(
+    'lets role id %s export selected entries and aliases without replacing other entries',
+    async (id) => {
+      const response = await fixture.request('/push-live', 'POST', { hashes: [123] }, id);
+      expect(response.status).toBe(200);
+      const result = await response.json();
+      expect(result.branch).toBe('converter-v2-test');
+      expect(fixture.writes[0]).toMatchObject({
+        branch: 'converter-v2-test',
+        sha: sha(3),
+        author: {
+          name: config.users[String(id)].login,
+          email: `${id}+${config.users[String(id)].login}@users.noreply.github.com`,
+        },
+        committer: { name: 'clarity-test[bot]' },
+      });
+      expect(fixture.live).toMatchObject({
+        perks: {
+          '123': {
+            hash: 123,
+            name: 'Demo perk',
+            type: 'Weapon Perk',
+            itemHash: 456,
+            itemName: 'Demo item',
+            editor: { en: { main: 'original', secondary: 'original' } },
+          },
+          '789': { hash: 789, name: 'Demo perk', editor: { en: { main: 'original' } } },
+          '999': { hash: 999, editor: { en: { main: 'untouched' } } },
+        },
+        databaseSettings: { folders: { saved: [] } },
+      });
+      expect(fixture.current()['live/pushed.json']).toEqual({
+        '123': await contentHash(tooltip()),
+      });
+      expect(result.pushed).toEqual(fixture.current()['live/pushed.json']);
+    },
+  );
+
+  it.each([3, 4, 5])('denies push-live for role id %s', async (id) => {
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, id)).status).toBe(403);
+    expect(fixture.writes).toHaveLength(0);
+    expect(fixture.commits).toHaveLength(0);
+  });
+
+  it('retries a SHA-checked live PUT and retains concurrent unrelated edits', async () => {
+    fixture.beforeLive = () => {
+      fixture.live = { ...fixture.live, perks: { '555': { hash: 555, editor: {} } } };
+      fixture.liveFileSha = sha(88);
+      fixture.liveHead = sha(89);
+    };
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+    expect(fixture.writes[0].sha).toBe(sha(88));
+    expect(fixture.live).toMatchObject({ perks: { '555': { hash: 555 }, '123': { hash: 123 } } });
+  });
+
+  it('reads large GitHub Contents responses through the blob API', async () => {
+    fixture.largeFile = true;
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+    expect(fixture.blobReads).toBe(1);
+    expect(fixture.live).toMatchObject({ perks: { '123': { hash: 123 } } });
+  });
+
+  it('bounds live-SHA races and never marks an unsuccessful export', async () => {
+    fixture.liveRaces = 3;
+    const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
+    expect(response.status).toBe(409);
+    expect(fixture.current()['live/pushed.json']).toEqual({});
+    expect(fixture.commits).toHaveLength(0);
+    expect(fixture.writes).toHaveLength(0);
+  });
+
+  it('reports a completed live export whose marker retries are exhausted', async () => {
+    fixture.patchRaces = 3;
+    const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      details: {
+        liveCommit: fixture.liveHead,
+        pushedRecorded: false,
+      },
+    });
+
+    expect(fixture.writes).toHaveLength(1);
+    expect(fixture.current()['live/pushed.json']).toEqual({});
+  });
+
+  it('surfaces partial publishing even when marker data is malformed', async () => {
+    fixture.moveData({ 'live/pushed.json': { '123': 'invalid hash' } });
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
+      expect(response.status).toBe(502);
+      expect(await response.json()).toMatchObject({
+        details: { liveCommit: fixture.liveHead, pushedRecorded: false },
+      });
+      expect(log).toHaveBeenCalledOnce();
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it('records exported content hashes, not edits made after exporting', async () => {
+    fixture.beforePatch = () =>
+      fixture.moveData({
+        'tooltips/123.json': tooltip('changed after export'),
+        'live/pushed.json': { '999': 'f'.repeat(64) },
+      });
+    const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
+    expect(response.status).toBe(200);
+    expect(fixture.current()['live/pushed.json']).toEqual({
+      '123': await contentHash(tooltip()),
+      '999': 'f'.repeat(64),
+    });
+    expect(fixture.current()['tooltips/123.json']).toEqual(tooltip('changed after export'));
+  });
+
+  it('reports a partial push explicitly if live changes before the marker commit', async () => {
+    fixture.beforePatch = () => {
+      fixture.liveHead = sha(1000);
+      fixture.moveData();
+    };
+    const response = await fixture.request('/push-live', 'POST', { hashes: [123] });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      details: {
+        liveCommit: expect.any(String),
+        pushedRecorded: false,
+      },
+    });
+    expect(fixture.current()['live/pushed.json']).toEqual({});
+  });
+
+  it('does not export missing tooltips or malformed/duplicate hash selections', async () => {
+    expect((await fixture.request('/push-live', 'POST', { hashes: [456] })).status).toBe(404);
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123, 123] })).status).toBe(400);
+    expect((await fixture.request('/push-live', 'POST', { hashes: [] })).status).toBe(400);
+    expect(fixture.writes).toHaveLength(0);
+  });
+});
+
+describe('permissions and history', () => {
+  it.each([403, 429, 500])(
+    'surfaces GitHub upstream status %s without writing defaults',
+    async (status) => {
+      fixture.upstreamStatus = status;
+      const response = await fixture.request('/me');
+      expect(response.status).toBe(status === 500 ? 502 : 503);
+      expect(await response.json()).toHaveProperty('error');
+      expect(fixture.commits).toHaveLength(0);
+    },
+  );
+  it.each([2, 3, 4, 5])('denies GET and PUT /permissions for role id %s', async (id) => {
+    expect((await fixture.request('/permissions', 'GET', undefined, id)).status).toBe(403);
+    expect((await fixture.request('/permissions', 'PUT', config, id)).status).toBe(403);
+  });
+
+  it('lets maintainers update roles and immediately uses the new configuration', async () => {
+    expect(await (await fixture.request('/permissions')).json()).toEqual(config);
+    const next: Permissions = structuredClone(config);
+    next.users['2'] = { login: 'bob', role: 'translator', languages: ['ja'] };
+    const result = await fixture.request('/permissions', 'PUT', next);
+    expect(result.status).toBe(200);
+    expect(await (await fixture.request('/me', 'GET', undefined, 2)).json()).toEqual({
+      id: 2,
+      login: 'bob',
+      role: 'translator',
+      languages: ['ja'],
+    });
+    expect((await fixture.request('/permissions', 'PUT', { users: {} })).status).toBe(400);
+  });
+
+  it('loads /me for known and unknown users without trusting caller role values', async () => {
+    expect(await (await fixture.request('/me', 'GET', undefined, 5)).json()).toEqual({
+      id: 5,
+      login: 'unknown',
+      role: null,
+      languages: [],
+    });
+    expect(await (await fixture.request('/me', 'GET', undefined, 4)).json()).toMatchObject({
+      role: 'translator',
+      languages: ['de'],
+    });
+  });
+
+  it('lists per-tooltip history and reads a particular immutable commit', async () => {
+    const result = await fixture.request('/history/123?page=1');
+    expect(await result.json()).toEqual({
+      page: 1,
+      commits: [
+        {
+          commit: sha(1),
+          author: 'alice',
+          date: '2026-10-01T00:00:00Z',
+          message: 'initial',
+        },
+      ],
+    });
+    expect(await (await fixture.request(`/history/123?commit=${sha(1)}`)).json()).toEqual({
+      commit: sha(1),
+      tooltip: tooltip(),
+    });
+    expect((await fixture.request('/history/123?commit=main')).status).toBe(400);
+    expect((await fixture.request('/history/123?page=-1')).status).toBe(400);
+    expect((await fixture.request('/history/4294967296')).status).toBe(400);
+    expect((await fixture.request(`/history/999?commit=${sha(1)}`)).status).toBe(404);
+    expect((await fixture.request('/history/123', 'GET', undefined, 5)).status).toBe(403);
+  });
+});

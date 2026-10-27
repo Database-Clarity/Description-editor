@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['legacy/**', '**/node_modules/**', '**/dist/**', '**/coverage/**', '.agents/**'],
+    ignores: [
+      'legacy/**',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '.agents/**',
+      '**/.wrangler/**',
+    ],
   },
   {
     files: ['**/*.{js,mjs,cjs}'],

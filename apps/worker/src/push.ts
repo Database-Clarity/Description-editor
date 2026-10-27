@@ -1,0 +1,122 @@
+import { z } from 'zod';
+import {
+  contentHash,
+  exportLegacy,
+  hashSchema,
+  pushedSchema,
+  tooltipSchema,
+  type Tooltip,
+} from '@clarity/core';
+import { catalog } from './catalog.js';
+import { RefRace, type GitHub } from './github.js';
+import { body, HttpError, json } from './http.js';
+import { permissions, requireAccess } from './permissions.js';
+import type { Identity } from './types.js';
+
+const pushSchema = z
+  .object({
+    hashes: z
+      .array(hashSchema)
+      .min(1)
+      .max(100)
+      .refine((hashes) => new Set(hashes).size === hashes.length, 'Duplicate tooltip hash'),
+  })
+  .strict();
+const liveSchema = z
+  .object({
+    perks: z.record(z.string(), z.unknown()),
+    databaseSettings: z.unknown(),
+  })
+  .passthrough();
+
+export async function pushLive(
+  request: Request,
+  github: GitHub,
+  user: Identity,
+): Promise<Response> {
+  const { hashes } = await body(request, pushSchema);
+  let liveCommit: string | undefined;
+  const exportedHashes: Record<string, string> = {};
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const head = await github.head();
+    requireAccess(await permissions(github, head), user, ['maintainer', 'editor']);
+    const tooltips: Tooltip[] = [];
+    for (const hash of hashes) {
+      const file = await github.file(`tooltips/${hash}.json`, head);
+      if (!file) throw new HttpError(404, `Tooltip ${hash} does not exist`);
+      const tooltip = tooltipSchema.parse(file.value);
+      if (tooltip.hash !== hash) throw new HttpError(502, 'Stored tooltip hash mismatch');
+      tooltips.push(tooltip);
+      exportedHashes[hash] = await contentHash(tooltip);
+    }
+    const { facts, aliases } = await catalog(github.env);
+    for (const tooltip of tooltips) {
+      if (!facts[tooltip.hash] && !tooltip.custom) {
+        throw new HttpError(422, `Missing generator facts for tooltip ${tooltip.hash}`);
+      }
+    }
+    const entries = exportLegacy(tooltips, Date.now(), facts);
+    for (const [alias, item] of Object.entries(aliases)) {
+      if (entries[item]) {
+        if (entries[alias] && Number(alias) !== item) {
+          throw new HttpError(422, `Sandbox alias ${alias} collides with a selected tooltip`);
+        }
+        entries[alias] = { ...entries[item], hash: Number(alias) };
+      }
+    }
+    const liveHead = await github.head(github.env.LIVE_BRANCH);
+    const file = await github.requiredFile('liveDescriptions.json', liveHead);
+    const live = liveSchema.parse(file.value);
+    try {
+      liveCommit = await github.putLive(
+        file.sha,
+        { ...live, perks: { ...live.perks, ...entries } },
+        user,
+      );
+      break;
+    } catch (error) {
+      if (!(error instanceof RefRace)) throw error;
+    }
+  }
+  if (!liveCommit) throw new HttpError(409, 'Live branch kept moving; retry push-live');
+
+  // The two branches cannot be committed atomically. Never mark a newer save as pushed.
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const head = await github.head();
+      requireAccess(await permissions(github, head), user, ['maintainer', 'editor']);
+      if ((await github.head(github.env.LIVE_BRANCH)) !== liveCommit) {
+        throw new HttpError(409, 'Live changed before recording push; retry push-live');
+      }
+      const pushed = pushedSchema.parse(
+        (await github.requiredFile('live/pushed.json', head)).value,
+      );
+      try {
+        const commit = await github.commit(
+          head,
+          {
+            'live/pushed.json': { ...pushed, ...exportedHashes },
+          },
+          `Record push to ${github.env.LIVE_BRANCH} at ${liveCommit}`,
+          user,
+        );
+        return json({ commit, liveCommit, pushed: exportedHashes, branch: github.env.LIVE_BRANCH });
+      } catch (error) {
+        if (!(error instanceof RefRace)) throw error;
+      }
+    }
+    throw new HttpError(409, 'Data branch kept moving; retry push-live to record its status');
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw new HttpError(error.status, error.message, { liveCommit, pushedRecorded: false });
+    }
+    console.error(
+      'Push marker failed after live write',
+      error instanceof Error ? error.message : 'Unknown error',
+    );
+    throw new HttpError(502, 'Live was written, but recording the push failed; retry push-live', {
+      liveCommit,
+      pushedRecorded: false,
+    });
+  }
+}
