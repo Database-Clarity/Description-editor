@@ -15,6 +15,21 @@ npx tsc --noEmit
 
 ## Public API
 
+- `parseMarkup(text, globals?)` returns `{ lines, diagnostics }`. `lines` uses the
+  converter's structured line/span/table format; editor validation and preview use
+  the same parser. `globals` holds raw selected-language `variables` (hash 2),
+  `titles` (hash 3), optional `imports` (raw text keyed by tooltip hash; `1` or
+  `global` supplies global exports), and optional `type` (legacy category type for
+  enhanced/catalyst/exotic conditional blocks). Cross-tooltip imports now read
+  main text only; `import self` reports the removed secondary-editor dependency.
+  Stat formula spans are removed. Numeric `${...}` arithmetic is interpreted
+  without `eval`/`Function`; the runtime has no converter/lodash dependency.
+  Missing imports/variables produce visible diagnostics. Browser languages use
+  `markupLanguage(lang)` to map legacy Chinese keys to BCP-47.
+  The MIT-attributed port is checked against pinned converter 1.0.55 on every
+  stored language of all 2,761 tooltips in **both** real database fixtures (5,522
+  comparisons), normalizing only secondary := main and stat-formula removal.
+
 - `tooltipSchema`, `langTextSchema`, `permissionsSchema`, `pushedSchema` and
   their inferred types validate persisted data without silently stripping fields.
 - `migrateLegacy(database)` accepts the complete legacy intermediate database and

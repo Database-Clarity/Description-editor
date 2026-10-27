@@ -21,3 +21,24 @@ Put component styles in `*.module.scss`. Keep pure domain logic in `packages/cor
 not in UI components. When keyboard/wheel tooltip stepping is implemented, replace
 the route immediately and push a history entry after one second idle; explicit links
 already push entries normally.
+
+## Editor and preview
+
+`features/editor` exports `<ClarityEditor value lang onChange globals readOnly? />`.
+`features/preview` exports `<TooltipPreview text lang name icon? categoryLabel? globals />`.
+Both accept raw `text[lang].text` and the core `MarkupGlobals` shape:
+`{ variables, titles, imports?, type? }`. Provide selected-language raw text for
+all tooltips in `imports` (keyed by hash; hash 1 contains global exports) and
+the category's `legacyType` as `type`. No component fetches data.
+The core parser drives validation and rendering; title popovers work by hover
+and keyboard focus, and weapon-specific sections have a preview selector.
+
+CodeMirror has native `spellcheck="true"` and a BCP-47 `lang` on its editable
+content (Chinese `zh-chs`/`zh-cht` map to `zh-Hans`/`zh-Hant`). Native underlines
+require spelling enabled and the corresponding browser dictionary installed;
+the application cannot install or force a dictionary. Right-click a misspelling
+for native suggestions. Ctrl/Cmd+Space completes variables, title references,
+import names/targets and formatting; Ctrl/Cmd+Z undoes; Ctrl/Cmd+/ toggles comments.
+Scroll Lock and Ctrl/Cmd+Shift+F align table columns in one undoable transaction.
+Changing to an externally supplied document clears undo history, preventing
+undo from restoring a different tooltip or language.

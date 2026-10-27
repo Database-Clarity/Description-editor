@@ -5,3 +5,4 @@ export * from './contentHash.js';
 export * from './migrateLegacy.js';
 export * from './exportLegacy.js';
 export * from './merge3.js';
+export * from './markup/index.js';
