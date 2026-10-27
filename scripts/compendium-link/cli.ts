@@ -8,7 +8,6 @@ import {
   compendiumDataSchema,
   contentHash,
   publishableHash,
-  sameCell,
   tooltipSchema,
   type Tooltip,
 } from '../../packages/core/src/index.js';
@@ -90,17 +89,6 @@ for (const [index, result] of results.entries()) {
   if ((await publishableHash(before.tooltip)) !== (await publishableHash(result.next))) {
     throw new Error(`Refusing publishable change to ${result.hash}`);
   }
-  // A repeated baseline run must not manufacture snapshot timestamp-only changes.
-  const old = before.tooltip.compendium;
-  const next = result.next.compendium!;
-  if (
-    old &&
-    old.gid === next.gid &&
-    old.rowKey === next.rowKey &&
-    old.section === next.section &&
-    sameCell(old.snapshot, next.snapshot)
-  )
-    next.snapshotAt = old.snapshotAt;
   if ((await contentHash(before.tooltip)) !== (await contentHash(result.next))) {
     changes.push({ file: before.file, tooltip: result.next });
   }

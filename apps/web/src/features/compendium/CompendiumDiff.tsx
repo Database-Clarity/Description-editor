@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { diffCompendium, type CompendiumCell } from '@clarity/core';
 import { RichCell } from './RichCell';
 import styles from './Compendium.module.scss';
@@ -27,26 +27,75 @@ function changes(before: CompendiumCell, after: CompendiumCell): string[] {
 }
 function StyleChange({ before, after }: { before: CompendiumCell; after: CompendiumCell }) {
   const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const anchor = useRef<HTMLSpanElement>(null);
+  const popover = useRef<HTMLSpanElement>(null);
+  const visible = open || hovered || focused;
   const id = useId();
   const description = changes(before, after).join('; ') || 'Styling changed within this word';
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const position = () => {
+      if (!anchor.current || !popover.current) return;
+      const left = anchor.current.getBoundingClientRect().left;
+      const width = popover.current.getBoundingClientRect().width;
+      const limit = document.documentElement.clientWidth - width - 8;
+      setOffset(Math.max(8, Math.min(left, limit)) - left);
+    };
+    position();
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    return () => {
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+    };
+  }, [visible]);
   return (
-    <span className={styles.styleChange} data-open={open}>
+    <span
+      ref={anchor}
+      className={styles.styleChange}
+      data-open={visible}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setFocused(false);
+          setOpen(false);
+        }
+      }}
+    >
       <button
         type="button"
         className={styles.styleToggle}
         title={description}
         aria-label={`${after.plain}: ${description}`}
         aria-describedby={id}
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-        onBlur={() => setOpen(false)}
+        aria-expanded={visible}
+        onClick={() => {
+          setOpen(!open);
+          setHovered(false);
+          setFocused(false);
+        }}
         onKeyDown={(event) => {
-          if (event.key === 'Escape') setOpen(false);
+          if (event.key === 'Escape') {
+            setOpen(false);
+            setHovered(false);
+            setFocused(false);
+          }
         }}
       >
         <RichCell cell={after} links={false} />
       </button>
-      <span id={id} className={styles.stylePopover} role="tooltip">
+      <span
+        ref={popover}
+        id={id}
+        className={styles.stylePopover}
+        role="tooltip"
+        style={{ insetInlineStart: offset }}
+      >
         <span>{description}</span>
         <span className={styles.swatches}>
           {[before, after].map((cell, index) => (

@@ -47,12 +47,10 @@ export function autoLinkCompendium(
   if (tooltip.hash <= 3) return { ...result, reason: 'no-equivalent' };
   if (tooltip.compendium) {
     const resolved = resolveCompendiumLink(tooltip.compendium, data);
-    if ('row' in resolved)
-      return {
-        ...result,
-        reason: 'linked',
-        next: { ...tooltip, compendium: snapshotCompendium(resolved, now) },
-      };
+    if ('row' in resolved) return { ...result, reason: 'linked' };
+    return resolved.status === 'candidates'
+      ? { ...result, reason: 'ambiguous', candidates: resolved.candidates }
+      : { ...result, reason: 'unmatched' };
   }
   const family = Object.values(items).filter(
     (entry) => resolveAlias(entry.hash, aliases) === tooltip.hash,

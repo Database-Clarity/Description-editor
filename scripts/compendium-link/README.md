@@ -27,6 +27,8 @@ totals, `compendium-unlinked.csv` with every unresolved hash and reason, and
 `baseline.json` containing only proposed changed tooltip files. Every proposal
 must preserve its core `publishableHash`; otherwise the entire run fails.
 Existing identical snapshots retain their timestamp, making reruns no-ops.
+Existing links are never rewritten, even when their source changed or moved:
+only an English edit or explicit editor review may acknowledge that change.
 
 **Publication is a separate, owner-approved operation.** After reviewing the
 coverage and receiving approval for the exact data HEAD, rerun with

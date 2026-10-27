@@ -162,3 +162,40 @@ it('prefers the full item name over shortened variants without hiding genuine am
     ).reason,
   ).toBe('ambiguous');
 });
+it.each(['unchanged', 'changed', 'moved', 'missing', 'ambiguous'])(
+  'never re-snapshots or replaces an existing %s link during a baseline rerun',
+  (status) => {
+    const linked = {
+      ...tooltip,
+      compendium: {
+        gid: '441434520',
+        rowKey: 'Existing row',
+        snapshot: cell,
+        snapshotAt: now,
+      },
+    };
+    const nextCell =
+      status === 'changed'
+        ? { plain: 'New upstream text', runs: [{ text: 'New upstream text' }] }
+        : cell;
+    const rows = status === 'missing' ? [] : [{ ...row('Existing row'), cell: nextCell }];
+    if (status === 'ambiguous') rows.push({ ...rows[0], rowIndex: 7 });
+    const current = {
+      ...data,
+      tabs: [{ ...data.tabs[0], gid: status === 'moved' ? '12345' : '441434520', rows }],
+    };
+    const result = autoLinkCompendium(
+      linked,
+      { 123: { hash: 123, name: 'Existing row', categoryId: 'weapon-trait-exotic' } },
+      {},
+      current,
+      '2026-10-28T00:00:00Z',
+    );
+    expect(result.reason).toBe(
+      status === 'missing' ? 'unmatched' : status === 'ambiguous' ? 'ambiguous' : 'linked',
+    );
+    expect(result.next).toBeUndefined();
+    expect(linked.compendium.snapshot).toEqual(cell);
+    expect(linked.compendium.snapshotAt).toBe(now);
+  },
+);

@@ -60,8 +60,6 @@
   outline: 1px dotted #e7c374;
   outline-offset: 2px;
 }
-.styleChange:hover > .stylePopover,
-.styleChange:focus-within > .stylePopover,
 .styleChange[data-open='true'] > .stylePopover {
   display: block;
 }
@@ -75,7 +73,8 @@
   border: 1px solid #e7c374;
   background: #161923;
   color: #fff;
-  width: min(22rem, 70vw);
+  box-sizing: border-box;
+  width: min(22rem, calc(100vw - 1rem));
   white-space: normal;
   font-size: 0.9rem;
 }
