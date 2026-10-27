@@ -14,8 +14,10 @@ be hosted below a GitHub Pages repository path.
 - `src/features/navigation/`: one compact layout with category/tooltip dropdowns at the
   top of the sidebar, name/hash search, alias resolution, and history-aware navigation.
   Categories are grouped by their registry group and order. Workspace navigation
-  is a secondary dropdown. Wheel/arrow stepping is scoped to the Tooltip dropdown,
-  never an editor or normal page scrolling. Explicit selections push history;
+  is a secondary dropdown. Shift+Scroll steps anywhere in the app, including
+  inside editors, matching the original site. Unmodified wheel/arrow stepping
+  also works on the Tooltip dropdown; ordinary page/editor scrolling is untouched.
+  Explicit selections push history;
   stepping replaces immediately and commits one entry after a second idle.
 - `src/ui/`: shared components and base styles.
 - `src/services/`: generator, authored bundle, worker API, and native IndexedDB access.

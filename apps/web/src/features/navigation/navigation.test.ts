@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EditorData } from '../../stores/data';
 import { canonicalHash, navigationGroups, variantHashes } from './catalog';
-import { createStepping } from './stepping';
+import { createStepping, shiftScrollDirection } from './stepping';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
@@ -109,6 +109,15 @@ describe('tooltip catalog', () => {
 });
 
 describe('stepping history', () => {
+  it('recognizes Shift+Scroll anywhere, including horizontal wheel deltas, without stealing normal scrolling or zoom', () => {
+    const event = { shiftKey: false, ctrlKey: false, metaKey: false, deltaX: 0, deltaY: 100 };
+    expect(shiftScrollDirection(event)).toBe(0);
+    expect(shiftScrollDirection({ ...event, shiftKey: true })).toBe(1);
+    expect(shiftScrollDirection({ ...event, shiftKey: true, deltaY: -100 })).toBe(-1);
+    expect(shiftScrollDirection({ ...event, shiftKey: true, deltaY: 0, deltaX: 100 })).toBe(1);
+    expect(shiftScrollDirection({ ...event, shiftKey: true, ctrlKey: true })).toBe(0);
+    expect(shiftScrollDirection({ ...event, shiftKey: true, metaKey: true })).toBe(0);
+  });
   afterEach(() => vi.useRealTimers());
   function history() {
     const entries = ['/t/10'];

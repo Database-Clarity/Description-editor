@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { EditorData } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { itemFor, navigationGroups, variantHashes } from './catalog';
-import { createStepping } from './stepping';
+import { createStepping, shiftScrollDirection } from './stepping';
 import styles from './Layout.module.scss';
 
 export function TooltipNavigation({ data }: { data: EditorData }) {
@@ -41,9 +41,15 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
     const element = select.current;
     if (!element) return;
     const wheel = (event: WheelEvent) => {
-      if (!event.deltaY || event.ctrlKey) return;
+      if (!event.deltaY || event.ctrlKey || event.metaKey || event.shiftKey) return;
       event.preventDefault();
       step.current(Math.sign(event.deltaY));
+    };
+    const shiftWheel = (event: WheelEvent) => {
+      const direction = shiftScrollDirection(event);
+      if (!direction) return;
+      event.preventDefault();
+      step.current(direction);
     };
     const pop = () => stepping.cancel();
     const change = (event: Event) => {
@@ -55,11 +61,13 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
       if (event.target instanceof Element && event.target.closest('a[href]')) stepping.commit();
     };
     element.addEventListener('wheel', wheel, { passive: false });
+    window.addEventListener('wheel', shiftWheel, { passive: false, capture: true });
     window.addEventListener('popstate', pop);
     document.addEventListener('click', explicit, true);
     document.addEventListener('change', change, true);
     return () => {
       element.removeEventListener('wheel', wheel);
+      window.removeEventListener('wheel', shiftWheel, true);
       window.removeEventListener('popstate', pop);
       document.removeEventListener('click', explicit, true);
       document.removeEventListener('change', change, true);
@@ -134,7 +142,7 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
         </select>
       </label>
       <small id="tooltip-stepping-help">
-        Wheel / arrow keys on Tooltip to step. * = unsaved draft.
+        Shift+Scroll anywhere to step; arrow keys on Tooltip also work. * = unsaved draft.
       </small>
     </section>
   );

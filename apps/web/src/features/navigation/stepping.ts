@@ -1,5 +1,12 @@
 export type NavigateTo = (path: string, options: { replace: boolean }) => void;
 
+export function shiftScrollDirection(
+  event: Pick<WheelEvent, 'shiftKey' | 'ctrlKey' | 'metaKey' | 'deltaX' | 'deltaY'>,
+): number {
+  if (!event.shiftKey || event.ctrlKey || event.metaKey) return 0;
+  return Math.sign(event.deltaY || event.deltaX);
+}
+
 // Keep the pre-gesture route in history, not every intermediate wheel tick.
 export function createStepping(navigate: NavigateTo) {
   let origin: string | undefined;
