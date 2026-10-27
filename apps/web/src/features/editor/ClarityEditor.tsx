@@ -19,7 +19,7 @@ import {
 import { markupLanguage, parseMarkup, type Lang, type MarkupGlobals } from '@clarity/core';
 import { clarityCompletions } from './completion';
 import { clarityHighlighting, clarityLanguage } from './language';
-import { formatMarkupTables } from './formatTable';
+import { tableFormattingTransaction } from './formatTable';
 import styles from './ClarityEditor.module.scss';
 
 export interface ClarityEditorProps {
@@ -68,13 +68,8 @@ export function ClarityEditor({
     if (!host.current) return;
     const format = (editor: EditorView) => {
       if (editor.state.readOnly) return false;
-      const text = editor.state.doc.toString();
-      const formatted = formatMarkupTables(text);
-      if (text !== formatted)
-        editor.dispatch({
-          changes: { from: 0, to: text.length, insert: formatted },
-          userEvent: 'input',
-        });
+      const transaction = tableFormattingTransaction(editor.state);
+      if (transaction) editor.dispatch(transaction);
       return true;
     };
     extensions.current = [
