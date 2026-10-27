@@ -1,0 +1,47 @@
+.editor {
+  min-width: 0;
+  border: 1px solid #454545;
+  :global(.cm-editor) {
+    background: #1e1e1e;
+    color: #fff;
+    min-height: 220px;
+    font-size: 14px;
+  }
+  :global(.cm-scroller) {
+    font-family: Consolas, monospace;
+    overflow: auto;
+  }
+  :global(.cm-gutters) {
+    background: #1e1e1e;
+    color: #858585;
+    border-color: #454545;
+  }
+  :global(.cm-activeLine),
+  :global(.cm-activeLineGutter) {
+    background: #ffffff08;
+  }
+  :global(.cm-cursor) {
+    border-left-color: white;
+  }
+  :global(.cm-selectionBackground),
+  :global(.cm-focused .cm-selectionBackground) {
+    background: #004972b8 !important;
+  }
+  :global(.cm-tooltip) {
+    background: #252526;
+    color: white;
+    border: 1px solid #454545;
+  }
+  :global(.cm-tooltip-autocomplete > ul > li[aria-selected]) {
+    background: #004972;
+    color: white;
+  }
+}
+.help {
+  padding: 6px 10px;
+  color: #bdbdbd;
+  font-size: 12px;
+  p {
+    margin: 6px 0;
+  }
+}
