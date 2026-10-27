@@ -103,7 +103,11 @@ export function AssociationsPanel({ hash }: { hash: number }) {
           </ul>
         </details>
       ) : (
-        <p>{saving ? 'Finish the open save review before editing associations.' : 'Association editing requires an editor account and a connected API.'}</p>
+        <p>
+          {saving
+            ? 'Finish the open save review before editing associations.'
+            : 'Association editing requires an editor account and a connected API.'}
+        </p>
       )}
     </section>
   );
