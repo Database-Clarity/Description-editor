@@ -1,0 +1,226 @@
+.preview {
+  width: 100%;
+  max-width: 320px;
+  min-width: 0;
+  height: fit-content;
+  color: #fff;
+  background-color: hsl(279, 36%, 5%);
+  font:
+    14px/1.3 Arial,
+    Helvetica,
+    DestinySymbols,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 15px;
+  line-height: 17px;
+  letter-spacing: -0.02em;
+  padding: 10px;
+  background-color: hsl(0, 0%, 33%);
+  color: hsl(0, 0%, 93%);
+}
+.name {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 24px;
+}
+.category {
+  opacity: 0.7;
+  margin-top: 4px;
+}
+.icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.description {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+}
+.weapon,
+.diagnostics {
+  display: block;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.pvp {
+  color: hsl(0, 100%, 80%);
+}
+.pve {
+  color: hsl(220, 100%, 75%);
+}
+.green {
+  color: hsl(116, 58%, 65%);
+}
+.yellow {
+  color: hsl(51, 100%, 45%);
+}
+.blue {
+  color: hsl(180, 100%, 45%);
+}
+.purple {
+  color: hsl(300, 100%, 81%);
+}
+.enhancedArrow {
+  color: hsl(46, 100%, 50%);
+}
+.center {
+  text-align: center;
+}
+.right {
+  text-align: right;
+}
+.spacer {
+  padding-top: 5px;
+}
+.bold {
+  font-weight: bold;
+}
+.background {
+  background-color: hsla(0, 0%, 100%, 0.15);
+}
+.breakSpaces {
+  white-space: break-spaces;
+}
+.title {
+  text-decoration: underline;
+  display: inline-block;
+  color: hsl(38, 80%, 56%);
+}
+.link a {
+  color: hsl(201, 100%, 65%);
+}
+.wide {
+  width: auto !important;
+}
+.centerTable {
+  align-self: center;
+}
+.table {
+  border-collapse: collapse;
+  td:first-child {
+    padding-left: 3px;
+  }
+}
+.background_2 tr:nth-child(even),
+.background_1 tr:nth-child(odd) {
+  background-color: hsla(0, 0%, 100%, 0.15);
+}
+.titleAnchor {
+  position: relative;
+}
+.titleContainer {
+  display: none;
+  color: white;
+  z-index: 2;
+  padding: 2px 4px;
+  flex-direction: column;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  background-color: black;
+  max-width: min(300px, 85vw);
+  width: max-content;
+  border: 2px solid #696969;
+  font-weight: normal;
+  text-align: left;
+  table td:not(:first-child):not(:last-child) {
+    padding: 0 3px;
+  }
+}
+.titleAnchor:hover > .titleContainer,
+.titleAnchor:focus > .titleContainer {
+  display: flex;
+}
+
+@mixin icon($url, $width: 10px, $size: 10px 10px) {
+  &::before {
+    content: '';
+    display: inline-block;
+    height: 10px;
+    width: $width;
+    margin: 0 1px;
+    background: url($url) center / $size no-repeat;
+  }
+}
+.kinetic {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_3385a924fd3ccb92c343ade19f19a370.png'
+  );
+}
+.arc {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_092d066688b879c807c3b460afdd61e6.png'
+  );
+}
+.solar {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_2a1773e10968f2d088b97c22b22bba9e.png'
+  );
+}
+.void {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_ceb2f6197dccf3958bb31cc783eb97a0.png'
+  );
+}
+.stasis {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_530c4c3e7981dc2aefd24fd3293482bf.png'
+  );
+}
+.strand {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyDamageTypeDefinition_b2fe51a94f3533f97079dfa0d27a4096.png'
+  );
+}
+.primary {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/99f3733354862047493d8550e46a45ec.png',
+    13px,
+    18px 20px
+  );
+}
+.special {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/d920203c4fd4571ae7f39eb5249eaecb.png',
+    13px,
+    18px 20px
+  );
+}
+.heavy {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/78ef0e2b281de7b60c48920223e0f9b1.png',
+    13px,
+    18px 20px
+  );
+}
+.barrier {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyBreakerTypeDefinition_07b9ba0194e85e46b258b04783e93d5d.png'
+  );
+}
+.overload {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyBreakerTypeDefinition_da558352b624d799cf50de14d7cb9565.png'
+  );
+}
+.unstoppable {
+  @include icon(
+    'https://www.bungie.net/common/destiny2_content/icons/DestinyBreakerTypeDefinition_825a438c85404efd6472ff9e97fc7251.png'
+  );
+}
+.hunter {
+  @include icon('./assets/hunter.svg');
+}
+.titan {
+  @include icon('./assets/titan.svg', 11px);
+}
+.warlock {
+  @include icon('./assets/warlock.svg', 22px);
+}
