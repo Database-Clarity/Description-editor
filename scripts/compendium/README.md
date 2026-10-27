@@ -7,7 +7,9 @@ this README, `parser-source.txt`, `compendium.json`, and
 
 The Action runs daily at 05:17 UTC and on demand. GitHub schedules can be delayed.
 The runner fetches the Landing htmlview to discover all tabs, then parses each
-tab using the editor core parser. A failed fetch, invalid schema, unknown layout
+tracked tab using the editor core parser. Tab names containing literal uppercase
+`OLD` are excluded case-sensitively; `Old` and `old` remain eligible.
+A failed fetch, invalid schema, unknown layout
 or empty non-Landing tab fails the entire run without replacing the old data.
 Landing is a navigation-only tab. Other tabs support ordinary/parallel tables,
 row-spanned names/descriptions, and artifact cards with their descriptions on

@@ -5,6 +5,7 @@ import {
   type CompendiumRow,
   type CompendiumSheet,
 } from './types.js';
+import { isTrackedCompendiumTab } from './config.js';
 
 export function normaliseCompendiumName(name: string): string {
   return name
@@ -46,7 +47,9 @@ export function resolveCompendiumLink(
   link: CompendiumLink,
   data: CompendiumData,
 ): CompendiumResolution {
-  const all = data.tabs.flatMap((tab) => tab.rows.map((row) => ({ tab, row })));
+  const all = data.tabs
+    .filter((tab) => isTrackedCompendiumTab(tab.name))
+    .flatMap((tab) => tab.rows.map((row) => ({ tab, row })));
   let exact = all.filter(({ tab, row }) => tab.gid === link.gid && row.name === link.rowKey);
   if (exact.length > 1 && link.section) {
     const section = exact.filter(({ row }) => row.section === link.section);

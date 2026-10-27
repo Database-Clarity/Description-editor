@@ -13,6 +13,7 @@ import { HistoryPanel } from '../history/HistoryPanel';
 import { canEditLanguage } from '../auth/permissions';
 import { useSaveState } from '../../services/save/state';
 import { AssociationsPanel } from '../associations/AssociationsPanel';
+import { CompendiumPanel } from '../compendium/CompendiumPanel';
 import styles from './TooltipPage.module.scss';
 
 export function TooltipPage() {
@@ -106,6 +107,7 @@ export function TooltipPage() {
                   onChange={(text) => edit(base, lang, text, user?.login ?? 'local draft')}
                 />
               </section>
+              <div>
               <TooltipPreview
                 text={value}
                 lang={lang}
@@ -115,6 +117,8 @@ export function TooltipPage() {
                 globals={globals}
                 tooltipHash={variant}
               />
+              <CompendiumPanel base={base} />
+              </div>
             </div>
             <AssociationsPanel hash={variant} />
             <HistoryPanel hash={variant} />

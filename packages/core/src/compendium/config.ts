@@ -15,7 +15,16 @@ export interface CompendiumColumns {
   descriptionColumns: number[];
   section?: string;
 }
-const glossary = { nameColumns: [1], descriptionColumns: [3], sectionHeaders: ['Glossary'] };
+export function isTrackedCompendiumTab(name: string): boolean {
+  return !name.includes('OLD');
+}
+const glossary = {
+  nameColumns: [1],
+  descriptionColumns: [3],
+  sectionHeaders: ['Glossary', 'Hunters', 'Titans', 'Warlocks'],
+  nameHeaders: ['Fragments', 'Aspects'],
+  descriptionHeaders: ['Information', 'Stat Changes', 'Fragment Slots'],
+};
 const armorSlots = [
   'Helmet',
   'Arms',
@@ -91,3 +100,77 @@ export const compendiumTabs: Record<string, CompendiumTabConfig> = {
   '135237481': { name: 'OLD Game Mechanics', nameHeaders: ['Modifier'] },
   '2137280685': { name: 'OLD Exotic Armors', descriptionHeaders: ['Notes'] },
 };
+
+const subclasses = [
+  '618967225',
+  '1186062409',
+  '1907852650',
+  '1088259962',
+  '1870531554',
+  '1918152785',
+];
+export const compendiumCategoryTabs: Record<string, string[]> = {
+  'weapon-perk': ['1662574278'],
+  'weapon-perk-exotic': ['441434520', '1662574278'],
+  'weapon-trait': ['1662574278'],
+  'weapon-trait-enhanced': ['1662574278'],
+  'weapon-trait-exotic': ['441434520'],
+  'weapon-trait-enhanced-exotic': ['441434520'],
+  'weapon-trait-origin': ['1662574278'],
+  'weapon-trait-origin-exotic': ['1662574278'],
+  'weapon-frame': ['1662574278'],
+  'weapon-frame-enhanced': ['1662574278'],
+  'weapon-frame-exotic': ['441434520'],
+  'weapon-frame-enhanced-exotic': ['441434520'],
+  'weapon-catalyst-exotic': ['441434520'],
+  'weapon-mod': ['1662574278'],
+  'armor-trait-exotic': ['1500097863', '20898389'],
+  'armor-mod-general': ['1934379638', '1925335732'],
+  'armor-mod-combat': ['1934379638', '1925335732'],
+  'armor-mod-activity': ['1934379638', '1925335732'],
+  'armor-mod-seasonal': ['473308249', '715236319', '70425171'],
+  'subclass-fragment': subclasses,
+  'subclass-aspect': subclasses,
+  'subclass-super': subclasses,
+  'subclass-grenade': subclasses,
+  'subclass-melee': subclasses,
+  'subclass-class': ['527596209', ...subclasses],
+  'subclass-movement': subclasses,
+  verbs: subclasses,
+};
+
+const fragmentTabs: Record<string, string> = {
+  'Spark of ': '618967225',
+  'Ember of ': '1186062409',
+  'Echo of ': '1907852650',
+  'Whisper of ': '1088259962',
+  'Thread of ': '1870531554',
+  'Facet of ': '1918152785',
+};
+export function compendiumPreferredTabs(category: string, name: string): string[] {
+  const fragment =
+    category === 'subclass-fragment' &&
+    Object.entries(fragmentTabs).find(([prefix]) => name.startsWith(prefix))?.[1];
+  return fragment ? [fragment] : (compendiumCategoryTabs[category] ?? []);
+}
+export function compendiumNameVariants(category: string, name: string): string[] {
+  const names = [name];
+  if (category === 'subclass-fragment') {
+    const prefix = Object.keys(fragmentTabs).find((prefix) => name.startsWith(prefix));
+    if (prefix) names.push(name.slice(prefix.length));
+  }
+  if (category === 'armor-mod-general') {
+    names.push(name.replace(/\b(?:Arc|Solar|Void|Stasis|Strand|Harmonic)\s+/g, ''));
+  }
+  if (category === 'weapon-catalyst-exotic') names.push(name.replace(/\s+catalyst$/i, ''));
+  return [...new Set(names)];
+}
+export function compendiumIdentifiers(name: string): string[] {
+  return [
+    name,
+    ...name
+      .split('\n')
+      .map((line) => line.replace(/^[↑+\s]+/u, '').trim())
+      .filter(Boolean),
+  ];
+}

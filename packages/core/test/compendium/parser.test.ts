@@ -14,9 +14,18 @@ const fixture = (name: string) =>
 describe('real htmlview golden fixtures', () => {
   it('discovers tab names/gids from Landing without evaluating scripts', () => {
     const tabs = parseCompendiumTabs(fixture('landing'));
-    expect(tabs).toHaveLength(22);
+    expect(tabs).toHaveLength(16);
     expect(tabs).toContainEqual({ name: 'Weapon Perks', gid: '1662574278' });
     expect(tabs).toContainEqual({ name: 'Arc', gid: '618967225' });
+  });
+  it('excludes literal uppercase OLD only, including from direct sheet parsing', () => {
+    const tabs = parseCompendiumTabs(
+      '<a href="?gid=1">OLD Perks</a><a href="?gid=2">old perks</a><a href="?gid=3">Old perks</a><a href="?gid=4">Perks</a>',
+    );
+    expect(tabs.map((tab) => tab.name)).toEqual(['old perks', 'Old perks', 'Perks']);
+    expect(() => parseCompendiumSheet('<html>must not be parsed</html>', '1', 'OLD Perks')).toThrow(
+      'Ignored',
+    );
   });
   it.each([
     ['weapon', '1662574278', 'Accelerated Heatsink'],
@@ -25,7 +34,7 @@ describe('real htmlview golden fixtures', () => {
   ])('normalises %s cell text and styles against a saved golden', (name, gid, key) => {
     const sheet = parseCompendiumSheet(fixture(name), gid);
     expect(sheet).toMatchSnapshot();
-    const row = sheet.rows.find((row) => row.name === key)!;
+    const row = sheet.rows.find((row) => row.name.split('\n')[0] === key)!;
     expect(row.cell.plain).toBe(row.cell.runs.map((run) => run.text).join(''));
     expect(compendiumCellSchema.safeParse(row.cell).success).toBe(true);
     expect(JSON.stringify(sheet)).not.toMatch(/class=|className|"s\d+"/);

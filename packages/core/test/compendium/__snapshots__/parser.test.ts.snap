@@ -1370,8 +1370,11 @@ Can only trigger once per Force Converter activation.",
           },
         ],
       },
-      "name": "AION Renewal",
-      "nameNorm": "aion renewal",
+      "name": "AION Renewal
+
+Kepler
+Destination",
+      "nameNorm": "aion renewal kepler destination",
       "rowIndex": 3,
       "section": "Armor Set Bonuses",
     },
@@ -1558,8 +1561,11 @@ Quicksilver Storm's Rocket Tracer, Nanotech Tracer Round, Exhaustive Research Ro
           },
         ],
       },
-      "name": "AION Adapter",
-      "nameNorm": "aion adapter",
+      "name": "AION Adapter
+
+Kepler
+Destination",
+      "nameNorm": "aion adapter kepler destination",
       "rowIndex": 5,
       "section": "Armor Set Bonuses",
     },

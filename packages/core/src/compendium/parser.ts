@@ -1,4 +1,9 @@
-import { compendiumTabs, type CompendiumColumns, type CompendiumTabConfig } from './config.js';
+import {
+  compendiumTabs,
+  isTrackedCompendiumTab,
+  type CompendiumColumns,
+  type CompendiumTabConfig,
+} from './config.js';
 import {
   attr,
   descendants,
@@ -34,7 +39,7 @@ export function parseCompendiumTabs(html: string): CompendiumTab[] {
     if (gid && name && !tabs.has(gid)) tabs.set(gid, { gid, name });
   }
   if (!tabs.size) throw new Error('Compendium Landing page did not contain any tabs');
-  return [...tabs.values()];
+  return [...tabs.values()].filter((tab) => isTrackedCompendiumTab(tab.name));
 }
 
 interface GridCell {
@@ -147,22 +152,28 @@ function detectColumns(cells: GridRow['cells'], config?: CompendiumTabConfig) {
     .filter(({ cell }) => descriptionHeaders.includes(cell!.cell.plain.trim().toLowerCase()))
     .map(({ index }) => index);
   if (!nameColumns.length || !descriptionColumns.length) return undefined;
-  return descriptionColumns.flatMap((description, index): CompendiumColumns[] => {
+  const groups: CompendiumColumns[] = [];
+  for (const [index, description] of descriptionColumns.entries()) {
     const names = nameColumns.filter(
       (column) => column < description && column > (descriptionColumns[index - 1] ?? -1),
     );
-    if (!names.length) return [];
-    return [
-      {
+    if (!names.length) {
+      groups.at(-1)?.descriptionColumns.push(description);
+    } else {
+      groups.push({
         nameColumns: names,
         descriptionColumns: [description],
         ...(descriptionColumns.length > 1 ? { section: cells[names[0]]!.cell.plain.trim() } : {}),
-      },
-    ];
-  });
+      });
+    }
+  }
+  return groups;
 }
 export function parseCompendiumSheet(html: string, tab: string, tabName?: string): CompendiumSheet {
   const config = compendiumTabs[tab];
+  if (!isTrackedCompendiumTab(tabName ?? config?.name ?? tab)) {
+    throw new Error(`Ignored Compendium tab: ${tabName ?? config?.name ?? tab}`);
+  }
   if (config?.navigationOnly) return { gid: tab, name: tabName ?? config.name, rows: [] };
   const grid = parseCompendiumGrid(html);
   let groups: CompendiumColumns[] | undefined = config?.cards ? config.groups : undefined;
@@ -222,7 +233,7 @@ export function parseCompendiumSheet(html: string, tab: string, tabName?: string
           !seen?.has(entry.element),
       );
       const rowKey = names
-        .map((entry) => entry.cell.plain.split('\n')[0].trim())
+        .map((entry) => entry.cell.plain.trim())
         .filter(Boolean)
         .join(' ');
       if (!name || !rowKey || !descriptions.length) continue;
