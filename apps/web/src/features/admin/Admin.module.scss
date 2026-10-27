@@ -1,0 +1,41 @@
+.tableWrapper {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  th,
+  td {
+    padding: 0.8rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #555;
+  }
+  th {
+    color: #bcbcc5;
+  }
+  small {
+    display: block;
+    margin-top: 0.4rem;
+  }
+}
+.languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 13rem;
+  label {
+    white-space: nowrap;
+  }
+}
+.add {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+.login {
+  display: grid;
+  gap: 0.4rem;
+}

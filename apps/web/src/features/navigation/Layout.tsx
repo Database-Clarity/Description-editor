@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDataStore } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
+import { useAuthStore } from '../../stores/auth';
 import { AuthStatus } from '../auth/AuthStatus';
 import { TooltipNavigation } from './TooltipNavigation';
 import styles from './Layout.module.scss';
@@ -19,6 +20,7 @@ const links = [
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const { data, status, error, load } = useDataStore();
   const { hydrated, pending, error: draftError, hydrate, retry } = useDraftStore();
   useEffect(() => {
@@ -62,11 +64,13 @@ export function Layout() {
             }
             onChange={(event) => navigate(event.target.value)}
           >
-            {links.map(({ to, label }) => (
-              <option key={to} value={to}>
-                {label}
-              </option>
-            ))}
+            {links
+              .filter(({ to }) => to !== '/admin' || user?.role === 'maintainer')
+              .map(({ to, label }) => (
+                <option key={to} value={to}>
+                  {label}
+                </option>
+              ))}
           </select>
         </label>
         <AuthStatus />

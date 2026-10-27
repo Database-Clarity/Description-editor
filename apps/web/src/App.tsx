@@ -11,6 +11,7 @@ import { ReviewPage } from './features/review/ReviewPage';
 import { DriftPage } from './features/drift/DriftPage';
 import { TranslationsPage } from './features/translations/TranslationsPage';
 import { PlaceholderPage } from './ui/PlaceholderPage';
+import { useAuthStore } from './stores/auth';
 
 export function App() {
   return (
@@ -41,6 +42,9 @@ export function App() {
 
 function StartPage() {
   const data = useDataStore((state) => state.data);
+  const { user, loading } = useAuthStore();
+  if (loading) return <p role="status">Loading your workspace...</p>;
+  if (user?.role === 'translator') return <Navigate to="/translations" replace />;
   const first = data && navigationGroups(data, '')[0]?.sections[0]?.items[0];
   return first ? <Navigate to={`/t/${first.hash}`} replace /> : <p>No tooltips available.</p>;
 }
