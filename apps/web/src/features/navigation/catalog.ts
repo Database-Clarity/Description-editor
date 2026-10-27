@@ -58,6 +58,12 @@ export interface CategoryGroup {
 
 export function navigationGroups(data: EditorData, query: string): CategoryGroup[] {
   const search = query.trim().toLocaleLowerCase();
+  const matchingAliases = new Set<number>();
+  if (search) {
+    for (const [alias, target] of Object.entries(data.sandboxAliases)) {
+      if (alias.includes(search)) matchingAliases.add(canonicalHash(target, data));
+    }
+  }
   const items = Object.values(data.items)
     .concat(
       Object.values(data.bundle.tooltips)
@@ -74,10 +80,7 @@ export function navigationGroups(data: EditorData, query: string): CategoryGroup
               String(hash).includes(search) ||
               data.items[hash]?.name.toLocaleLowerCase().includes(search),
           ) ||
-          Object.entries(data.sandboxAliases).some(
-            ([alias, target]) =>
-              alias.includes(search) && canonicalHash(target, data) === item.hash,
-          )),
+          matchingAliases.has(item.hash)),
     );
   const categories = [...data.categories];
   for (const item of items) {
