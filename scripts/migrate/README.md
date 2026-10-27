@@ -11,7 +11,7 @@ npm run migrate -- --output <isolated-editor-data-checkout>
 
 This is a standalone tooling package, not an app workspace. Root lint covers its
 source; its own typecheck and tests are required in addition to the root checks.
-It imports `migrateLegacy`, `contentHash` and schemas from `@clarity/core`.
+It imports `migrateLegacy`, `publishableHash` and schemas from `@clarity/core`.
 
 By default the command fetches current public
 `Live-Clarity-Database/intermediate/intermediateDescriptions.json` and
@@ -35,8 +35,9 @@ itself or touches `intermediate`, `converter`, `live` or `main`.
 
 `live/pushed.json` hashes the migrated converter data, not the intermediate data.
 Printed pending count compares each migrated intermediate tooltip against that
-baseline using the full core content hash. Preserved legacy metadata (including
-upload timestamps/flags) participates, so pending includes metadata-only changes.
+baseline using core `publishableHash`: per-language text strings, associations
+and custom facts only. Preserved legacy metadata (including upload timestamps
+and flags), edit credits and snapshots do not create pending changes.
 
 ## Initial publication
 

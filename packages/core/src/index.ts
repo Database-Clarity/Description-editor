@@ -2,6 +2,7 @@ export * from './languages.js';
 export * from './legacy.js';
 export * from './schemas.js';
 export * from './contentHash.js';
+export * from './publishableHash.js';
 export * from './migrateLegacy.js';
 export * from './exportLegacy.js';
 export * from './merge3.js';

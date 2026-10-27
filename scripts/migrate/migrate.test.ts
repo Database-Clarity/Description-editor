@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
-  contentHash,
+  publishableHash,
   migrateLegacy,
   permissionsSchema,
   pushedSchema,
@@ -46,14 +46,14 @@ afterEach(async () => {
 });
 
 describe('migration', () => {
-  it('uses the migrated live baseline and reports full content-hash differences', async () => {
+  it('uses migrated live publishable hashes and ignores metadata-only changes', async () => {
     const intermediate = database('draft');
     const live = database('published');
     const result = await prepareMigration(intermediate, live, owner);
     expect(result.pending).toBe(1);
     expect(result.liveCount).toBe(1);
-    expect(result.pushed['42']).toBe(await contentHash(migrateLegacy(live)[0]));
-    expect(result.pushed['42']).not.toBe(await contentHash(result.tooltips[0]));
+    expect(result.pushed['42']).toBe(await publishableHash(migrateLegacy(live)[0]));
+    expect(result.pushed['42']).not.toBe(await publishableHash(result.tooltips[0]));
     expect(result.tooltips[0].text.en).toEqual({
       text: 'draft',
       updatedAt: '1970-01-01T00:00:02.000Z',
@@ -62,7 +62,7 @@ describe('migration', () => {
     expect((await prepareMigration(live, live, owner)).pending).toBe(0);
     const metadataOnly = database('published');
     metadataOnly.perks[42].lastUpload = 3000;
-    expect((await prepareMigration(metadataOnly, live, owner)).pending).toBe(1);
+    expect((await prepareMigration(metadataOnly, live, owner)).pending).toBe(0);
   });
 
   it('retains live-only baselines, detects new tooltips, and validates input', async () => {

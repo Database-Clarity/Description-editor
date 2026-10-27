@@ -2,7 +2,7 @@ import { copyFile, mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/p
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  contentHash,
+  publishableHash,
   migrateLegacy,
   permissionsSchema,
   stableStringify,
@@ -21,10 +21,10 @@ export async function prepareMigration(intermediate: unknown, live: unknown, own
   const liveTooltips = migrateLegacy(live);
   const pushed: Pushed = Object.fromEntries(
     await Promise.all(
-      liveTooltips.map(async (tooltip) => [tooltip.hash, await contentHash(tooltip)]),
+      liveTooltips.map(async (tooltip) => [tooltip.hash, await publishableHash(tooltip)]),
     ),
   );
-  const hashes = await Promise.all(tooltips.map(contentHash));
+  const hashes = await Promise.all(tooltips.map(publishableHash));
   const pending = tooltips.filter(
     (tooltip, index) => hashes[index] !== pushed[tooltip.hash],
   ).length;
