@@ -28,6 +28,30 @@ function memory(): DraftStorage {
 }
 
 describe('local drafts', () => {
+  it('persists association-only drafts, preserves the base and retains them when text is undone', async () => {
+    const storage = memory();
+    const store = createDraftStore(storage);
+    expect(() => store.getState().updateDraft(base, (next) => next)).toThrow('recovery');
+    await store.getState().hydrate();
+    store.getState().updateDraft(base, (next) => ({ ...next, associated: [30, 20] }));
+    store.getState().edit(base, 'en', 'Changed', 'alice');
+    store.getState().edit(base, 'en', 'Original', 'alice');
+    await store.getState().flush();
+    const recovered = createDraftStore(storage);
+    await recovered.getState().hydrate();
+    expect(recovered.getState().drafts[10]).toEqual({
+      base,
+      next: { ...base, associated: [30, 20] },
+    });
+    store
+      .getState()
+      .updateDraft({ ...base, associated: [99] }, (next) => ({ ...next, associated: [] }));
+    expect(store.getState().drafts).toEqual({});
+    expect(() => store.getState().updateDraft(base, (next) => ({ ...next, hash: 11 }))).toThrow(
+      'hash',
+    );
+    await store.getState().flush();
+  });
   it('recovers drafts from IndexedDB after recreating the store and supports discard', async () => {
     const first = createDraftStore(draftStorage);
     await first.getState().hydrate();

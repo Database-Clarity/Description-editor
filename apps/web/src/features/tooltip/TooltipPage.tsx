@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { languages, langSchema, type Lang, type MarkupGlobals } from '@clarity/core';
 import { apiUrl } from '../../services/api';
 import { tooltipImports } from '../../services/tooltipImports';
@@ -12,12 +12,16 @@ import { TooltipPreview } from '../preview';
 import { HistoryPanel } from '../history/HistoryPanel';
 import { canEditLanguage } from '../auth/permissions';
 import { useSaveState } from '../../services/save/state';
+import { AssociationsPanel } from '../associations/AssociationsPanel';
 import styles from './TooltipPage.module.scss';
 
 export function TooltipPage() {
   const { hash: parameter } = useParams();
+  const [search, setSearch] = useSearchParams();
   const data = useDataStore((state) => state.data);
-  const [lang, setLang] = useState<Lang>('en');
+  const [defaultLang, setLang] = useState<Lang>('en');
+  const lang = langSchema.safeParse(search.get('lang')).data ?? defaultLang;
+  const highlightLine = Number(search.get('line'));
   const drafts = useDraftStore((state) => state.drafts);
   const edit = useDraftStore((state) => state.edit);
   const discard = useDraftStore((state) => state.discard);
@@ -51,7 +55,13 @@ export function TooltipPage() {
         </div>
         <label>
           Language{' '}
-          <select value={lang} onChange={(event) => setLang(langSchema.parse(event.target.value))}>
+          <select
+            value={lang}
+            onChange={(event) => {
+              setLang(langSchema.parse(event.target.value));
+              setSearch({ lang: event.target.value });
+            }}
+          >
             {languages.map((language) => (
               <option key={language} value={language}>
                 {language}
@@ -90,6 +100,9 @@ export function TooltipPage() {
                   globals={globals}
                   requireEnglish={variant > 3}
                   readOnly={!apiUrl || !hydrated || saving || !canEditLanguage(user, lang)}
+                  highlightLine={
+                    Number(search.get('variant') ?? hash) === variant ? highlightLine : undefined
+                  }
                   onChange={(text) => edit(base, lang, text, user?.login ?? 'local draft')}
                 />
               </section>
@@ -100,8 +113,10 @@ export function TooltipPage() {
                 icon={entry?.icon || undefined}
                 categoryLabel={category?.label ?? entry?.categoryId}
                 globals={globals}
+                tooltipHash={variant}
               />
             </div>
+            <AssociationsPanel hash={variant} />
             <HistoryPanel hash={variant} />
           </section>
         );

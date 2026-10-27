@@ -1,0 +1,41 @@
+.panel {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #485362;
+  border-radius: 6px;
+  input {
+    max-width: 100%;
+    margin: 8px;
+  }
+  summary {
+    cursor: pointer;
+  }
+}
+.selected {
+  padding-left: 24px;
+  li {
+    margin: 8px 0;
+  }
+  img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+}
+.actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 12px;
+}
+.results {
+  max-height: 260px;
+  overflow: auto;
+  padding: 0;
+  list-style: none;
+  button {
+    margin: 4px 0;
+    text-align: left;
+  }
+}

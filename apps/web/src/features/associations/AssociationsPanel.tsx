@@ -1,0 +1,110 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { resolveAlias } from '@clarity/core';
+import { apiUrl } from '../../services/api';
+import { useDataStore } from '../../stores/data';
+import { useDraftStore } from '../../stores/drafts';
+import { useAuthStore } from '../../stores/auth';
+import { useSaveState } from '../../services/save/state';
+import { canEditTooltipFields } from '../auth/permissions';
+import { canonicalHash, itemFor, tooltipFor } from '../navigation/catalog';
+import { GlobalUsageSummary } from '../globals/GlobalsPage';
+import { associationCandidates, moveAssociation } from './associations';
+import styles from './AssociationsPanel.module.scss';
+
+export function AssociationsPanel({ hash }: { hash: number }) {
+  const data = useDataStore((state) => state.data);
+  const draft = useDraftStore((state) => state.drafts[hash]);
+  const hydrated = useDraftStore((state) => state.hydrated);
+  const updateDraft = useDraftStore((state) => state.updateDraft);
+  const user = useAuthStore((state) => state.user);
+  const saving = useSaveState((state) => state.locked);
+  const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState(false);
+  const tooltip = data ? (draft?.next ?? tooltipFor(hash, data)) : undefined;
+  const candidates = useMemo(
+    () => (data && tooltip ? associationCandidates(data, query, hash, tooltip.associated) : []),
+    [data, tooltip, query, hash],
+  );
+  if (!data || !tooltip) return null;
+  const editable = Boolean(apiUrl && hydrated && !saving && canEditTooltipFields(user));
+  function change(associated: number[]) {
+    if (!editable || !data) return;
+    updateDraft(tooltipFor(hash, data), (next) => ({ ...next, associated }));
+  }
+  return (
+    <section className={styles.panel} aria-label={`Associations for ${hash}`}>
+      {(hash === 2 || hash === 3) && <GlobalUsageSummary hash={hash} />}
+      <h3>Associated tooltips</h3>
+      <p>Shown in this order as expandable entries in the preview.</p>
+      {!tooltip.associated.length && <p>No associated tooltips.</p>}
+      <ol className={styles.selected}>
+        {tooltip.associated.map((associated, index) => {
+          const target = resolveAlias(associated, data.aliases);
+          const entry = itemFor(target, data);
+          return (
+            <li key={`${associated}:${index}`}>
+              {entry?.icon && <img src={`https://www.bungie.net${entry.icon}`} alt="" />}
+              <Link to={`/t/${canonicalHash(target, data)}`}>
+                {entry?.name ?? `Tooltip ${target}`}
+              </Link>
+              {editable && (
+                <span className={styles.actions}>
+                  <button
+                    type="button"
+                    aria-label={`Move ${entry?.name ?? target} up`}
+                    disabled={index === 0}
+                    onClick={() => change(moveAssociation(tooltip.associated, index, -1))}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Move ${entry?.name ?? target} down`}
+                    disabled={index === tooltip.associated.length - 1}
+                    onClick={() => change(moveAssociation(tooltip.associated, index, 1))}
+                  >
+                    Down
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${entry?.name ?? target}`}
+                    onClick={() =>
+                      change(tooltip.associated.filter((_, position) => position !== index))
+                    }
+                  >
+                    Remove
+                  </button>
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {editable ? (
+        <details open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
+          <summary>Add associated tooltip</summary>
+          <label>
+            Search name or hash{' '}
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
+          </label>
+          <p>
+            {candidates.length} matches
+            {candidates.length > 30 && ' (showing the first 30; narrow your search)'}
+          </p>
+          <ul className={styles.results}>
+            {candidates.slice(0, 30).map((target) => (
+              <li key={target}>
+                <button type="button" onClick={() => change([...tooltip.associated, target])}>
+                  Add {itemFor(target, data)?.name ?? `Tooltip ${target}`} ({target})
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : (
+        <p>{saving ? 'Finish the open save review before editing associations.' : 'Association editing requires an editor account and a connected API.'}</p>
+      )}
+    </section>
+  );
+}

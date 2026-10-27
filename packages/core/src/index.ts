@@ -9,3 +9,4 @@ export * from './aliases.js';
 export * from './merge3.js';
 export * from './markup/index.js';
 export * from './validation/index.js';
+export * from './globals/index.js';
