@@ -72,10 +72,13 @@ it('keeps explicitly configured cross-category duplicate names ambiguous', () =>
     { ...sheet.rows[0], section: 'Intrinsic Traits', rowIndex: 999 },
   ];
   expect(
-    resolveCompendiumLink(snapshotCompendium(combined, now), {
-      ...data,
-      tabs: [{ ...sheet, rows }],
-    }).status,
+    resolveCompendiumLink(
+      { ...snapshotCompendium(combined, now), section: undefined },
+      {
+        ...data,
+        tabs: [{ ...sheet, rows }],
+      },
+    ).status,
   ).toBe('candidates');
 });
 const offsets = [

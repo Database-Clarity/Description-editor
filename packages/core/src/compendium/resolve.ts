@@ -97,6 +97,17 @@ export function resolveCompendiumLink(
     moved = true;
   }
   if (found.length) {
+    // A saved section disambiguates category collisions only. Sections within the
+    // same category still contribute all of their legitimate multipart content.
+    if (
+      !link.cells &&
+      link.section &&
+      found.every(({ tab }) => tab.gid === link.gid) &&
+      new Set(found.map(categoryOf).filter(Boolean)).size > 1
+    ) {
+      const category = compendiumTabs[link.gid]?.sectionCategories?.[link.section];
+      if (category) found = found.filter((entry) => categoryOf(entry) === category);
+    }
     if (link.cells && found.length > 1 && link.section) {
       const section = found.filter(({ row }) => row.section === link.section);
       if (section.length) found = section;
@@ -145,6 +156,9 @@ export function resolveCompendiumLink(
     )
     .slice(0, 3);
   return candidates.length ? { status: 'candidates', candidates } : { status: 'missing' };
+}
+function categoryOf({ tab, row }: CompendiumMatch): string | undefined {
+  return compendiumTabs[tab.gid]?.sectionCategories?.[row.section ?? ''];
 }
 // Combine only the same named thing in one tab; explicit category boundaries stay ambiguous.
 export function combineCompendiumMatches(matches: CompendiumMatch[]): CompendiumMatch | undefined {

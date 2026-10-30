@@ -8,16 +8,20 @@ import {
   type CompendiumPosition,
   type CompendiumCellOffset,
   type CompendiumMatch,
+  type CompendiumData,
 } from '@clarity/core';
+import { confirmCompendiumSelection } from './selection';
 import { RichCell } from './RichCell';
 import styles from './Compendium.module.scss';
 
 export function CellPicker({
   tab,
+  data,
   initial,
   onChoose,
 }: {
   tab: CompendiumSheet;
+  data: CompendiumData;
   initial?: CompendiumRow;
   onChoose(match: CompendiumMatch): void;
 }) {
@@ -40,6 +44,9 @@ export function CellPicker({
           }
         : undefined));
   const preview = anchor && selectCompendiumCells(tab, anchor, offsets);
+  const selection =
+    preview && row ? { tab, row: { ...row, cell: preview }, cells: offsets } : undefined;
+  const accepted = selection && confirmCompendiumSelection(selection, data);
   if (!tab.grid)
     return <p>This dataset has no sheet grid. Refresh the dataset to pick description cells.</p>;
   const hits = query.trim()
@@ -142,14 +149,21 @@ export function CellPicker({
               <RichCell cell={preview} />
             </div>
           )}
+          {selection && !accepted && (
+            <p role="alert">
+              This anchor cannot uniquely identify the selected cells. Duplicate anchor text is
+              ambiguous; choose a nearby unique anchor using the search, then select the description
+              cells again.
+            </p>
+          )}
           <button type="button" onClick={() => setOffsets([])}>
             Clear selection
           </button>{' '}
           <button
             type="button"
-            disabled={!preview || !row}
+            disabled={!accepted}
             onClick={() => {
-              if (preview && row) onChoose({ tab, row: { ...row, cell: preview }, cells: offsets });
+              if (accepted && selection) onChoose(selection);
             }}
           >
             Use selected cells (local draft)

@@ -11,6 +11,7 @@ import { RichCell } from './RichCell';
 import { LinkPicker } from './LinkPicker';
 import { useCompendiumStore } from './store';
 import styles from './Compendium.module.scss';
+import { confirmCompendiumSelection } from './selection';
 
 export function CompendiumPanel({ base }: { base: Tooltip }) {
   const { data: compendium, loading, error, load } = useCompendiumStore();
@@ -123,12 +124,16 @@ export function CompendiumPanel({ base }: { base: Tooltip }) {
                     {canEdit && (
                       <button
                         type="button"
-                        onClick={() =>
+                        disabled={!compendium || !confirmCompendiumSelection(candidate, compendium)}
+                        onClick={() => {
+                          if (!compendium) return;
+                          const confirmed = confirmCompendiumSelection(candidate, compendium);
+                          if (!confirmed) return;
                           updateDraft(base, (tooltip) => ({
                             ...tooltip,
-                            compendium: snapshotCompendium(candidate),
-                          }))
-                        }
+                            compendium: confirmed,
+                          }));
+                        }}
                       >
                         Link this row
                       </button>

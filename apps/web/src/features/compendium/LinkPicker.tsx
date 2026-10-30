@@ -4,8 +4,6 @@ import {
   compendiumNameVariants,
   compendiumPreferredTabs,
   normaliseCompendiumName,
-  snapshotCompendium,
-  combineCompendiumMatches,
   type CompendiumMatch,
   type Tooltip,
 } from '@clarity/core';
@@ -14,6 +12,7 @@ import { errorMessage } from '../../services/http';
 import { useCompendiumStore } from './store';
 import styles from './Compendium.module.scss';
 import { CellPicker } from './CellPicker';
+import { confirmCompendiumSelection } from './selection';
 
 export function LinkPicker({
   base,
@@ -88,17 +87,14 @@ export function LinkPicker({
     );
   }, [data, gid, query, category]);
   function choose(match: CompendiumMatch) {
+    const link = data && confirmCompendiumSelection(match, data);
+    if (!link) {
+      setError('This selection cannot be resolved uniquely. Choose a nearby unique name anchor.');
+      return;
+    }
     updateDraft(base, (tooltip) => ({
       ...tooltip,
-      compendium: snapshotCompendium(
-        match.cells
-          ? match
-          : (combineCompendiumMatches(
-              match.tab.rows
-                .filter((row) => row.nameNorm === match.row.nameNorm)
-                .map((row) => ({ tab: match.tab, row })),
-            ) ?? match),
-      ),
+      compendium: link,
     }));
     try {
       localStorage.setItem(preferenceKey, match.tab.gid);
@@ -159,6 +155,7 @@ export function LinkPicker({
         <CellPicker
           key={`${gid}:${anchorRow?.rowIndex}:${anchorRow?.anchor?.col}`}
           tab={tab}
+          data={data}
           initial={anchorRow}
           onChoose={choose}
         />
