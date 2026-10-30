@@ -150,3 +150,38 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.sheetScroll {
+  max-width: 100%;
+  max-height: 36rem;
+  overflow: auto;
+}
+.sheet {
+  border-collapse: collapse;
+  background: #1a1b29;
+  td,
+  th {
+    border: 1px solid #657080;
+    padding: 0.3rem;
+    min-width: 5rem;
+    vertical-align: top;
+  }
+  td[data-anchor='true'] {
+    outline: 3px solid #ffd98b;
+    outline-offset: -3px;
+  }
+  button {
+    display: block;
+    min-width: 10rem;
+    max-width: 28rem;
+    white-space: pre-wrap;
+    text-align: left;
+    background: transparent;
+    color: #ccc;
+    border: 0;
+  }
+  button[aria-pressed='true'] {
+    background: #245a40;
+    outline: 2px solid #76f49c;
+  }
+}

@@ -56,3 +56,33 @@ it('blocks missing/ambiguous links and upstream failures without clearing the ol
   await expect(compendiumEnricher({ before: base, next })).rejects.toThrow('HTTP 503');
   expect(base.compendium?.snapshot.plain).toBe('old');
 });
+
+it('preserves ordered human offsets on English saves and explicit review, leaving translations untouched', async () => {
+  const cells = [{ dRow: 1, dCol: 1 }];
+  const linked = {
+    ...base,
+    compendium: { ...base.compendium!, gid: '2', rowKey: 'Test (Enhanced)', cells },
+  };
+  const source = {
+    ...data,
+    tabs: [
+      {
+        ...data.tabs[0],
+        rows: [{ ...data.tabs[0].rows[0], anchor: { row: 8, col: 0 } }],
+        grid: [{ row: 9, col: 1, cell }],
+      },
+    ],
+  };
+  vi.mocked(loadCompendium).mockResolvedValue(source);
+  const next = { ...linked, text: { en: { ...linked.text.en!, text: 'Edited' } } };
+  const saved = await compendiumEnricher({ before: linked, next });
+  expect(saved.compendium).toMatchObject({ cells, snapshot: cell });
+  const translated = {
+    ...linked,
+    text: { ...linked.text, de: { ...linked.text.en!, text: 'Deutsch' } },
+  };
+  expect(await compendiumEnricher({ before: linked, next: translated })).toBe(translated);
+  vi.mocked(loadCompendium).mockResolvedValue({ ...data, tabs: [{ ...source.tabs[0], grid: [] }] });
+  await expect(compendiumEnricher({ before: linked, next })).rejects.toThrow('relinking');
+  expect(linked.compendium.snapshot.plain).toBe('old');
+});

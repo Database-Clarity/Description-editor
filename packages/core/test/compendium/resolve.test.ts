@@ -41,18 +41,16 @@ describe('robust Compendium link resolution', () => {
     const styled = { ...row('Test'), cell: cell(link.snapshot.plain, '#ff0000') };
     expect(resolveCompendiumLink(link, data([styled])).status).toBe('changed');
   });
-  it('disambiguates exact names by section then snapshot similarity', () => {
-    const first = row('Test', 'unrelated', 'A');
-    const second = row('Test', link.snapshot.plain, 'B');
-    expect(resolveCompendiumLink({ ...link, section: 'A' }, data([first, second]))).toMatchObject({
+  it('combines duplicate names rather than selecting the closest snapshot', () => {
+    const result = resolveCompendiumLink(
+      link,
+      data([row('Test', 'first', 'A'), { ...row('Test', 'second', 'B'), rowIndex: 7 }]),
+    );
+    expect(result).toMatchObject({
       status: 'changed',
-      row: { section: 'A' },
+      parts: ['A', 'B'],
+      row: { cell: { plain: 'A\nfirst\n\nB\nsecond' } },
     });
-    expect(resolveCompendiumLink(link, data([first, second]))).toMatchObject({
-      status: 'ok',
-      row: { section: 'B' },
-    });
-    expect(resolveCompendiumLink(link, data([second, { ...second }])).status).toBe('candidates');
   });
   it('auto-follows unique normalized names across every tab, not row positions', () => {
     const resolved = resolveCompendiumLink(link, data([], [row('Tést! (Enhanced)')]));

@@ -9,6 +9,7 @@ export interface CompendiumTabConfig {
   cards?: boolean;
   navigationOnly?: boolean;
   sectionOverrides?: Record<string, CompendiumColumns[]>;
+  sectionCategories?: Record<string, string>;
 }
 export interface CompendiumColumns {
   nameColumns: number[];
@@ -47,7 +48,18 @@ const artifactCards = (columns: number[], offset: number) =>
 // Columns are zero-based overrides only; recognized headers take precedence on every fetch.
 export const compendiumTabs: Record<string, CompendiumTabConfig> = {
   '1038486120': { name: 'Landing', navigationOnly: true },
-  '1662574278': { name: 'Weapon Perks' },
+  '1662574278': {
+    name: 'Weapon Perks',
+    sectionCategories: {
+      'Weapon Traits': 'trait',
+      'Intrinsic Traits': 'frame',
+      'Origin Traits': 'origin',
+      'Enhanced Weapon Mods are equippable only on Tier 4 and Tier 5 Weapons.': 'mod',
+      'Heavy Crossbow Information': 'frame',
+      'Glaive Information': 'frame',
+      'Sword Guard Information': 'frame',
+    },
+  },
   '1287885342': { name: 'Armor Perks' },
   '473308249': { name: 'Artifact Perks', cards: true, groups: artifactCards([2, 5, 8], -1) },
   '1934379638': { name: 'Armor Mods', nameHeaders: armorSlots },

@@ -79,6 +79,7 @@ export const compendiumLinkSchema = z
     snapshot: compendiumCellSchema,
     snapshotAt: z.string().datetime({ offset: true }),
     cells: compendiumCellOffsetsSchema.optional(),
+    parts: z.array(z.string()).optional(),
   })
   .strict();
 export type CompendiumStyle = z.infer<typeof compendiumStyleSchema>;

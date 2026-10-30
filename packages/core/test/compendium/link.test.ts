@@ -192,7 +192,7 @@ it.each(['unchanged', 'changed', 'moved', 'missing', 'ambiguous'])(
       '2026-10-28T00:00:00Z',
     );
     expect(result.reason).toBe(
-      status === 'missing' ? 'unmatched' : status === 'ambiguous' ? 'ambiguous' : 'linked',
+      status === 'missing' ? 'unmatched' : 'linked',
     );
     expect(result.next).toBeUndefined();
     expect(linked.compendium.snapshot).toEqual(cell);

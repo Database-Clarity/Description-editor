@@ -1,11 +1,13 @@
 import {
   sameCell,
+  normaliseRuns,
   type CompendiumData,
   type CompendiumLink,
   type CompendiumRow,
   type CompendiumSheet,
 } from './types.js';
-import { isTrackedCompendiumTab } from './config.js';
+import { compendiumTabs, isTrackedCompendiumTab } from './config.js';
+import { selectCompendiumCells } from './cells.js';
 
 export function normaliseCompendiumName(name: string): string {
   return name
@@ -35,6 +37,8 @@ export function compendiumSimilarity(left: string, right: string): number {
 export interface CompendiumMatch {
   tab: CompendiumSheet;
   row: CompendiumRow;
+  parts?: string[];
+  cells?: CompendiumLink['cells'];
 }
 export interface CompendiumCandidate extends CompendiumMatch {
   similarity: number;
@@ -48,35 +52,84 @@ export function resolveCompendiumLink(
   link: CompendiumLink,
   data: CompendiumData,
 ): CompendiumResolution {
-  const all = data.tabs
+  const all: CompendiumMatch[] = data.tabs
     .filter((tab) => isTrackedCompendiumTab(tab.name))
     .flatMap((tab) => tab.rows.map((row) => ({ tab, row })));
-  let exact = all.filter(({ tab, row }) => tab.gid === link.gid && row.name === link.rowKey);
-  if (exact.length > 1 && link.section) {
-    const section = exact.filter(({ row }) => row.section === link.section);
-    if (section.length) exact = section;
-  }
-  if (exact.length > 1) {
-    const ranked = exact
-      .map((match) => ({
-        ...match,
-        similarity: compendiumSimilarity(link.snapshot.plain, match.row.cell.plain),
-      }))
-      .sort((a, b) => b.similarity - a.similarity);
-    if (ranked[0].similarity === ranked[1].similarity) {
-      return { status: 'candidates', candidates: ranked.slice(0, 3) };
+  // An arbitrary human-picked anchor need not be one of the parsed named rows.
+  if (link.cells) {
+    for (const tab of data.tabs.filter((tab) => isTrackedCompendiumTab(tab.name))) {
+      for (const entry of tab.grid ?? []) {
+        if (
+          normaliseCompendiumName(entry.cell.plain.trim()) !== normaliseCompendiumName(link.rowKey)
+        )
+          continue;
+        if (
+          !all.some(
+            (match) =>
+              match.tab === tab &&
+              match.row.anchor?.row === entry.row &&
+              match.row.anchor?.col === entry.col,
+          )
+        ) {
+          all.push({
+            tab,
+            row: {
+              name: entry.cell.plain.trim(),
+              nameNorm: normaliseCompendiumName(entry.cell.plain.trim()),
+              rowIndex: entry.row,
+              anchor: { row: entry.row, col: entry.col },
+              cell: entry.cell,
+            },
+          });
+        }
+      }
     }
-    exact = [ranked[0]];
   }
-  if (exact.length === 1) {
-    const match = exact[0];
-    const changed = !sameCell(link.snapshot, match.row.cell);
-    return { ...match, changed, status: changed ? 'changed' : 'ok' };
+  let found = all.filter(({ tab, row }) => tab.gid === link.gid && row.name === link.rowKey);
+  if (found.length && !link.cells)
+    found = all.filter(
+      ({ tab, row }) =>
+        tab.gid === link.gid && row.nameNorm === normaliseCompendiumName(link.rowKey),
+    );
+  let moved = false;
+  if (!found.length) {
+    found = all.filter(({ row }) => row.nameNorm === normaliseCompendiumName(link.rowKey));
+    moved = true;
   }
-  const normalized = all.filter(({ row }) => row.nameNorm === normaliseCompendiumName(link.rowKey));
-  if (normalized.length === 1) {
-    const match = normalized[0];
-    return { ...match, status: 'moved', changed: !sameCell(link.snapshot, match.row.cell) };
+  if (found.length) {
+    if (link.cells && found.length > 1 && link.section) {
+      const section = found.filter(({ row }) => row.section === link.section);
+      if (section.length) found = section;
+    }
+    const match = link.cells
+      ? found.length === 1
+        ? found[0]
+        : undefined
+      : combineCompendiumMatches(found);
+    if (!match)
+      return {
+        status: 'candidates',
+        candidates: found.slice(0, 3).map((entry) => ({
+          ...entry,
+          similarity: compendiumSimilarity(link.snapshot.plain, entry.row.cell.plain),
+        })),
+      };
+    if (link.cells) {
+      const cell =
+        match.row.anchor && selectCompendiumCells(match.tab, match.row.anchor, link.cells);
+      // Do not fall back to configured cells or similarity when a human override breaks.
+      if (!cell) return { status: 'missing' };
+      match.row = { ...match.row, cell };
+      match.cells = link.cells;
+    }
+    const changed =
+      !sameCell(link.snapshot, match.row.cell) ||
+      JSON.stringify(link.parts ?? []) !== JSON.stringify(match.parts ?? []);
+    return {
+      ...match,
+      changed,
+      status: moved || match.row.name !== link.rowKey ? 'moved' : changed ? 'changed' : 'ok',
+    };
   }
   const candidates = all
     .map((match) => ({
@@ -93,6 +146,54 @@ export function resolveCompendiumLink(
     .slice(0, 3);
   return candidates.length ? { status: 'candidates', candidates } : { status: 'missing' };
 }
+// Combine only the same named thing in one tab; explicit category boundaries stay ambiguous.
+export function combineCompendiumMatches(matches: CompendiumMatch[]): CompendiumMatch | undefined {
+  if (!matches.length) return undefined;
+  const sorted = [...matches].sort(
+    (a, b) =>
+      a.row.rowIndex - b.row.rowIndex || (a.row.anchor?.col ?? 0) - (b.row.anchor?.col ?? 0),
+  );
+  const first = sorted[0];
+  const categories = new Set(
+    sorted
+      .map(({ tab, row }) => compendiumTabs[tab.gid]?.sectionCategories?.[row.section ?? ''])
+      .filter(Boolean),
+  );
+  if (
+    new Set(sorted.map(({ row }) => `${row.rowIndex}:${row.anchor?.col ?? 0}`)).size !==
+      sorted.length ||
+    categories.size > 1 ||
+    sorted.some(({ tab, row }) => tab.gid !== first.tab.gid || row.nameNorm !== first.row.nameNorm)
+  )
+    return undefined;
+  if (sorted.length === 1) return { ...first };
+  const parts = sorted.map(({ tab, row }, index) => {
+    const context = tab.grid?.find(
+      (entry) =>
+        entry.row === row.rowIndex &&
+        entry.col !== row.anchor?.col &&
+        entry.cell.plain.trim() &&
+        entry.cell.plain !== row.cell.plain &&
+        entry.cell.plain.trim() !== row.name,
+    );
+    const qualifier = /[([]([^()[\]]+)[)\]]\s*$/.exec(row.name)?.[1];
+    return qualifier ?? context?.cell.plain.trim() ?? row.section ?? `Part ${index + 1}`;
+  });
+  return {
+    tab: first.tab,
+    parts,
+    row: {
+      ...first.row,
+      cell: normaliseRuns(
+        sorted.flatMap(({ row }, index) => [
+          ...(index ? [{ text: '\n\n' }] : []),
+          { text: `${parts[index]}\n`, bold: true },
+          ...row.cell.runs,
+        ]),
+      ),
+    },
+  };
+}
 export function snapshotCompendium(
   match: CompendiumMatch,
   now = new Date().toISOString(),
@@ -101,6 +202,8 @@ export function snapshotCompendium(
     gid: match.tab.gid,
     rowKey: match.row.name,
     ...(match.row.section ? { section: match.row.section } : {}),
+    ...(match.cells ? { cells: match.cells } : {}),
+    ...(match.parts ? { parts: match.parts } : {}),
     snapshot: match.row.cell,
     snapshotAt: now,
   };

@@ -12,7 +12,8 @@ mapped catalyst host names. Source names with bounded Roman-numeral ranges
 also identify each included rank; ampersands normalize to "and".
 Explicit exotic-trait aliases cover documented host cells and renamed source
 identifiers, not arbitrary description-substring or fuzzy matches.
-Only one exact or normalized name match is auto-linked. Ambiguous and
+Same-name parts within a tab combine in sheet order, including trailing weapon-type
+qualifiers; explicit configured category boundaries remain ambiguous. Ambiguous and
 similarity-only matches remain unlinked with candidates in the CSV report.
 
 From the editor repository root:
@@ -23,7 +24,7 @@ node scripts\compendium-link\dist\cli.mjs path\to\compendium.json path\to\report
 ```
 
 Outputs: `coverage.json` with the immutable source data HEAD and per-category
-totals, `compendium-unlinked.csv` with every unresolved hash and reason, and
+totals, combined-link and potential cell-override counts, `compendium-unlinked.csv` with every unresolved hash and reason, and
 `baseline.json` containing only proposed changed tooltip files. Every proposal
 must preserve its core `publishableHash`; otherwise the entire run fails.
 Existing identical snapshots retain their timestamp, making reruns no-ops.

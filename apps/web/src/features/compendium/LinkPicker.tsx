@@ -5,6 +5,7 @@ import {
   compendiumPreferredTabs,
   normaliseCompendiumName,
   snapshotCompendium,
+  combineCompendiumMatches,
   type CompendiumMatch,
   type Tooltip,
 } from '@clarity/core';
@@ -12,6 +13,7 @@ import { useDraftStore } from '../../stores/drafts';
 import { errorMessage } from '../../services/http';
 import { useCompendiumStore } from './store';
 import styles from './Compendium.module.scss';
+import { CellPicker } from './CellPicker';
 
 export function LinkPicker({
   base,
@@ -26,6 +28,7 @@ export function LinkPicker({
 }) {
   const data = useCompendiumStore((state) => state.data);
   const updateDraft = useDraftStore((state) => state.updateDraft);
+  const [anchorRow, setAnchorRow] = useState<CompendiumMatch['row']>();
   const [gid, setGid] = useState('');
   const [query, setQuery] = useState(name);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +88,18 @@ export function LinkPicker({
     );
   }, [data, gid, query, category]);
   function choose(match: CompendiumMatch) {
-    updateDraft(base, (tooltip) => ({ ...tooltip, compendium: snapshotCompendium(match) }));
+    updateDraft(base, (tooltip) => ({
+      ...tooltip,
+      compendium: snapshotCompendium(
+        match.cells
+          ? match
+          : (combineCompendiumMatches(
+              match.tab.rows
+                .filter((row) => row.nameNorm === match.row.nameNorm)
+                .map((row) => ({ tab: match.tab, row })),
+            ) ?? match),
+      ),
+    }));
     try {
       localStorage.setItem(preferenceKey, match.tab.gid);
     } catch (error) {
@@ -106,6 +120,7 @@ export function LinkPicker({
           onChange={(event) => {
             setGid(event.target.value);
             setQuery('');
+            setAnchorRow(undefined);
           }}
         >
           {data.tabs
@@ -134,9 +149,20 @@ export function LinkPicker({
                 ) && 'Exact match: '}
                 {row.name} {row.section && ` / ${row.section}`} <small>(row {row.rowIndex})</small>
               </button>
+              <button type="button" onClick={() => setAnchorRow(row)}>
+                Pick description cells near this name
+              </button>
             </li>
           ))}
       </ul>
+      {tab && (
+        <CellPicker
+          key={`${gid}:${anchorRow?.rowIndex}:${anchorRow?.anchor?.col}`}
+          tab={tab}
+          initial={anchorRow}
+          onChoose={choose}
+        />
+      )}
       {!rows.length && <p>No matching rows. Choose another tab or search.</p>}
       {rows.length > 100 && <p>Showing 100 of {rows.length}; refine the search.</p>}
     </section>

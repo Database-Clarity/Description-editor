@@ -9,6 +9,7 @@ import {
 } from './config.js';
 import {
   compendiumSimilarity,
+  combineCompendiumMatches,
   normaliseCompendiumName,
   resolveCompendiumLink,
   snapshotCompendium,
@@ -99,11 +100,22 @@ export function autoLinkCompendium(
     if (found.length) break;
   }
   if (!found.length) found = matches(all);
-  if (found.length === 1)
+  if (
+    found.length &&
+    found.every(
+      ({ tab, row }) => tab.gid === found[0].tab.gid && row.nameNorm === found[0].row.nameNorm,
+    )
+  ) {
+    found = all.filter(
+      ({ tab, row }) => tab.gid === found[0].tab.gid && row.nameNorm === found[0].row.nameNorm,
+    );
+  }
+  const combined = combineCompendiumMatches(found);
+  if (combined)
     return {
       ...result,
       reason: 'linked',
-      next: { ...tooltip, compendium: snapshotCompendium(found[0], now) },
+      next: { ...tooltip, compendium: snapshotCompendium(combined, now) },
     };
   const english = tooltip.text.en?.text ?? '';
   const candidates = (found.length ? found : all)

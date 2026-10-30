@@ -129,6 +129,12 @@ const summary = {
   fetchedAt: data.fetchedAt,
   total: tooltips.length,
   linked: results.filter((result) => result.reason === 'linked').length,
+  combined: results.filter(
+    (result, index) => (result.next ?? tooltips[index].tooltip).compendium?.parts?.length,
+  ).length,
+  needsCellOverride: results.filter(
+    (result) => result.reason === 'ambiguous' || result.reason === 'unmatched',
+  ).length,
   ambiguous: results.filter((result) => result.reason === 'ambiguous').length,
   unmatched: results.filter((result) => result.reason === 'unmatched').length,
   noEquivalent: results.filter((result) => result.reason === 'no-equivalent').length,

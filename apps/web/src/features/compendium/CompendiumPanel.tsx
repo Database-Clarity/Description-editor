@@ -153,7 +153,11 @@ export function CompendiumPanel({ base }: { base: Tooltip }) {
       {canEdit && (
         <div className={styles.actions}>
           <button type="button" onClick={() => setPicking(!picking)}>
-            {picking ? 'Close row picker' : link ? 'Relink row' : 'Link a row'}
+            {picking
+              ? 'Close row picker'
+              : link
+                ? 'Pick description cells / relink'
+                : 'Link a row / pick description cells'}
           </button>
           {link && (
             <button
