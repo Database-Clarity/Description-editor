@@ -382,6 +382,23 @@ describe('lossless conversion', () => {
     }
   });
 
+  test('refuses unreferenced definitions with comment-normalised headers', () => {
+    const body =
+      '<weapons other>\nNew fallback\n</weapons>\n< weapon type ( Sword ) >\nOld sword\n< ( other ) >\nOld fallback\n<$$>';
+    for (const header of [
+      'title sample ( // note',
+      'title sample ( /* note */',
+      'title sample (\t',
+      '/* note */title sample (',
+      'export hidden sample ( // note',
+    ]) {
+      const old = `${header}\n${body}\n)`;
+      const result = convertWeaponTypeSyntax(old);
+      expect(result.text).toBe(old);
+      expect(result.diagnostic).toMatch(/cannot be safely verified/);
+    }
+  });
+
   test('refuses to delete comments embedded in either header', () => {
     for (const old of [
       '< weapon type ( Sword /* authored header note */ ) >\nSword body\n<$$>',

@@ -68,7 +68,13 @@ export function convertWeaponTypeSyntax(text: string): WeaponConversion {
     } Edit the text by hand to use <weapons …> blocks.`,
   });
   // Preparation can hide authored blocks, so their equivalence cannot be proved here.
-  if (/^(?:enhanced|catalyst|exotic perk|export(?: hidden)? .+|title .+) \( *$/m.test(text))
+  const uncommented = text
+    .replace(/\r/g, '')
+    .replace(/\/\*[^]*?\*\//g, '')
+    .replace(/^ *?\/\/.*$\n?| +\/\/.*$/gm, '');
+  if (
+    /^(?:enhanced|catalyst|exotic perk|export(?: hidden)? .+|title .+) \([ \t]*$/m.test(uncommented)
+  )
     return fail('conditional, exported or title content cannot be safely verified');
   let reason = '';
   // Trailing comments stay in place when that renders the same, else move to their own line.
