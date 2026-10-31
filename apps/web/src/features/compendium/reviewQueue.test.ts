@@ -4,7 +4,7 @@ import type { EditorData } from '../../stores/data';
 import { createDraftStore } from '../../stores/drafts';
 import { confirmCompendiumSelection } from './selection';
 import { emptyProgress, readProgress, reviewStorageKey, sourceFingerprint } from './reviewProgress';
-import { mayDraftLink, reviewQueue } from './reviewQueue';
+import { applyReviewProgress, mayDraftLink, reviewEvidence, reviewQueue } from './reviewQueue';
 import { categorySuggestions, suggestionAnchor } from './suggestions';
 
 const cell = { plain: 'Description', runs: [{ text: 'Description', bold: true as const }] };
@@ -199,4 +199,42 @@ it('research suggestions navigate to parsed or arbitrary grid anchors without co
   expect(
     suggestionAnchor(tab, { gid: tab.gid, anchor: { row: 999, col: 2 }, rationale: 'stale' }),
   ).toBeUndefined();
+});
+
+it('reuses resolved evidence for local navigation and decisions; changed source rebuilds repair status', () => {
+  const evidence = reviewEvidence(editor, source, {}, fingerprint);
+  const progress = emptyProgress();
+  const healthy = evidence.find((entry) => entry.hash === 104)!;
+  const unlinked = evidence.find((entry) => entry.hash === 100)!;
+  const decision = { kind: 'skipped' as const, fingerprint: unlinked.evidence };
+  progress.decisions[100] = decision;
+  progress.decisions[104] = { kind: 'open', fingerprint: healthy.evidence };
+  // Repeated navigation/filter changes reuse the same evidence and preserve decisions.
+  for (const selected of [100, 104, 103]) {
+    const entries = applyReviewProgress(evidence, {
+      ...progress,
+      selected,
+      query: 'Test',
+      filter: 'all',
+    });
+    expect(entries.find((entry) => entry.hash === 100)?.status).toBe('skipped');
+    expect(entries.find((entry) => entry.hash === 104)?.status).toBe('saved');
+  }
+  const changedSource = { ...source, tabs: [] };
+  const refreshed = reviewEvidence(
+    editor,
+    changedSource,
+    {},
+    sourceFingerprint(changedSource.tabs),
+  );
+  const entries = applyReviewProgress(refreshed, progress);
+  expect(entries.find((entry) => entry.hash === 100)).toMatchObject({
+    status: 'open',
+    stale: true,
+  });
+  expect(entries.find((entry) => entry.hash === 104)).toMatchObject({
+    status: 'open',
+    reason: 'Needs repair',
+  });
+  expect(progress.decisions[100]).toBe(decision);
 });

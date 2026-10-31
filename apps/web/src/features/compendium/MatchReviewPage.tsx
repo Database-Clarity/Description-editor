@@ -10,7 +10,7 @@ import { useDataStore, type EditorData } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { useCompendiumStore } from './store';
 import { LinkPicker } from './LinkPicker';
-import { mayDraftLink, reviewQueue } from './reviewQueue';
+import { applyReviewProgress, mayDraftLink, reviewEvidence } from './reviewQueue';
 import { reviewStorageKey, sourceFingerprint, type ReviewProgress } from './reviewProgress';
 import { useReviewProgress } from './useReviewProgress';
 import styles from './Compendium.module.scss';
@@ -70,10 +70,11 @@ function ReviewQueue({
   const user = useAuthStore((state) => state.user);
   const locked = useSaveState((state) => state.locked);
   const fingerprint = useMemo(() => sourceFingerprint(source.tabs), [source]);
-  const entries = useMemo(
-    () => reviewQueue(editor, source, drafts, progress, fingerprint),
-    [editor, source, drafts, progress, fingerprint],
+  const evidence = useMemo(
+    () => reviewEvidence(editor, source, drafts, fingerprint),
+    [editor, source, drafts, fingerprint],
   );
+  const entries = useMemo(() => applyReviewProgress(evidence, progress), [evidence, progress]);
   const filtered = entries.filter(
     (entry) =>
       (!progress.category || entry.category === progress.category) &&

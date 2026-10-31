@@ -4,11 +4,10 @@ import type { Drafts } from '../../services/draftStorage';
 import { itemFor, tooltipFor } from '../navigation/catalog';
 import { localDecision, sourceFingerprint, type ReviewProgress } from './reviewProgress';
 
-export function reviewQueue(
+export function reviewEvidence(
   editor: EditorData,
   source: CompendiumData,
   drafts: Drafts,
-  progress: ReviewProgress,
   fingerprint: string,
 ) {
   const hashes = new Set(
@@ -33,13 +32,6 @@ export function reviewQueue(
         base.text.en,
         base.compendium,
       ]);
-      const decision = localDecision(progress, hash, evidence);
-      const status: 'drafted' | 'saved' | 'open' | 'skipped' | 'no-equivalent' = valid
-        ? changed
-          ? 'drafted'
-          : 'saved'
-        : decision;
-      if (status === 'saved' && !progress.decisions[hash] && !changed) return [];
       return [
         {
           hash,
@@ -47,17 +39,43 @@ export function reviewQueue(
           next,
           name: item?.name ?? String(hash),
           category: item?.categoryId ?? 'other',
-          status,
+          valid: !!valid,
+          changed,
           evidence,
-          stale:
-            !valid &&
-            !!progress.decisions[hash] &&
-            progress.decisions[hash].fingerprint !== evidence,
           reason: !next.compendium ? 'Unlinked' : valid ? 'Linked' : 'Needs repair',
         },
       ];
     })
     .sort((a, b) => a.name.localeCompare(b.name) || a.hash - b.hash);
+}
+
+// Local progress never changes source evidence or resolves sheet links.
+export function applyReviewProgress(
+  evidence: ReturnType<typeof reviewEvidence>,
+  progress: ReviewProgress,
+) {
+  return evidence.flatMap(({ valid, changed, ...entry }) => {
+    const status = valid
+      ? changed
+        ? ('drafted' as const)
+        : ('saved' as const)
+      : localDecision(progress, entry.hash, entry.evidence);
+    const decision = progress.decisions[entry.hash];
+    if (status === 'saved' && !decision && !changed) return [];
+    return [
+      { ...entry, status, stale: !valid && !!decision && decision.fingerprint !== entry.evidence },
+    ];
+  });
+}
+
+export function reviewQueue(
+  editor: EditorData,
+  source: CompendiumData,
+  drafts: Drafts,
+  progress: ReviewProgress,
+  fingerprint: string,
+) {
+  return applyReviewProgress(reviewEvidence(editor, source, drafts, fingerprint), progress);
 }
 
 export function mayDraftLink(
