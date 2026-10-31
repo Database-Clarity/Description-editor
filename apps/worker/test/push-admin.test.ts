@@ -45,6 +45,18 @@ describe('push-live', () => {
       123: await publishableHash(tooltip()),
     });
   });
+  it('passes weaponTypes to canonical entries and stubs and never writes owners', async () => {
+    fixture.aliases = { 456: { to: 123, kind: 'frame' } };
+    fixture.canonicalFacts = { weaponTypes: ['Bow', 'Sniper'], owners: [1, 2] };
+    fixture.extraItems = {
+      456: { hash: 456, name: 'Another frame', categoryId: 'perk', weaponTypes: ['Bow'], owners: [3, 4] },
+    };
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+    const published = (fixture.live as { perks: Record<string, unknown> }).perks;
+    expect(published['123']).toMatchObject({ weaponTypes: ['Bow', 'Sniper'] });
+    expect(published['456']).toMatchObject({ aliasOf: 123, weaponTypes: ['Bow'] });
+    expect(JSON.stringify(fixture.live)).not.toContain('owners');
+  });
   it('writes associations as a sorted canonical list and omits it otherwise', async () => {
     fixture.moveData({ 'tooltips/123.json': { ...tooltip(), associated: [900, 200, 456] } });
     expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);

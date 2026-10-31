@@ -9,6 +9,9 @@ const itemSchema = z.object({
   categoryId: z.string(),
   itemHash: hashSchema.optional(),
   itemName: z.string().optional(),
+  weaponTypes: z.array(z.string()).optional(),
+  // Editor-only; accepted so the generator may emit it, never exported.
+  owners: z.array(hashSchema).optional(),
 });
 const itemsSchema = z.record(z.string(), itemSchema);
 const categoriesSchema = z.array(
@@ -55,6 +58,7 @@ export async function catalog(env: Env): Promise<{
       type: category.legacyType ?? category.id,
       ...(item.itemHash === undefined ? {} : { itemHash: item.itemHash }),
       ...(item.itemName === undefined ? {} : { itemName: item.itemName }),
+      ...(item.weaponTypes === undefined ? {} : { weaponTypes: item.weaponTypes }),
     };
   }
   return { facts, aliases };

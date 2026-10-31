@@ -6,7 +6,10 @@ import { resolveAlias, type Aliases } from './aliases.js';
 export const translationMaxAge = 90 * 24 * 60 * 60 * 1000;
 export type LegacyEntry = LegacyMetadata &
   Pick<LegacyPerk, 'hash' | 'editor'> &
-  Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>> & { associated?: number[] };
+  Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>> & {
+    associated?: number[];
+    weaponTypes?: string[];
+  };
 /** An alias references its canonical tooltip; it carries only its own catalog facts, if any. */
 export type LegacyAliasStub = Partial<LegacyFacts> & {
   hash: number;

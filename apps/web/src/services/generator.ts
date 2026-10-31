@@ -23,6 +23,10 @@ export const itemSchema = z.object({
   enhancedHashes: z.array(hashSchema).optional(),
   baseHash: hashSchema.optional(),
   sandboxPerkHashes: z.array(hashSchema).optional(),
+  /** Weapon types the item appears on (optional generator fact). */
+  weaponTypes: z.array(z.string()).optional(),
+  /** All owning exotic items; present only for perks shared by two or more exotics. */
+  owners: z.array(hashSchema).optional(),
 });
 export const itemsSchema = z
   .record(z.string(), itemSchema)

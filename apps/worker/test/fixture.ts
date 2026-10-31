@@ -57,6 +57,8 @@ export class Fixture {
   failGoogle = false;
   aliases: Aliases = { 789: { to: 123, kind: 'sandbox' } };
   extraItems: Record<string, unknown> = {};
+  /** Extra generator fields on the canonical item 123. */
+  canonicalFacts: Record<string, unknown> = {};
   history = [
     {
       sha: sha(1),
@@ -163,6 +165,7 @@ export class Fixture {
             categoryId: 'perk',
             itemHash: 456,
             itemName: 'Demo item',
+            ...this.canonicalFacts,
           },
         });
       if (url.pathname.endsWith('/categories.json'))

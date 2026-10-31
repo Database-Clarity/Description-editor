@@ -54,5 +54,8 @@ export const legacyDatabaseSchema = z.object({
 export type LegacyPerk = z.infer<typeof legacyPerkSchema>;
 export type LegacyDatabase = z.infer<typeof legacyDatabaseSchema>;
 export type LegacyMetadata = z.infer<typeof legacyMetadataSchema>;
-export type LegacyFacts = Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>;
+/** `weaponTypes` is intermediate-only: the converter consumes it, published output never carries it. */
+export type LegacyFacts = Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'> & {
+  weaponTypes?: string[];
+};
 export type LegacyCatalog = Record<string, LegacyFacts>;

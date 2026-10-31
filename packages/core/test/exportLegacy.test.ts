@@ -43,6 +43,19 @@ test('catalog restores manifest facts without storing them in Tooltip', () => {
   })['42']).toMatchObject({ name: 'Perk', type: 'Weapon Perk', itemHash: 12, itemName: 'Weapon' });
   expect(() => exportLegacy([tooltip()], 0, {})).toThrow('Missing manifest facts');
 });
+test('weaponTypes facts reach canonical entries and alias stubs', () => {
+  const catalog = {
+    '42': { name: 'Frame', type: 'Weapon Frame', weaponTypes: ['Bow', 'Sniper'] },
+    '43': { name: 'Frame', type: 'Weapon Frame', weaponTypes: ['Bow'] },
+    '44': { name: 'Sandbox', type: 'Weapon Perk' },
+  };
+  const aliases = { 43: { to: 42, kind: 'frame' as const }, 44: { to: 42, kind: 'sandbox' as const } };
+  const result = exportLegacy([tooltip()], 0, catalog, aliases);
+  expect(result['42']).toMatchObject({ weaponTypes: ['Bow', 'Sniper'] });
+  expect(result['43']).toMatchObject({ aliasOf: 42, weaponTypes: ['Bow'] });
+  expect(result['44']).not.toHaveProperty('weaponTypes');
+  expect(exportLegacy([tooltip()], 0, { '42': { name: 'P', type: 'T' } })['42']).not.toHaveProperty('weaponTypes');
+});
 test('rejects duplicate hashes and invalid export times', () => {
   expect(() => exportLegacy([tooltip(), tooltip()], 0)).toThrow('Duplicate');
   for (const now of [-1, NaN, Infinity, 1.5]) expect(() => exportLegacy([], now)).toThrow();
