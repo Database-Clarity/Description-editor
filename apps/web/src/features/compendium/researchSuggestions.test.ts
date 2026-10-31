@@ -2,7 +2,8 @@ import { expect, it } from 'vitest';
 import { researchSuggestions } from './researchSuggestions';
 import { suggestionAnchor } from './suggestions';
 import hints from './research-hints.json';
-import type { CompendiumData } from '@clarity/core';
+import { compendiumDataSchema, type CompendiumData } from '@clarity/core';
+import capturedWindow from './fixtures/research-window.json';
 const cell = (plain: string) => ({ plain, runs: [{ text: plain }] });
 const data: CompendiumData = {
   fetchedAt: '2026-10-31T00:00:00Z',
@@ -65,4 +66,30 @@ it('exposes missing and cyclic authored imports without changing the text', () =
   expect(importContext(source, { '1': tooltip }, {}).join('\n')).toContain('cyclic dependency');
   expect(importContext(source, {}, {})).toEqual(['Import 1:\nMissing English source.']);
   expect(tooltip.text.en.text).toBe(source);
+});
+
+it('keeps captured evidence current through schema loading but detects actual text and style changes', () => {
+  const raw = capturedWindow as CompendiumData;
+  const loaded = compendiumDataSchema.parse(capturedWindow);
+  const hint = (value: CompendiumData) =>
+    researchSuggestions(299264772, value, 'weapon-mod', 'Adept Range')[0];
+  expect(hint(raw).stale).toBe(false);
+  expect(hint(loaded).stale).toBe(false);
+  const moved = structuredClone(loaded);
+  for (const tab of moved.tabs) {
+    for (const cell of tab.grid ?? []) cell.row += 3;
+    for (const row of tab.rows) {
+      row.rowIndex += 3;
+      if (row.anchor) row.anchor.row += 3;
+    }
+  }
+  expect(hint(moved).stale).toBe(false);
+  const textChange = structuredClone(loaded);
+  textChange.tabs[0].grid![0].cell.runs[0].text += ' updated';
+  expect(hint(textChange).stale).toBe(true);
+  const styleChange = structuredClone(loaded);
+  const run = styleChange.tabs[0].grid![0].cell.runs[0];
+  if (run.bold) delete run.bold;
+  else run.bold = true;
+  expect(hint(styleChange).stale).toBe(true);
 });

@@ -45,7 +45,7 @@ def fingerprint(value):
         if isinstance(x, dict):
             return {k: js_numbers(v) for k, v in x.items()}
         return x
-    text = json.dumps(js_numbers(value), ensure_ascii=False, separators=(',', ':'))
+    text = json.dumps(js_numbers(value), ensure_ascii=False, separators=(',', ':'), sort_keys=True)
     raw = text.encode('utf-16-le')
     h = 2166136261
     for i in range(0, len(raw), 2):
