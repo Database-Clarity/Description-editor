@@ -1,3 +1,5 @@
+import { importContext } from './importContext';
+import { researchSuggestions } from './researchSuggestions';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { CompendiumData } from '@clarity/core';
@@ -84,6 +86,16 @@ function ReviewQueue({
   );
   const selected = filtered.find((entry) => entry.hash === progress.selected) ?? filtered[0];
   const index = selected ? filtered.indexOf(selected) : -1;
+  const selectedHash = selected?.hash;
+  const selectedCategory = selected?.category;
+  const selectedName = selected?.name;
+  const suggestions = useMemo(
+    () =>
+      selectedHash !== undefined
+        ? researchSuggestions(selectedHash, source, selectedCategory!, selectedName!)
+        : [],
+    [selectedHash, selectedCategory, selectedName, source],
+  );
   const canEdit = mayDraftLink(user?.role, !!apiUrl, hydrated, locked);
   const choose = (hash: number) => update((state) => ({ ...state, selected: hash }));
   function decide(kind: 'open' | 'skipped' | 'no-equivalent', advance = false) {
@@ -204,6 +216,24 @@ function ReviewQueue({
           <pre className={styles.english}>
             {selected.next.text.en?.text || 'No English text yet.'}
           </pre>
+          {importContext(
+            selected.next.text.en?.text ?? '',
+            editor.bundle.tooltips,
+            editor.aliases,
+          ).map((context, index) => (
+            <details key={index}>
+              <summary>Authored import context</summary>
+              <pre className={styles.english}>{context}</pre>
+            </details>
+          ))}
+          <h3>In-game description</h3>
+          <pre className={styles.english}>
+            {editor.items[selected.hash]?.inGameDescription || 'No in-game description available.'}
+          </pre>
+          <p>
+            Imports in the English text above are retained as authored context; they do not imply
+            whole-description equivalence.
+          </p>
           <Link to={`/t/${selected.hash}`}>Open tooltip editor / inspect draft</Link>
           {selected.status === 'drafted' && (
             <p role="status">
@@ -222,6 +252,7 @@ function ReviewQueue({
             base={selected.base}
             name={selected.name}
             category={selected.category}
+            suggestions={suggestions}
             readOnly={!canEdit}
             onLinked={() => {
               setMessage(`${selected.name}: link drafted, not saved. Use the normal save summary.`);

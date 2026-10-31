@@ -14,6 +14,9 @@ export interface CompendiumSuggestion {
   section?: string;
   anchor?: { row: number; col: number };
   rationale: string;
+  observedAt?: string;
+  fingerprint?: string;
+  stale?: boolean;
 }
 export function suggestionAnchor(
   tab: CompendiumSheet,

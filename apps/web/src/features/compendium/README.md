@@ -58,3 +58,21 @@ Run root `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
 Queue regressions live in `reviewQueue.test.ts`; relative-cell confirmation and
 English/translation save invariants remain in selection/enricher/core tests.
 Changed UI still requires independent wide/narrow rendered verification.
+
+Reviewed research hints (October 31, 2026) now feed the existing typed suggestions
+API on `#/compendium/review`. `research-hints.json` shares navigation places across
+523 unresolved/excluded records, including all 41 human candidates. It contains
+no authoritative links or absolute coordinate identity. The generator and dated
+provenance are documented in `scripts/compendium-link/README.md`.
+
+`researchSuggestions.ts` re-finds unique full anchor text on the current grid,
+rebuilds the nearby window, compares a content fingerprint and reads the actual
+parsed section. Missing/duplicate anchors or changed windows show warnings; unsupported
+sections stay unknown and all-tab search remains available. Whole-source proposals,
+partial mechanics and related navigation are distinguished, never silently accepted.
+Fingerprinting is change detection, not a security assertion. `importContext.ts`
+provides bounded authored dependency inspection (with missing/cycle notices), beside
+current in-game descriptions. Draft/save authorization and local provisional negative
+decisions retain their existing behavior. Progress changes do not recompute source
+evidence or the selected item's navigation hints. Source/browser independent review
+must cover this new candidate and the preceding responsiveness fix.
