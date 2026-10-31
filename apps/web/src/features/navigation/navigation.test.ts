@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EditorData } from '../../stores/data';
-import { canonicalHash, navigationGroups, variantHashes } from './catalog';
+import { canonicalHash, navigationGroups, sharedPerkLabel, variantHashes } from './catalog';
 import { createStepping, shiftScrollDirection, stepWithinCategory } from './stepping';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -124,6 +124,33 @@ describe('tooltip catalog', () => {
     expect(markup).not.toContain('<button');
     expect(markup).toContain('value="10" selected=""');
     expect(markup).not.toContain('value="11"');
+  });
+  it('marks shared perks in the navigation item and callout', () => {
+    const shared: EditorData = {
+      ...data,
+      items: { ...data.items, 10: { ...data.items[10], owners: [20, 77] } },
+    };
+    const render = (value: EditorData) =>
+      renderToStaticMarkup(
+        createElement(
+          MemoryRouter,
+          { initialEntries: ['/t/10'] },
+          createElement(TooltipNavigation, { data: value }),
+        ),
+      );
+    expect(sharedPerkLabel(10, shared)).toBe('Shared perk — used on: Armor, 77');
+    expect(sharedPerkLabel(10, data)).toBeUndefined();
+    expect(sharedPerkLabel(20, shared)).toBeUndefined();
+    const markup = render(shared);
+    expect(markup).toContain('Shared perk — used on: Armor, 77');
+    expect(markup).toContain('· shared perk');
+    expect(render(data)).not.toContain('hared perk');
+    expect(
+      sharedPerkLabel(10, {
+        ...data,
+        items: { ...data.items, 10: { ...data.items[10], owners: [20] } },
+      }),
+    ).toBeUndefined();
   });
   it('provides one navigation appearance with no density toggle', () => {
     const markup = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(Layout)));

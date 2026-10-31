@@ -6,7 +6,13 @@ import { tooltipImports } from '../../services/tooltipImports';
 import { useDataStore } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
 import { useAuthStore } from '../../stores/auth';
-import { canonicalHash, itemFor, tooltipFor, variantHashes } from '../navigation/catalog';
+import {
+  canonicalHash,
+  itemFor,
+  sharedPerkLabel,
+  tooltipFor,
+  variantHashes,
+} from '../navigation/catalog';
 import { ClarityEditor } from '../editor';
 import { TooltipPreview } from '../preview';
 import { HistoryPanel } from '../history/HistoryPanel';
@@ -52,6 +58,7 @@ export function TooltipPage() {
               item?.categoryId}{' '}
             / {hash}
           </p>
+          {sharedPerkLabel(hash, data) && <p role="note">{sharedPerkLabel(hash, data)}</p>}
         </div>
         <label>
           Language{' '}

@@ -49,7 +49,13 @@ describe('push-live', () => {
     fixture.aliases = { 456: { to: 123, kind: 'frame' } };
     fixture.canonicalFacts = { weaponTypes: ['Bow', 'Sniper'], owners: [1, 2] };
     fixture.extraItems = {
-      456: { hash: 456, name: 'Another frame', categoryId: 'perk', weaponTypes: ['Bow'], owners: [3, 4] },
+      456: {
+        hash: 456,
+        name: 'Another frame',
+        categoryId: 'perk',
+        weaponTypes: ['Bow'],
+        owners: [3, 4],
+      },
     };
     expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
     const published = (fixture.live as { perks: Record<string, unknown> }).perks;
@@ -61,7 +67,9 @@ describe('push-live', () => {
     fixture.moveData({ 'tooltips/123.json': { ...tooltip(), associated: [900, 200, 456] } });
     expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
     expect(fixture.live).toMatchObject({ perks: { 123: { associated: [900, 200, 456] } } });
-    expect((fixture.live as { perks: Record<string, unknown> }).perks['999']).not.toHaveProperty('associated');
+    expect((fixture.live as { perks: Record<string, unknown> }).perks['999']).not.toHaveProperty(
+      'associated',
+    );
   });
   it.each([1, 2])(
     'lets role id %s export selected entries and aliases without replacing other entries',
@@ -113,7 +121,9 @@ describe('push-live', () => {
     afterEach(() => vi.useRealTimers());
 
     it('stamps a changed or brand-new canonical tooltip with the pusher and push time, never its alias stub', async () => {
-      fixture.moveData({ 'tooltips/123.json': { ...tooltip(), legacy: { uploadedBy: 'old', lastUpload: 5 } } });
+      fixture.moveData({
+        'tooltips/123.json': { ...tooltip(), legacy: { uploadedBy: 'old', lastUpload: 5 } },
+      });
       expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
       expect(perks()['123']).toMatchObject({ uploadedBy: 'bob', lastUpload: now });
       expect(perks()['789']).not.toHaveProperty('lastUpload');

@@ -107,7 +107,7 @@ const data: EditorData = {
 };
 
 function render() {
-  renderToStaticMarkup(
+  return renderToStaticMarkup(
     createElement(
       StaticRouter,
       { location: '/t/10' },
@@ -173,6 +173,22 @@ describe('tooltip screen composition', () => {
       categoryLabel: 'Enhanced category',
     });
     expect(editors.every((props) => props.readOnly === !apiUrl)).toBe(true);
+  });
+  it('shows the shared-perk callout in the header only when 2+ exotics own the perk', () => {
+    expect(render()).not.toContain('Shared perk');
+    const owned = (owners: number[]): EditorData => ({
+      ...data,
+      items: {
+        ...data.items,
+        10: { ...data.items[10], owners },
+        20: { hash: 20, name: 'Exotic <A>', icon: '', categoryId: 'base', inGameDescription: '' },
+      },
+    });
+    useDataStore.setState({ data: owned([20, 30]) });
+    // Names come from the item lookup (escaped); unknown owners fall back to the hash.
+    expect(render()).toContain('Shared perk — used on: Exotic &lt;A&gt;, 30');
+    useDataStore.setState({ data: owned([20]) });
+    expect(render()).not.toContain('Shared perk');
   });
   it('sends an enhanced edit to that exact tooltip with the signed-in author and loaded base', () => {
     render();

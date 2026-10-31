@@ -3,7 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { resolveAlias } from '@clarity/core';
 import type { EditorData } from '../../stores/data';
 import { useDraftStore } from '../../stores/drafts';
-import { frameGroupSize, itemFor, navigationGroups, variantHashes } from './catalog';
+import {
+  frameGroupSize,
+  itemFor,
+  navigationGroups,
+  sharedPerkLabel,
+  variantHashes,
+} from './catalog';
 import { createStepping, shiftScrollDirection, stepWithinCategory } from './stepping';
 import styles from './Layout.module.scss';
 
@@ -158,15 +164,16 @@ export function TooltipNavigation({ data }: { data: EditorData }) {
           {items.map((item) => {
             const dirty = variantHashes(item.hash, data).some((variant) => drafts[variant]);
             return (
-              <option key={item.hash} value={item.hash}>
+              <option key={item.hash} value={item.hash} title={sharedPerkLabel(item.hash, data)}>
                 {dirty ? '* ' : ''}
-                {item.name} ({item.hash})
+                {item.name} ({item.hash}){sharedPerkLabel(item.hash, data) && ' · shared perk'}
                 {frameGroupSize(item.hash, data) > 1 && ` ×${frameGroupSize(item.hash, data)}`}
               </option>
             );
           })}
         </select>
       </label>
+      {sharedPerkLabel(hash, data) && <small role="note">{sharedPerkLabel(hash, data)}</small>}
       <small id="tooltip-stepping-help">
         Shift+Scroll anywhere steps within this category and stops at its ends. Arrow keys on
         Tooltip also work. * = unsaved draft.

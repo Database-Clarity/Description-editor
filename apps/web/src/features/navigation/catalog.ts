@@ -33,6 +33,14 @@ export function itemFor(hash: number, data: EditorData): Item | undefined {
   return { hash, ...custom, icon: '', inGameDescription: '' };
 }
 
+/** "Shared perk — used on: A, B" for perks owned by 2+ exotics; undefined otherwise. */
+export function sharedPerkLabel(hash: number, data: EditorData): string | undefined {
+  const owners = data.items[hash]?.owners;
+  if (!owners || owners.length < 2) return undefined;
+  const names = owners.map((owner) => itemFor(owner, data)?.name ?? String(owner));
+  return `Shared perk — used on: ${names.join(', ')}`;
+}
+
 const variants = new WeakMap<EditorData, Map<number, number[]>>();
 export function variantHashes(hash: number, data: EditorData): number[] {
   let index = variants.get(data);
