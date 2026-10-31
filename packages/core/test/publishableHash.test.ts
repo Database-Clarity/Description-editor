@@ -13,7 +13,7 @@ test('hashes exactly the canonical publishable projection with SHA-256', async (
   };
   const projection = {
     text: { en: 'English' },
-    associated: [2, 9],
+    associated: [9, 2],
     custom: value.custom,
   };
   expect(await publishableHash(value)).toBe(
@@ -21,8 +21,18 @@ test('hashes exactly the canonical publishable projection with SHA-256', async (
   );
   expect(await publishableHash(value)).toMatch(/^[a-f0-9]{64}$/);
   expect(value.associated).toEqual([9, 2]);
-  expect(await publishableHash({ ...value, hash: 123, associated: [2, 9] })).toBe(
+  expect(await publishableHash({ ...value, hash: 123 })).toBe(await publishableHash(value));
+  expect(await publishableHash({ ...value, associated: [2, 9] })).not.toBe(
     await publishableHash(value),
+  );
+});
+
+test('empty and single-element associations hash as before order became meaningful', async () => {
+  expect(await publishableHash({ ...tooltip(), associated: [] })).toBe(
+    '09fa9ede78e8f168f8af688400e361410594c2354f86326d42b51a500e3ca5f5',
+  );
+  expect(await publishableHash({ ...tooltip(), associated: [7] })).toBe(
+    '9d66270fbda993433760873e242a296354a6085769bc62b05502cbc383c7a3cb',
   );
 });
 

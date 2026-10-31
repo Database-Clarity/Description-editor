@@ -8,7 +8,7 @@ export async function publishableHash(tooltip: Tooltip): Promise<string> {
       text: Object.fromEntries(
         Object.entries(parsed.text).map(([language, value]) => [language, value.text]),
       ),
-      associated: [...parsed.associated].sort((a, b) => a - b),
+      associated: parsed.associated,
       custom: parsed.custom,
     }),
   );

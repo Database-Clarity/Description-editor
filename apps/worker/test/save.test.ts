@@ -108,7 +108,7 @@ describe('save concurrency', () => {
     const response = await fixture.request('/save', 'POST', change(base, next));
     expect(response.status).toBe(200);
     expect((await response.json()).tooltips[0]).toMatchObject({
-      associated: [77, 88],
+      associated: [88, 77],
       text: { en: { text: 'mine' }, fr: { text: 'bonjour' } },
     });
   });

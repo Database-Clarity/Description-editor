@@ -42,19 +42,21 @@ npx tsc --noEmit
 - `migrateLegacy(database)` accepts the complete legacy intermediate database and
   returns `Tooltip[]`. Unknown authored fields fail validation.
 - `contentHash(tooltip)` returns a Promise of a lowercase SHA-256 hex string.
-  Object keys and association order are canonicalized; text, metadata and array
-  order elsewhere are significant. `stableStringify` accepts finite JSON data
+  Object keys are canonicalized; text, metadata and array order (including
+  `associated`, whose authored order is meaningful) are significant. `stableStringify` accepts finite JSON data
   (optional object properties with `undefined` are omitted).
 - `publishableHash(tooltip)` uses the same canonical JSON/SHA-256 algorithm, but
-  hashes only per-language text strings, associations (set order), and custom
+  hashes only per-language text strings, associations (authored order), and custom
   facts. `live/pushed.json` stores these digests: metadata-only edits do not mark
   a tooltip pending. Identity, timestamps, author credits, source revisions,
   legacy metadata and snapshots are excluded; they remain stored in the tooltip.
 - `merge3(base, head, next)` returns `{ ok: true, merged }` or
   `{ ok: false, conflicts: [{ field, base, head, next }] }`. Each language's
   complete `LangText` is atomic, preventing text and author/timestamp mismatches.
-  Associations use set merge: union additions, remove an original member if
-  either side removed it. All other top-level fields are atomic, including
+  Association membership uses set merge: union additions, remove an original member if
+  either side removed it. Order never conflicts: if one side kept the base order the
+  other side's order wins; if both reordered, `next`'s order is kept for surviving
+  members and `head`-only additions are appended in `head`'s order. All other top-level fields are atomic, including
   snapshots and legacy metadata. A hash mismatch is an error.
 - `aliasesSchema` validates generic `{ to, kind: 'sandbox' | 'frame' }` aliases;
   `resolveAlias(hash, aliases)` follows chains and rejects cycles.
@@ -62,9 +64,9 @@ npx tsc --noEmit
   Supply canonical tooltips only. Shared text is emitted under every frame and
   sandbox alias; each frame keeps its own catalog facts (required when a catalog
   is supplied). Alias tooltips and cycles fail explicitly.
-  `associated` lists the tooltip's associations resolved to canonical hashes,
-  deduplicated, without the entry's own hash, sorted ascending (publishableHash treats
-  associations as a set), and omitted when empty; alias copies inherit it.
+  `associated` lists the tooltip's associations in authored order, resolved to canonical
+  hashes, deduplicated to the first occurrence, without the entry's own hash, and omitted
+  when empty; alias copies inherit it.
   `now` is nonnegative integer epoch milliseconds, used only when no legacy upload
   timestamp exists; export does not manufacture new edit authorship. Main text
   supplies **both** legacy editor fields. A translation with known

@@ -40,7 +40,40 @@ test('association additions union and removals win for existing members', () => 
   const head = { ...base, associated: [2, 3] };
   const next = { ...base, associated: [1, 4] };
   expect(merge3(base, head, next)).toEqual({
-    ok: true, merged: { ...base, associated: [3, 4] },
+    ok: true, merged: { ...base, associated: [4, 3] },
+  });
+});
+test('association reorder merges with an untouched side in either direction', () => {
+  const base = { ...tooltip(), associated: [1, 2, 3] };
+  const reordered = { ...base, associated: [3, 1, 2] };
+  expect(merge3(base, base, reordered)).toEqual({ ok: true, merged: reordered });
+  expect(merge3(base, reordered, base)).toEqual({ ok: true, merged: reordered });
+});
+test('association reorder keeps its order and appends the other side additions', () => {
+  const base = { ...tooltip(), associated: [1, 2, 3] };
+  const head = { ...base, associated: [1, 2, 3, 4, 5] };
+  const next = { ...base, associated: [3, 2, 1] };
+  expect(merge3(base, head, next)).toEqual({
+    ok: true, merged: { ...base, associated: [3, 2, 1, 4, 5] },
+  });
+});
+test('association reorder on both sides never conflicts and keeps mine', () => {
+  const base = { ...tooltip(), associated: [1, 2, 3] };
+  const head = { ...base, associated: [2, 3, 1] };
+  const next = { ...base, associated: [3, 1, 2] };
+  expect(merge3(base, head, next)).toEqual({
+    ok: true, merged: { ...base, associated: [3, 1, 2] },
+  });
+});
+test('association removal merges with a reorder on the other side', () => {
+  const base = { ...tooltip(), associated: [1, 2, 3] };
+  const removed = { ...base, associated: [1, 3] };
+  const reordered = { ...base, associated: [3, 2, 1] };
+  expect(merge3(base, removed, reordered)).toEqual({
+    ok: true, merged: { ...base, associated: [3, 1] },
+  });
+  expect(merge3(base, reordered, removed)).toEqual({
+    ok: true, merged: { ...base, associated: [1, 3] },
   });
 });
 test('deletion merges with unchanged but conflicts with editing the deleted field', () => {

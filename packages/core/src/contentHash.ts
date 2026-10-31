@@ -16,9 +16,7 @@ export function stableStringify(value: unknown): string {
 
 export async function contentHash(tooltip: Tooltip): Promise<string> {
   const parsed = tooltipSchema.parse(tooltip);
-  const bytes = new TextEncoder().encode(stableStringify({
-    ...parsed, associated: [...parsed.associated].sort((a, b) => a - b),
-  }));
+  const bytes = new TextEncoder().encode(stableStringify(parsed));
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }

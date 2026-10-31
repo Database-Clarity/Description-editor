@@ -54,8 +54,7 @@ export function exportLegacy(
     const associated = [
       ...new Set(tooltip.associated.map((hash) => resolveAlias(hash, aliases))),
     ]
-      .filter((hash) => hash !== tooltip.hash)
-      .sort((a, b) => a - b);
+      .filter((hash) => hash !== tooltip.hash);
     entries[tooltip.hash] = {
       ...tooltip.legacy,
       ...facts,

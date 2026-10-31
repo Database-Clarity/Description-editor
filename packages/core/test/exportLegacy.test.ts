@@ -77,14 +77,14 @@ test('all legacy stat fields and tracker credits are omitted from export', () =>
   }
   expect(result['0'].updateTracker?.descriptions.en?.updatedBy).toBe('author');
 });
-test('associated is canonical, deduplicated, sorted and omitted when empty', () => {
+test('associated keeps authored order, deduplicated to first occurrence, and is omitted when empty', () => {
   const value = tooltip();
   expect(exportLegacy([value], 0)['42']).not.toHaveProperty('associated');
   expect(JSON.stringify(exportLegacy([value], 0)['42'])).not.toContain('associated');
   value.associated = [900, 7, 100, 43, 44, 42];
   const aliases = { 43: { to: 7, kind: 'frame' as const }, 44: { to: 42, kind: 'sandbox' as const } };
-  expect(exportLegacy([value], 0, undefined, aliases)['42'].associated).toEqual([7, 100, 900]);
-  expect(exportLegacy([value], 0)['42'].associated).toEqual([7, 43, 44, 100, 900]);
+  expect(exportLegacy([value], 0, undefined, aliases)['42'].associated).toEqual([900, 7, 100]);
+  expect(exportLegacy([value], 0)['42'].associated).toEqual([900, 7, 100, 43, 44]);
   value.associated = [44];
   expect(exportLegacy([value], 0, undefined, aliases)['42']).not.toHaveProperty('associated');
 });

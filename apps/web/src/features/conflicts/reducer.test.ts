@@ -45,7 +45,7 @@ describe('conflict resolution', () => {
         choice === 'mine' ? next.text.en : head.text.en,
       );
       expect(result.changes[0].next.text.fr).toEqual(head.text.fr);
-      expect(result.changes[0].next.associated).toEqual([20, 30, 40]);
+      expect(result.changes[0].next.associated).toEqual([20, 40, 30]);
       expect(base.text.en?.text).toBe('base');
     },
   );

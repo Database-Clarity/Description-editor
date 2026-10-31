@@ -43,9 +43,21 @@ export function merge3(base: Tooltip, head: Tooltip, next: Tooltip): MergeResult
   const original = new Set(base.associated);
   const theirs = new Set(head.associated);
   const mine = new Set(next.associated);
-  const associated = [...new Set([...original, ...theirs, ...mine])].filter((hash) =>
-    original.has(hash) ? theirs.has(hash) && mine.has(hash) : theirs.has(hash) || mine.has(hash),
-  ).sort((a, b) => a - b);
+  const members = new Set(
+    [...original, ...theirs, ...mine].filter((hash) =>
+      original.has(hash) ? theirs.has(hash) && mine.has(hash) : theirs.has(hash) || mine.has(hash),
+    ),
+  );
+  const sameOrder = (a: readonly number[], b: readonly number[]) =>
+    a.length === b.length && a.every((hash, index) => hash === b[index]);
+  const associated = sameOrder(head.associated, base.associated)
+    ? next.associated.filter((hash) => members.has(hash))
+    : sameOrder(next.associated, base.associated)
+      ? head.associated.filter((hash) => members.has(hash))
+      : [
+          ...next.associated.filter((hash) => members.has(hash)),
+          ...head.associated.filter((hash) => members.has(hash) && !mine.has(hash)),
+        ];
   if (conflicts.length) return { ok: false, conflicts };
   return { ok: true, merged: tooltipSchema.parse({ ...merged, text, associated }) };
 }
