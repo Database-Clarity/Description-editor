@@ -71,6 +71,55 @@ describe('weapon-type picker', () => {
     expect(html).toContain('Plain text.');
   });
 
+  describe('sections that only live in titles', () => {
+    const titleText = [
+      'See <title Tip [Tip] />',
+      '',
+      'title Tip (',
+      '<weapons Sword>',
+      'Sword only',
+      '</weapons>',
+      '<weapons Glaive>',
+      'Glaive only',
+      '</weapons>',
+      ')',
+    ].join('\n');
+
+    test('show the picker and specialise the title content', () => {
+      const html = render({ text: titleText, weaponTypes: ['Sword', 'Glaive'] });
+      expect(options(html)).toEqual(['Sword', 'Glaive', allLabelled]);
+      expect([...html.matchAll(/Sword only|Glaive only/g)].map((match) => match[0])).toEqual([
+        'Sword only',
+      ]);
+      const lines = parseMarkup(titleText).lines;
+      const shown = previewLines(lines, 'Glaive', ['Sword', 'Glaive']);
+      expect(shown[0].linesContent?.[1].title?.map((line) => line.weaponTypes)).toEqual([
+        undefined,
+      ]);
+      expect(shown[0].linesContent?.[1].title).toHaveLength(1);
+    });
+
+    test('table-cell titles are specialised and extra tags in titles are offered', () => {
+      const cellText = [
+        '< table >',
+        '| <title Tip [Tip] /> | x',
+        '<$>',
+        '',
+        'title Tip (',
+        '<weapons Grenade>',
+        'Boom',
+        '</weapons>',
+        ')',
+      ].join('\n');
+      const lines = parseMarkup(cellText).lines;
+      expect(weaponChoices(lines, undefined)).toEqual([...weaponTypeNames, 'Grenade']);
+      const cell = (choice: string) =>
+        previewLines(lines, choice, undefined)[0].table?.[0].rowContent?.[0].cellContent[0].title;
+      expect(cell('Grenade')).toHaveLength(1);
+      expect(cell('Sword')).toHaveLength(0);
+    });
+  });
+
   test('extra tags named by a section are offered when there are no facts', () => {
     const lines = parseMarkup('<weapons Grenade>\nBoom\n</weapons>').lines;
     expect(weaponChoices(lines, undefined)).toEqual([...weaponTypeNames, 'Grenade']);

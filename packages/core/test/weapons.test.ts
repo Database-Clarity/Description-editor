@@ -125,6 +125,52 @@ describe('weapon section validation', () => {
     expect(text.slice(issue?.from, issue?.to)).toBe('<weapons Nope>');
   });
 
+  test('title declarations are separate scopes, each with its own other block', () => {
+    const block = (name: string) => `<weapons other>\n${name}\n</weapons>`;
+    const text = [
+      'See <title A [A] /> and <title B [B] />',
+      block('Main'),
+      '',
+      'title A (',
+      block('A fallback'),
+      ')',
+      'title B (',
+      block('B fallback'),
+      ')',
+    ].join('\n');
+    expect(validateWeaponSections(text)).toEqual([]);
+    expect(validateText(text, 'en')).toEqual([]);
+    const parsed = parseMarkup(text).lines[0].linesContent?.flatMap((span) => span.title ?? []);
+    expect(parsed?.map((line) => line.weaponOther)).toEqual([true, true]);
+  });
+
+  test('a duplicate other inside one title is rejected at its source line', () => {
+    const text = [
+      'Main',
+      'title A (',
+      '<weapons other>',
+      'one',
+      '</weapons>',
+      '<weapons other>',
+      'two',
+      '</weapons>',
+      ')',
+    ].join('\n');
+    expect(validateWeaponSections(text)).toEqual([
+      expect.objectContaining({ line: 6, message: expect.stringContaining('Only one') }),
+    ]);
+    expect(
+      validateText(text, 'en').filter((issue) => issue.message.startsWith('Line 6: Only one')),
+    ).toHaveLength(1);
+  });
+
+  test('errors inside a title keep the original line numbers', () => {
+    const text = 'Main\n\ntitle A (\nx\n<weapons Nope>\ny\n</weapons>\n)';
+    expect(validateWeaponSections(text)).toEqual([
+      expect.objectContaining({ line: 5, message: expect.stringContaining('"Nope"') }),
+    ]);
+  });
+
   test('the old syntax parses and warns', () => {
     const old = '< weapon type (Bow, HC) >\nBows.\n< (other) >\nRest.\n<$$>';
     const { lines } = parseMarkup(old);
@@ -200,6 +246,92 @@ describe('migrateWeaponTypeSyntax', () => {
         weaponTypes: [...(line.weaponTypes ?? [])].sort(),
       }));
     expect(flatten(after)).toEqual(flatten(before));
+  });
+
+  test('an early old other keeps the types it covered', () => {
+    const old = '< weapon type ( other ) >\nRest\n< ( Sword ) >\nSword text\n<$$>';
+    const migrated = migrateWeaponTypeSyntax(old);
+    expect(migrated).not.toContain('<weapons other>');
+    expect(validateWeaponSections(migrated)).toEqual([]);
+    const before = parseMarkup(old).lines;
+    const after = parseMarkup(migrated).lines;
+    for (const type of ['Sword', 'Glaive', 'Grenade']) {
+      expect(texts(specializeWeaponTypes(after, { type }))).toEqual(
+        texts(specializeWeaponTypes(before, { type })),
+      );
+    }
+    expect(texts(specializeWeaponTypes(after, { type: 'Sword' }))).toEqual(['Rest', 'Sword text']);
+    expect(migrateWeaponTypeSyntax(migrated)).toBe(migrated);
+  });
+
+  test('independent old chains with their own fallback stay valid and equivalent', () => {
+    const old = [
+      '< weapon type ( Sword ) >',
+      'S1',
+      '< ( other ) >',
+      'R1',
+      '<$$>',
+      'Between',
+      '< weapon type ( Glaive ) >',
+      'G2',
+      '< ( other ) >',
+      'R2',
+      '<$$>',
+    ].join('\n');
+    const migrated = migrateWeaponTypeSyntax(old);
+    expect(validateWeaponSections(migrated)).toEqual([]);
+    expect(migrated.match(/<weapons other>/g)?.length ?? 0).toBeLessThanOrEqual(1);
+    const before = parseMarkup(old).lines;
+    const after = parseMarkup(migrated).lines;
+    for (const type of ['Sword', 'Glaive', 'Hand Cannon', 'Melee']) {
+      expect(texts(specializeWeaponTypes(after, { type }))).toEqual(
+        texts(specializeWeaponTypes(before, { type })),
+      );
+    }
+  });
+
+  test('a final old other still becomes <weapons other>', () => {
+    expect(migrateWeaponTypeSyntax('< weapon type ( Sword ) >\nS\n< ( other ) >\nR\n<$$>')).toBe(
+      '<weapons Sword>\nS\n</weapons>\n<weapons other>\nR\n</weapons>',
+    );
+  });
+
+  test('comments on header and terminator lines are kept and do not block conversion', () => {
+    const old = '< weapon type ( Sword ) > // swords\nBody\n<$$> /* end */';
+    expect(hasOldWeaponTypeSyntax(old)).toBe(true);
+    const migrated = migrateWeaponTypeSyntax(old);
+    expect(migrated).toBe('<weapons Sword> // swords\nBody\n</weapons> /* end */');
+    expect(validateWeaponSections(migrated)).toEqual([]);
+    expect(migrateWeaponTypeSyntax(migrated)).toBe(migrated);
+  });
+
+  test('delimiters inside comments are not structure', () => {
+    const old = [
+      '< weapon type ( Sword ) >',
+      '/*',
+      '<$$>',
+      '*/',
+      'Body',
+      '<$$>',
+      '// < weapon type ( Glaive ) >',
+    ].join('\n');
+    const migrated = migrateWeaponTypeSyntax(old);
+    expect(migrated).toBe(
+      [
+        '<weapons Sword>',
+        '/*',
+        '<$$>',
+        '*/',
+        'Body',
+        '</weapons>',
+        '// < weapon type ( Glaive ) >',
+      ].join('\n'),
+    );
+    expect(validateWeaponSections(migrated)).toEqual([]);
+    expect(texts(parseMarkup(migrated).lines)).toEqual(['Body']);
+    expect(migrateWeaponTypeSyntax('// < weapon type ( Sword ) >\nx\n// <$$>')).toBe(
+      '// < weapon type ( Sword ) >\nx\n// <$$>',
+    );
   });
 
   test('keeps CRLF line endings, unknown names and text without old blocks', () => {

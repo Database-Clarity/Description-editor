@@ -1,11 +1,29 @@
-import { specializeWeaponTypes, weaponTypeNames, type MarkupLine } from '@clarity/core';
+import {
+  specializeWeaponTypes,
+  weaponTypeNames,
+  type MarkupLine,
+  type MarkupSpan,
+} from '@clarity/core';
 
 /** Select value for the labelled view; no weapon type name can collide with it. */
 export const allLabelled = '*';
 
-/** True when the text has weapon-type sections, i.e. the picker is worth showing. */
+/** Every line, including those of titles nested in spans and table cells. */
+function withNested(lines: readonly MarkupLine[]): MarkupLine[] {
+  const titles = (spans: MarkupSpan[] | undefined) =>
+    (spans ?? []).flatMap((span) => (span.title ? withNested(span.title) : []));
+  return lines.flatMap((line) => [
+    line,
+    ...titles(line.linesContent),
+    ...(line.table ?? []).flatMap((row) =>
+      (row.rowContent ?? []).flatMap((cell) => titles(cell.cellContent)),
+    ),
+  ]);
+}
+
+/** True when the text, or a title it shows, has weapon-type sections: the picker is worth showing. */
 export function hasWeaponSections(lines: readonly MarkupLine[]): boolean {
-  return lines.some((line) => line.weaponTypes);
+  return withNested(lines).some((line) => line.weaponTypes);
 }
 
 /**
@@ -17,7 +35,9 @@ export function weaponChoices(
   facts: readonly string[] | undefined,
 ): string[] {
   if (facts?.length) return [...facts];
-  const named = lines.flatMap((line) => (line.weaponOther ? [] : (line.weaponTypes ?? [])));
+  const named = withNested(lines).flatMap((line) =>
+    line.weaponOther ? [] : (line.weaponTypes ?? []),
+  );
   return [
     ...weaponTypeNames,
     ...new Set(named.filter((name) => !weaponTypeNames.some((type) => type === name))),

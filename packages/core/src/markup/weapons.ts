@@ -160,23 +160,37 @@ function blankComments(text: string): string {
     .replace(/^ *\/\/.*$| +\/\/.*$/gm, '');
 }
 
-/** Validation of weapon-type sections in authored text; line numbers refer to `text`. */
+/**
+ * Validation of weapon-type sections in authored text; line numbers refer to `text`.
+ * The main body and every `title … ( … )` declaration are separate scopes, as the parser
+ * treats them, so each may have its own `other` block.
+ */
 export function validateWeaponSections(text: string): WeaponSectionIssue[] {
-  const clean = blankComments(text);
-  const issues = scanWeaponSections(clean).issues;
-  clean
-    .replace(/\r/g, '')
-    .split('\n')
-    .forEach((content, index) => {
-      if (oldOpen.test(content)) {
-        issues.push({
-          severity: 'warning',
-          line: index + 1,
-          message:
-            'Old weapon-type syntax: use <weapons Name> … </weapons>. Convert it with "Convert old weapon-type syntax".',
-        });
-      }
-    });
+  const clean = blankComments(text).replace(/\r/g, '');
+  const lines = clean.split('\n');
+  const main = [...lines];
+  const scopes: { first: number; text: string }[] = [];
+  for (const match of clean.matchAll(/^title .+ \([^]*?\n\)$/gm)) {
+    const first = clean.slice(0, match.index).split('\n').length - 1;
+    const length = match[0].split('\n').length;
+    // The declaration's own header and closing lines are not part of its body.
+    scopes.push({ first: first + 1, text: lines.slice(first + 1, first + length - 1).join('\n') });
+    main.fill('', first, first + length);
+  }
+  scopes.unshift({ first: 0, text: main.join('\n') });
+  const issues = scopes.flatMap(({ first, text: scope }) =>
+    scanWeaponSections(scope).issues.map((issue) => ({ ...issue, line: issue.line + first })),
+  );
+  lines.forEach((content, index) => {
+    if (oldOpen.test(content)) {
+      issues.push({
+        severity: 'warning',
+        line: index + 1,
+        message:
+          'Old weapon-type syntax: use <weapons Name> … </weapons>. Convert it with "Convert old weapon-type syntax".',
+      });
+    }
+  });
   return issues.sort((a, b) => a.line - b.line);
 }
 
@@ -184,30 +198,89 @@ export function hasOldWeaponTypeSyntax(text: string): boolean {
   return /^\s*< weapon type\b/m.test(blankComments(text));
 }
 
+/** Blanks comments with spaces, keeping every character position and newline. */
+function maskComments(text: string): string {
+  const blank = (comment: string) => comment.replace(/[^\r\n]/g, ' ');
+  return text.replace(/\/\*[^]*?\*\//g, blank).replace(/^ *\/\/.*$| +\/\/.*$/gm, blank);
+}
+
+interface LegacyGroup {
+  /** Canonical (or unknown, as written) names of the header; empty for `other`. */
+  names: string[];
+  other: boolean;
+  /** Types this group covers in the old syntax (`other` = what earlier groups of its chain left). */
+  covers: string[];
+  /** Comment text that followed the header and terminator on their lines. */
+  headerTail: string;
+  body: string[];
+}
+
+/** The one old `other` group (if any) whose set the text-wide new `other` still reproduces. */
+function keptOther(groups: LegacyGroup[], named: Set<string>): LegacyGroup | undefined {
+  const others = groups.filter((group) => group.other);
+  // Explicit blocks name types too, so each candidate is checked against the rest being explicit.
+  return others.find((group) => {
+    const taken = new Set(named);
+    for (const rest of others) {
+      if (rest !== group) for (const name of rest.covers) taken.add(name);
+    }
+    const complement = markupWeaponTypes.filter((name) => !taken.has(name));
+    return (
+      complement.length === group.covers.length &&
+      complement.every((name) => group.covers.includes(name))
+    );
+  });
+}
+
+/** Writes one old chain as new blocks; `terminatorTail` is a comment after the old `<$$>`. */
+function migratedChain(groups: LegacyGroup[], terminatorTail: string, keeper?: LegacyGroup) {
+  const blocks = groups.flatMap((group) => {
+    const header = !group.other
+      ? group.names.join(', ')
+      : group === keeper
+        ? 'other'
+        : group.covers.join(', ');
+    // An old `other` that nothing could match is dead text and cannot be named.
+    if (group.other && !header) return [];
+    return [`<weapons ${header}>${group.headerTail}`, ...group.body, '</weapons>'];
+  });
+  if (blocks.length) blocks[blocks.length - 1] += terminatorTail;
+  return blocks;
+}
+
 /**
  * Rewrites old `< weapon type (HC) > … < (Bow) > … <$$>` blocks to `<weapons …>` blocks.
- * Pure and idempotent; text that has no old block is returned unchanged.
+ * Pure and idempotent; text that has no old block is returned unchanged. Comments are kept
+ * and never read as structure. The old `other` covered what earlier groups of its chain left;
+ * where the new text-wide `other` would differ, the block lists its types instead.
  */
 export function migrateWeaponTypeSyntax(text: string): string {
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   const lines = text.split(/\r?\n/);
-  const output: string[] = [];
+  const masked = maskComments(text)
+    .split(/\r?\n/)
+    // A line that starts inside a multi-line comment is not structure.
+    .map((line, index) => (lines[index].slice(0, line.search(/\S|$/)).trim() ? '' : line));
+  const tailOf = (index: number) => lines[index].slice(masked[index].trimEnd().length);
+  const chains: { at: number; end: number; groups: LegacyGroup[] }[] = [];
+  const named = new Set<string>();
+  for (const line of masked) {
+    // Blocks already in the new syntax count towards what the new `other` leaves out.
+    for (const name of splitNames(openTag.exec(line)?.[1])) {
+      const canonical = canonicalWeaponType(name);
+      if (canonical) named.add(canonical);
+    }
+  }
   for (let index = 0; index < lines.length; index++) {
-    if (!oldOpen.test(lines[index])) {
-      output.push(lines[index]);
-      continue;
-    }
+    if (!oldOpen.test(masked[index])) continue;
     let end = index + 1;
-    while (end < lines.length && !oldTerminator.test(lines[end])) end++;
-    const first = oldHeader.exec(lines[index]);
-    if (end >= lines.length || !first) {
-      output.push(lines[index]);
-      continue;
-    }
-    const groups: { names: string[]; body: string[] }[] = [];
+    while (end < lines.length && !oldTerminator.test(masked[end])) end++;
+    if (end >= lines.length || !oldHeader.test(masked[index])) continue;
+    const groups: LegacyGroup[] = [];
+    let left = [...markupWeaponTypes];
     for (let cursor = index; cursor < end; cursor++) {
-      const header = oldHeader.exec(lines[cursor]);
-      if (header && (cursor === index || !oldOpen.test(lines[cursor]))) {
+      const header = oldHeader.exec(masked[cursor]);
+      if (header && (cursor === index || !oldOpen.test(masked[cursor]))) {
         const names: string[] = [];
         let other = false;
         for (const raw of splitNames(header[1])) {
@@ -218,14 +291,32 @@ export function migrateWeaponTypeSyntax(text: string): string {
             if (!names.includes(name)) names.push(name);
           }
         }
-        groups.push({ names: other ? ['other'] : names, body: [] });
+        left = left.filter((type) => !names.includes(type));
+        groups.push({
+          names,
+          other,
+          covers: other ? left : names.filter((name) => markupWeaponTypes.includes(name)),
+          headerTail: tailOf(cursor),
+          body: [],
+        });
+        if (!other) for (const name of names) named.add(name);
       } else groups.at(-1)?.body.push(lines[cursor]);
     }
-    for (const group of groups) {
-      output.push(`<weapons ${group.names.join(', ')}>`, ...group.body, '</weapons>');
-    }
+    chains.push({ at: index, end, groups });
     index = end;
   }
+  const keeper = keptOther(
+    chains.flatMap((chain) => chain.groups),
+    named,
+  );
+  const output: string[] = [];
+  let cursor = 0;
+  for (const chain of chains) {
+    output.push(...lines.slice(cursor, chain.at));
+    output.push(...migratedChain(chain.groups, tailOf(chain.end), keeper));
+    cursor = chain.end + 1;
+  }
+  output.push(...lines.slice(cursor));
   return output.join(eol);
 }
 
