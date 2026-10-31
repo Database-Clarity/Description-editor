@@ -335,9 +335,9 @@ describe('migrateWeaponTypeSyntax', () => {
     );
   });
 
-  test('keeps CRLF line endings, unknown names and text without old blocks', () => {
-    expect(migrateWeaponTypeSyntax('a\r\n< weapon type (HC, Zap) >\r\nx\r\n<$$>\r\nb')).toBe(
-      'a\r\n<weapons Hand Cannon, Zap>\r\nx\r\n</weapons>\r\nb',
+  test('keeps CRLF line endings and text without old blocks', () => {
+    expect(migrateWeaponTypeSyntax('a\r\n< weapon type (HC) >\r\nx\r\n<$$>\r\nb')).toBe(
+      'a\r\n<weapons Hand Cannon>\r\nx\r\n</weapons>\r\nb',
     );
     expect(migrateWeaponTypeSyntax('Plain\n<weapons Sword>\nx\n</weapons>')).toBe(
       'Plain\n<weapons Sword>\nx\n</weapons>',
@@ -364,6 +364,41 @@ function views(text: string) {
 describe('lossless conversion', () => {
   const allTypes = `< weapon type ( ${markupWeaponTypes.join(', ')} ) >`;
   const chain = (note: string) => [allTypes, 'All types', '< ( other ) >', note, '<$$>'];
+
+  test('refuses hidden conditional and exported content', () => {
+    const body =
+      '<weapons other>\nNew fallback\n</weapons>\n< weapon type ( Sword ) >\nOld sword\n< ( other ) >\nOld fallback\n<$$>';
+    for (const wrapper of [
+      'enhanced',
+      'catalyst',
+      'exotic perk',
+      'export hidden sample',
+      'title sample',
+    ]) {
+      const old = `${wrapper} (\n${body}\n)`;
+      const result = convertWeaponTypeSyntax(old);
+      expect(result.text).toBe(old);
+      expect(result.diagnostic).toMatch(/cannot be safely verified/);
+    }
+  });
+
+  test('refuses to delete comments embedded in either header', () => {
+    for (const old of [
+      '< weapon type ( Sword /* authored header note */ ) >\nSword body\n<$$>',
+      '< weapon type ( Sword ) >\nSword body\n< ( other /* authored fallback note */ ) >\nOther\n<$$>',
+    ]) {
+      const result = convertWeaponTypeSyntax(old);
+      expect(result.text).toBe(old);
+      expect(result.diagnostic).toMatch(/comment/);
+    }
+  });
+
+  test('refuses unknown names rather than introducing validation errors', () => {
+    const old = '< weapon type (HC, Zap) >\nx\n<$$>';
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.text).toBe(old);
+    expect(result.diagnostic).toMatch(/unknown weapon type/i);
+  });
 
   test('two fallbacks that cover no type are refused and keep their text', () => {
     const old = [...chain('Authored note A'), ...chain('Authored note B')].join('\n');

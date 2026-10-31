@@ -36,10 +36,10 @@ function renderings(text: string): Map<string, string> {
 
 /** The first way `candidate` differs from `source`, or undefined when they render alike. */
 function difference(source: string, candidate: string): string | undefined {
-  // Unknown names are kept as written so that the new validation reports them to the author.
-  const error = validateWeaponSections(candidate).find(
-    (issue) => issue.severity === 'error' && !issue.message.startsWith('Unknown weapon type'),
-  );
+  const error = validateWeaponSections(candidate).find((issue) => issue.severity === 'error');
+  const comments = (text: string) => text.match(/\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g) ?? [];
+  if (JSON.stringify(comments(source)) !== JSON.stringify(comments(candidate)))
+    return 'a comment would be lost or changed';
   if (error) return `the result would not validate (line ${error.line}: ${error.message})`;
   const before = renderings(source);
   const after = renderings(candidate);
@@ -67,6 +67,9 @@ export function convertWeaponTypeSyntax(text: string): WeaponConversion {
       mixed ? ' Mixed old and new fallback: this text already has a <weapons other> block.' : ''
     } Edit the text by hand to use <weapons …> blocks.`,
   });
+  // Preparation can hide authored blocks, so their equivalence cannot be proved here.
+  if (/^(?:enhanced|catalyst|exotic perk|export(?: hidden)? .+|title .+) \( *$/m.test(text))
+    return fail('conditional, exported or title content cannot be safely verified');
   let reason = '';
   // Trailing comments stay in place when that renders the same, else move to their own line.
   for (const ownLines of [false, true]) {
