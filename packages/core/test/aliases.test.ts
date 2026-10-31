@@ -52,3 +52,13 @@ test('export emits shared text under every alias while preserving each frame man
     exportLegacy([tooltip()], 0, { 42: { name: 'Base', type: 'Weapon Frame' } }, aliases),
   ).toThrow('Missing manifest facts for frame alias');
 });
+test('frame and sandbox alias copies carry the canonical associated list', () => {
+  const value = { ...tooltip(), associated: [300, 200, 43] };
+  const entries = exportLegacy(
+    [value],
+    0,
+    { 42: { name: 'Base', type: 'Weapon Frame' }, 43: { name: 'Enhanced', type: 'Weapon Frame' } },
+    aliases,
+  );
+  for (const hash of [42, 43, 44]) expect(entries[hash].associated).toEqual([200, 300]);
+});

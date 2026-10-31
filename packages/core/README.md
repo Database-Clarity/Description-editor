@@ -62,6 +62,9 @@ npx tsc --noEmit
   Supply canonical tooltips only. Shared text is emitted under every frame and
   sandbox alias; each frame keeps its own catalog facts (required when a catalog
   is supplied). Alias tooltips and cycles fail explicitly.
+  `associated` lists the tooltip's associations resolved to canonical hashes,
+  deduplicated, without the entry's own hash, sorted ascending (publishableHash treats
+  associations as a set), and omitted when empty; alias copies inherit it.
   `now` is nonnegative integer epoch milliseconds, used only when no legacy upload
   timestamp exists; export does not manufacture new edit authorship. Main text
   supplies **both** legacy editor fields. A translation with known

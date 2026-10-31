@@ -41,6 +41,12 @@ describe('push-live', () => {
       123: await publishableHash(tooltip()),
     });
   });
+  it('writes associations as a sorted canonical list and omits it otherwise', async () => {
+    fixture.moveData({ 'tooltips/123.json': { ...tooltip(), associated: [900, 200, 456] } });
+    expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+    expect(fixture.live).toMatchObject({ perks: { 123: { associated: [200, 456, 900] } } });
+    expect((fixture.live as { perks: Record<string, unknown> }).perks['999']).not.toHaveProperty('associated');
+  });
   it.each([1, 2])(
     'lets role id %s export selected entries and aliases without replacing other entries',
     async (id) => {

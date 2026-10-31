@@ -6,7 +6,7 @@ import { resolveAlias, type Aliases } from './aliases.js';
 export const translationMaxAge = 90 * 24 * 60 * 60 * 1000;
 export type LegacyEntry = LegacyMetadata &
   Pick<LegacyPerk, 'hash' | 'editor'> &
-  Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>>;
+  Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>> & { associated?: number[] };
 
 export function exportLegacy(
   tooltips: readonly Tooltip[],
@@ -51,10 +51,16 @@ export function exportLegacy(
       catalog?.[tooltip.hash] ??
       (tooltip.custom ? { name: tooltip.custom.name, type: tooltip.custom.categoryId } : undefined);
     if (catalog && !facts) throw new Error(`Missing manifest facts for tooltip ${tooltip.hash}`);
+    const associated = [
+      ...new Set(tooltip.associated.map((hash) => resolveAlias(hash, aliases))),
+    ]
+      .filter((hash) => hash !== tooltip.hash)
+      .sort((a, b) => a - b);
     entries[tooltip.hash] = {
       ...tooltip.legacy,
       ...facts,
       hash: tooltip.hash,
+      ...(associated.length ? { associated } : {}),
       editor,
       uploadedBy: tooltip.legacy?.uploadedBy ?? '',
       lastUpload: tooltip.legacy?.lastUpload ?? now,
