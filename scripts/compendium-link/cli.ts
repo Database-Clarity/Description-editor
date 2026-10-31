@@ -79,11 +79,14 @@ const [items, aliases, data] = await Promise.all([
 ]);
 const now = new Date().toISOString();
 const tooltips = readTooltips(head);
+const tooltipIndex = Object.fromEntries(tooltips.map(({ tooltip }) => [tooltip.hash, tooltip]));
 const results = tooltips.map(({ tooltip }) =>
-  autoLinkCompendium(tooltip, items, aliases, data, now),
+  autoLinkCompendium(tooltip, items, aliases, data, now, tooltipIndex),
 );
 const changes: { file: string; tooltip: Tooltip }[] = [];
 for (const [index, result] of results.entries()) {
+  if (tooltips[index].tooltip.compendium && result.next)
+    throw new Error(`Refusing to rewrite existing link ${result.hash}`);
   if (!result.next) continue;
   const before = tooltips[index];
   if ((await publishableHash(before.tooltip)) !== (await publishableHash(result.next))) {
@@ -140,6 +143,8 @@ const summary = {
   noEquivalent: results.filter((result) => result.reason === 'no-equivalent').length,
   metadataChanges: changes.length,
   publishableChanges: 0,
+  preservedExistingLinks: tooltips.filter(({ tooltip }) => tooltip.compendium).length,
+  rewrittenExistingLinks: 0,
   categories,
 };
 await writeFile(path.join(output, 'coverage.json'), JSON.stringify(summary, null, 2) + '\n');

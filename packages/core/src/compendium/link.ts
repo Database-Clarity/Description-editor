@@ -1,3 +1,4 @@
+import { reviewedCompendiumLink, reviewedCompendiumRules } from './reviewed.js';
 import { resolveAlias } from '../aliases.js';
 import type { Aliases } from '../aliases.js';
 import type { Tooltip } from '../schemas.js';
@@ -39,6 +40,7 @@ export function autoLinkCompendium(
   aliases: Aliases,
   data: CompendiumData,
   now: string,
+  tooltips: Record<string, Tooltip> = {},
 ): AutoLinkResult {
   const item = items[tooltip.hash];
   const name = item?.name ?? tooltip.custom?.name ?? String(tooltip.hash);
@@ -51,6 +53,12 @@ export function autoLinkCompendium(
     if ('row' in resolved) return { ...result, reason: 'linked' };
     return resolved.status === 'candidates'
       ? { ...result, reason: 'ambiguous', candidates: resolved.candidates }
+      : { ...result, reason: 'unmatched' };
+  }
+  if (reviewedCompendiumRules[tooltip.hash]) {
+    const compendium = reviewedCompendiumLink(tooltip, items, aliases, data, now, tooltips);
+    return compendium
+      ? { ...result, reason: 'linked', next: { ...tooltip, compendium } }
       : { ...result, reason: 'unmatched' };
   }
   const family = Object.values(items).filter(
