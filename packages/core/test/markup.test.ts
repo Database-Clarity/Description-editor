@@ -4,7 +4,7 @@ import {
   type IntermediatePerk,
 } from '@icemourne/description-converter';
 import { describe, expect, test } from 'vitest';
-import { parseMarkup } from '../src/markup/index.js';
+import { canonicalWeaponType, parseMarkup } from '../src/markup/index.js';
 import { evaluateMarkupMath } from '../src/markup/arithmetic.js';
 import { database } from './helpers.js';
 
@@ -32,6 +32,25 @@ function withoutStats(lines: DescriptionLine[] | undefined): unknown {
         })),
       })),
     })) ?? []
+  );
+}
+
+/**
+ * The published converter names weapon types by abbreviation; v2 uses canonical names and also
+ * records block identity. Compare everything else exactly.
+ */
+function comparable(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(comparable);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => key !== 'weaponBlock' && key !== 'weaponOther')
+      .map(([key, entry]) => [
+        key,
+        key === 'weaponTypes' && Array.isArray(entry)
+          ? entry.map((name: string) => canonicalWeaponType(name, true) ?? name).sort()
+          : comparable(entry),
+      ]),
   );
 }
 
@@ -72,9 +91,10 @@ describe.each(['live', 'intermediate'])('%s real-tooltip converter golden parity
           hash: perk.hash,
           database: perks,
         });
-        expect(JSON.parse(JSON.stringify(actual.lines)), `${source}/${perk.hash}/${lang}`).toEqual(
-          JSON.parse(JSON.stringify(withoutStats(expected))),
-        );
+        expect(
+          comparable(JSON.parse(JSON.stringify(actual.lines))),
+          `${source}/${perk.hash}/${lang}`,
+        ).toEqual(comparable(JSON.parse(JSON.stringify(withoutStats(expected)))));
         compared++;
       }
     }

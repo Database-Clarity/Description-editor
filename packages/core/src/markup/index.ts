@@ -4,6 +4,14 @@ import type { MarkupDiagnostic, MarkupGlobals, MarkupLine, ParsedMarkup } from '
 
 export * from './types.js';
 export * from './syntax.js';
+export {
+  canonicalWeaponType,
+  hasOldWeaponTypeSyntax,
+  migrateWeaponTypeSyntax,
+  validateWeaponSections,
+  type WeaponSectionIssue,
+} from './weapons.js';
+export * from './specialize.js';
 
 export function parseMarkup(
   text: string,
