@@ -194,9 +194,10 @@ describe('migrateWeaponTypeSyntax', () => {
     const before = parseMarkup(old).lines;
     const after = parseMarkup(migrateWeaponTypeSyntax(old)).lines;
     const flatten = (lines: typeof before) =>
-      lines.map(({ weaponBlock: _block, ...rest }) => ({
-        ...rest,
-        weaponTypes: [...(rest.weaponTypes ?? [])].sort(),
+      lines.map((line) => ({
+        ...line,
+        weaponBlock: 0,
+        weaponTypes: [...(line.weaponTypes ?? [])].sort(),
       }));
     expect(flatten(after)).toEqual(flatten(before));
   });

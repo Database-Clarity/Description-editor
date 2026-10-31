@@ -40,7 +40,10 @@ export type WeaponTypeChoice =
     };
 
 function strip(line: MarkupLine): MarkupLine {
-  const { weaponTypes: _types, weaponBlock: _block, weaponOther: _other, ...rest } = line;
+  const rest = { ...line };
+  delete rest.weaponTypes;
+  delete rest.weaponBlock;
+  delete rest.weaponOther;
   return rest;
 }
 
