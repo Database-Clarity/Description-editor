@@ -12,6 +12,7 @@ import { catalog } from './catalog.js';
 import { RefRace, type GitHub } from './github.js';
 import { body, HttpError, json } from './http.js';
 import { permissions, requireAccess } from './permissions.js';
+import { stampUploads } from './stamp.js';
 import type { Identity } from './types.js';
 
 const pushSchema = z
@@ -65,10 +66,18 @@ export async function pushLive(
         throw new HttpError(422, `Missing generator facts for tooltip ${tooltip.hash}`);
       }
     }
-    const entries = exportLegacy(tooltips, Date.now(), facts, aliases);
+    // A malformed marker is reported by the marker step below; here it just means "all changed".
+    const pushed =
+      pushedSchema.safeParse((await github.requiredFile('live/pushed.json', head)).value).data ?? {};
+    const changed = new Set(
+      canonicalHashes.filter((hash) => pushed[hash] !== exportedHashes[hash]),
+    );
     const liveHead = await github.head(github.env.LIVE_BRANCH);
     const file = await github.requiredFile('liveDescriptions.json', liveHead);
     const live = liveSchema.parse(file.value);
+    const now = Date.now();
+    const entries = exportLegacy(tooltips, now, facts, aliases);
+    stampUploads(entries, changed, live.perks, aliases, now, user.login);
     try {
       liveCommit = await github.putLive(
         file.sha,

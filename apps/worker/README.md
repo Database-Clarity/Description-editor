@@ -85,6 +85,15 @@ hashes. These hash only language text strings, associations and optional custom
 identity, excluding edit/upload metadata and snapshots. Save still uses full
 `contentHash` values for concurrency comparisons.
 
+Upload stamping follows the legacy editor. Each attempt reads `live/pushed.json` at the
+data head and the live file fresh. A selected tooltip whose `publishableHash` differs
+from its pushed marker (or has none) is *changed*: its entry and every alias copy get
+`lastUpload` = one timestamp for the whole push and `uploadedBy` = the pushing user's
+GitHub login. An *unchanged* tooltip keeps `lastUpload`/`uploadedBy` from the current
+live entry for that hash (and for each alias hash); with no live entry the exported
+(migrated) values are left. Stored tooltip files are never stamped. A malformed marker
+file counts as "all changed" for stamping and is reported by the marker step.
+
 GitHub has no atomic transaction across two branches. If the live write succeeds
 but the marker cannot be recorded, an explicit error includes
 `details: { liveCommit, pushedRecorded: false }`. Retry push-live to reconcile.

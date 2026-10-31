@@ -85,6 +85,75 @@ describe('push-live', () => {
     },
   );
 
+  describe('upload stamping', () => {
+    const now = 1_900_000_000_000;
+    type Perks = Record<string, { lastUpload?: number; uploadedBy?: string }>;
+    const perks = () => (fixture.live as { perks: Perks }).perks;
+    beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now }));
+    afterEach(() => vi.useRealTimers());
+
+    it('stamps a changed or brand-new tooltip and its alias copies with the pusher and push time', async () => {
+      fixture.moveData({ 'tooltips/123.json': { ...tooltip(), legacy: { uploadedBy: 'old', lastUpload: 5 } } });
+      expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
+      expect(perks()['123']).toMatchObject({ uploadedBy: 'bob', lastUpload: now });
+      expect(perks()['789']).toMatchObject({ uploadedBy: 'bob', lastUpload: now });
+      expect(perks()['999']).not.toHaveProperty('lastUpload');
+    });
+
+    it('stamps a tooltip whose publishable hash differs from the pushed marker', async () => {
+      fixture.moveData({ 'live/pushed.json': { '123': 'a'.repeat(64) } });
+      fixture.live = {
+        ...fixture.live,
+        perks: { ...perks(), '123': { lastUpload: 7, uploadedBy: 'old' } },
+      };
+      expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+      expect(perks()['123']).toMatchObject({ uploadedBy: 'alice', lastUpload: now });
+    });
+
+    it('keeps the live stamp of an unchanged tooltip and each alias copy', async () => {
+      fixture.moveData({ 'live/pushed.json': { '123': await publishableHash(tooltip()) } });
+      fixture.live = {
+        ...fixture.live,
+        perks: {
+          ...perks(),
+          '123': { lastUpload: 111, uploadedBy: 'old' },
+          '789': { lastUpload: 222, uploadedBy: 'older' },
+        },
+      };
+      expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
+      expect(perks()['123']).toMatchObject({ lastUpload: 111, uploadedBy: 'old' });
+      expect(perks()['789']).toMatchObject({ lastUpload: 222, uploadedBy: 'older' });
+    });
+
+    it('leaves exported values for an unchanged tooltip with no live entry', async () => {
+      fixture.moveData({
+        'tooltips/123.json': { ...tooltip(), legacy: { uploadedBy: 'migrated', lastUpload: 42 } },
+        'live/pushed.json': { '123': await publishableHash(tooltip()) },
+      });
+      expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
+      expect(perks()['123']).toMatchObject({ lastUpload: 42, uploadedBy: 'migrated' });
+      expect(perks()['789']).toMatchObject({ lastUpload: 42, uploadedBy: 'migrated' });
+    });
+
+    it('re-reads pushed and live data when retrying after a live race', async () => {
+      const unchanged = await publishableHash(tooltip());
+      fixture.beforeLive = () => {
+        // A concurrent push recorded the same content and wrote its own stamp meanwhile.
+        fixture.moveData({ 'live/pushed.json': { '123': unchanged } });
+        fixture.live = {
+          ...fixture.live,
+          perks: { ...perks(), '123': { lastUpload: 5, uploadedBy: 'carol' } },
+        };
+        fixture.liveFileSha = sha(88);
+        fixture.liveHead = sha(89);
+      };
+      expect((await fixture.request('/push-live', 'POST', { hashes: [123] })).status).toBe(200);
+      expect(fixture.writes).toHaveLength(1);
+      expect(fixture.writes[0].sha).toBe(sha(88));
+      expect(perks()['123']).toMatchObject({ lastUpload: 5, uploadedBy: 'carol' });
+    });
+  });
+
   it.each([3, 4, 5])('denies push-live for role id %s', async (id) => {
     expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, id)).status).toBe(403);
     expect(fixture.writes).toHaveLength(0);
