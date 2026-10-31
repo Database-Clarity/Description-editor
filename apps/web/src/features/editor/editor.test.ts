@@ -4,11 +4,11 @@ import { CompletionContext } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { markupLanguage, validateText, type MarkupGlobals } from '@clarity/core';
+import { markupLanguage, markupWeaponTypes, validateText, type MarkupGlobals } from '@clarity/core';
 import { ClarityEditor } from './ClarityEditor';
 import { clarityCompletions } from './completion';
 import { clarityLanguage } from './language';
-import { weaponSyntaxConversion } from './weaponSyntax';
+import { planWeaponSyntaxConversion, weaponSyntaxConversion } from './weaponSyntax';
 import { formatMarkupTables, tableFormattingTransaction } from './formatTable';
 
 const globals: MarkupGlobals = {
@@ -146,6 +146,18 @@ describe('weapon-type syntax in the editor', () => {
       }),
     ).toBe(true);
     expect(state.doc.toString()).toBe(text);
+  });
+
+  test('a conversion that would lose text changes nothing and says why', () => {
+    const allTypes = `< weapon type ( ${markupWeaponTypes.join(', ')} ) >`;
+    const chain = (note: string) => [allTypes, 'All types', '< ( other ) >', note, '<$$>'];
+    const text = [...chain('Authored note A'), ...chain('Authored note B')].join('\n');
+    const state = EditorState.create({ doc: text });
+    const plan = planWeaponSyntaxConversion(state);
+    expect(plan.change).toBeUndefined();
+    expect(plan.diagnostic).toMatch(/fallback with no remaining types/i);
+    expect(weaponSyntaxConversion(state)).toBeUndefined();
+    expect(planWeaponSyntaxConversion(EditorState.create({ doc: 'Plain text' }))).toEqual({});
   });
 
   test('the old-syntax warning and conversion button appear only for editable old text', () => {

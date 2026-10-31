@@ -232,29 +232,47 @@ function keptOther(groups: LegacyGroup[], named: Set<string>): LegacyGroup | und
   });
 }
 
-/** Writes one old chain as new blocks; `terminatorTail` is a comment after the old `<$$>`. */
-function migratedChain(groups: LegacyGroup[], terminatorTail: string, keeper?: LegacyGroup) {
-  const blocks = groups.flatMap((group) => {
+/**
+ * Writes one old chain as new blocks; `terminatorTail` is a comment after the old `<$$>`.
+ * With `ownLines`, trailing comments move to their own line (content kept) so that a tag stays
+ * on its own line after preparation strips comments together with their line break.
+ * Returns undefined when a group cannot be written without losing its text.
+ */
+function migratedChain(
+  groups: LegacyGroup[],
+  terminatorTail: string,
+  ownLines: boolean,
+  keeper?: LegacyGroup,
+) {
+  const blocks: string[] = [];
+  for (const group of groups) {
     const header = !group.other
       ? group.names.join(', ')
       : group === keeper
         ? 'other'
         : group.covers.join(', ');
-    // An old `other` that nothing could match is dead text and cannot be named.
-    if (group.other && !header) return [];
-    return [`<weapons ${header}>${group.headerTail}`, ...group.body, '</weapons>'];
-  });
-  if (blocks.length) blocks[blocks.length - 1] += terminatorTail;
+    // An old `other` that nothing could match has no name to write, and its body must not vanish.
+    if (!header) return undefined;
+    const tail = ownLines ? '' : group.headerTail;
+    blocks.push(`<weapons ${header}>${tail}`);
+    if (ownLines && group.headerTail.trim()) blocks.push(group.headerTail.trim());
+    blocks.push(...group.body, '</weapons>');
+  }
+  if (!ownLines) blocks[blocks.length - 1] += terminatorTail;
+  else if (terminatorTail.trim()) blocks.push(terminatorTail.trim());
   return blocks;
 }
 
+export type WeaponRewrite = { text: string } | { problem: string };
+
 /**
- * Rewrites old `< weapon type (HC) > … < (Bow) > … <$$>` blocks to `<weapons …>` blocks.
- * Pure and idempotent; text that has no old block is returned unchanged. Comments are kept
- * and never read as structure. The old `other` covered what earlier groups of its chain left;
- * where the new text-wide `other` would differ, the block lists its types instead.
+ * Raw rewrite of old `< weapon type (HC) > … < (Bow) > … <$$>` blocks to `<weapons …>` blocks.
+ * Comments are kept and never read as structure. The old `other` covered what earlier groups of
+ * its chain left; where the new text-wide `other` would differ, the block lists its types instead.
+ * It does not check that the result renders the same: use `convertWeaponTypeSyntax` for that.
+ * A `problem` is returned when a section cannot be written without losing text.
  */
-export function migrateWeaponTypeSyntax(text: string): string {
+export function rewriteWeaponTypeSyntax(text: string, ownLines = false): WeaponRewrite {
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   const lines = text.split(/\r?\n/);
   const masked = maskComments(text)
@@ -264,11 +282,13 @@ export function migrateWeaponTypeSyntax(text: string): string {
   const tailOf = (index: number) => lines[index].slice(masked[index].trimEnd().length);
   const chains: { at: number; end: number; groups: LegacyGroup[] }[] = [];
   const named = new Set<string>();
+  let hasNewOther = false;
   for (const line of masked) {
     // Blocks already in the new syntax count towards what the new `other` leaves out.
     for (const name of splitNames(openTag.exec(line)?.[1])) {
       const canonical = canonicalWeaponType(name);
       if (canonical) named.add(canonical);
+      else if (name.toLowerCase() === 'other') hasNewOther = true;
     }
   }
   for (let index = 0; index < lines.length; index++) {
@@ -305,19 +325,38 @@ export function migrateWeaponTypeSyntax(text: string): string {
     chains.push({ at: index, end, groups });
     index = end;
   }
-  const keeper = keptOther(
-    chains.flatMap((chain) => chain.groups),
-    named,
-  );
+  // An existing `<weapons other>` already is the text's one fallback, so no old one may become it.
+  const keeper = hasNewOther
+    ? undefined
+    : keptOther(
+        chains.flatMap((chain) => chain.groups),
+        named,
+      );
   const output: string[] = [];
   let cursor = 0;
   for (const chain of chains) {
     output.push(...lines.slice(cursor, chain.at));
-    output.push(...migratedChain(chain.groups, tailOf(chain.end), keeper));
+    const blocks = migratedChain(chain.groups, tailOf(chain.end), ownLines, keeper);
+    if (!blocks) {
+      return {
+        problem:
+          'Fallback with no remaining types: an old "other" section that no weapon type can reach has no <weapons> name, and converting would delete its text.',
+      };
+    }
+    output.push(...blocks);
     cursor = chain.end + 1;
   }
   output.push(...lines.slice(cursor));
-  return output.join(eol);
+  return { text: output.join(eol) };
+}
+
+/** True when the text already has a `<weapons other>` block (outside comments). */
+export function hasWeaponsOther(text: string): boolean {
+  return maskComments(text)
+    .split(/\r?\n/)
+    .some((line) =>
+      splitNames(openTag.exec(line)?.[1]).some((name) => name.toLowerCase() === 'other'),
+    );
 }
 
 /** True when a `<weapons …>` or `</weapons>` tag line is present. */

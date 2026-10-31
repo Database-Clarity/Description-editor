@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  convertWeaponTypeSyntax,
   englishWeaponTypeLabels,
   hasOldWeaponTypeSyntax,
   markupWeaponTypes,
@@ -344,6 +345,142 @@ describe('migrateWeaponTypeSyntax', () => {
     expect(migrateWeaponTypeSyntax('< weapon type (HC) >\nunterminated')).toBe(
       '< weapon type (HC) >\nunterminated',
     );
+  });
+});
+
+/** What a reader sees: every type's specialised lines, and the labelled view's text without labels. */
+function views(text: string) {
+  const { lines } = parseMarkup(text);
+  return {
+    byType: Object.fromEntries(
+      markupWeaponTypes.map((type) => [type, texts(specializeWeaponTypes(lines, { type }))]),
+    ),
+    everything: texts(specializeWeaponTypes(lines, { labelled: {} })).map((line) =>
+      line.replace(/^[^:]*: /, ''),
+    ),
+  };
+}
+
+describe('lossless conversion', () => {
+  const allTypes = `< weapon type ( ${markupWeaponTypes.join(', ')} ) >`;
+  const chain = (note: string) => [allTypes, 'All types', '< ( other ) >', note, '<$$>'];
+
+  test('two fallbacks that cover no type are refused and keep their text', () => {
+    const old = [...chain('Authored note A'), ...chain('Authored note B')].join('\n');
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.text).toBe(old);
+    expect(result.diagnostic).toMatch(/fallback with no remaining types/i);
+    expect(migrateWeaponTypeSyntax(old)).toBe(old);
+    expect(views(result.text).everything).toEqual(expect.arrayContaining(['Authored note B']));
+  });
+
+  test('a single fallback that covers no type converts and keeps its text', () => {
+    const old = chain('Authored note A').join('\n');
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.diagnostic).toBeUndefined();
+    expect(result.text).toContain('<weapons other>\nAuthored note A\n</weapons>');
+    expect(validateWeaponSections(result.text)).toEqual([]);
+    expect(views(result.text)).toEqual(views(old));
+  });
+
+  test('an old fallback next to a new <weapons other> that would lose a type is refused', () => {
+    const old = [
+      '<weapons other>',
+      'New fallback',
+      '</weapons>',
+      '< weapon type ( Sword ) >',
+      'Old sword',
+      '< ( other ) >',
+      'Old fallback',
+      '<$$>',
+    ].join('\n');
+    expect(views(old).byType.Sword).toEqual(['New fallback', 'Old sword']);
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.text).toBe(old);
+    expect(result.diagnostic).toMatch(/mixed old and new fallback/i);
+    expect(result.diagnostic).toMatch(/rendering would change/);
+  });
+
+  test('a mixed text converts when every type still renders the same', () => {
+    const old = [
+      '<weapons Sword>',
+      'New sword',
+      '</weapons>',
+      '<weapons other>',
+      'New fallback',
+      '</weapons>',
+      '< weapon type ( Sword ) >',
+      'Old sword',
+      '<$$>',
+    ].join('\n');
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.diagnostic).toBeUndefined();
+    expect(result.text).not.toBe(old);
+    expect(validateWeaponSections(result.text)).toEqual([]);
+    expect(views(result.text)).toEqual(views(old));
+  });
+
+  test('an old fallback converts to a type list beside a named new block', () => {
+    const old = [
+      '<weapons Glaive>',
+      'New glaive',
+      '</weapons>',
+      '< weapon type ( Sword ) >',
+      'Old sword',
+      '< ( other ) >',
+      'Old fallback',
+      '<$$>',
+    ].join('\n');
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.diagnostic).toBeUndefined();
+    expect(validateWeaponSections(result.text)).toEqual([]);
+    expect(views(result.text)).toEqual(views(old));
+    expect(views(result.text).byType.Glaive).toEqual(['New glaive', 'Old fallback']);
+  });
+
+  test('a multiline comment after the terminator moves to its own line and renders the same', () => {
+    const old = '< weapon type ( Sword ) >\nSword body\n<$$> /* note\ncontinued */\nAfter';
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.diagnostic).toBeUndefined();
+    expect(result.text).toBe(
+      '<weapons Sword>\nSword body\n</weapons>\n/* note\ncontinued */\nAfter',
+    );
+    expect(views(old).byType.Sword).toEqual(['Sword body', 'After']);
+    expect(views(result.text).byType.Sword).toEqual(['Sword body', 'After']);
+    expect(views(result.text)).toEqual(views(old));
+    expect(views(result.text).everything.join('\n')).not.toContain('</weapons>');
+    expect(validateWeaponSections(result.text)).toEqual([]);
+    expect(migrateWeaponTypeSyntax(result.text)).toBe(result.text);
+  });
+
+  test('a comment after a header or terminator that does not join lines stays in place', () => {
+    const old = '< weapon type ( Sword ) > // swords\nBody\n<$$> // end\nAfter';
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.text).toBe('<weapons Sword> // swords\nBody\n</weapons> // end\nAfter');
+    expect(views(result.text)).toEqual(views(old));
+  });
+
+  test('any conversion renders the same, otherwise the text is left with a diagnostic', () => {
+    const cases = [
+      '< weapon type ( Sword ) > /* a\nb */\nBody\n<$$>\nAfter',
+      'Intro\n< weapon type ( Sword ) >\nS\n< ( other ) >\nR\n<$$> /* end */\nAfter',
+      '< weapon type ( Bow ) > /* x */\nB\n<$$>\nTail',
+    ];
+    for (const old of cases) {
+      const result = convertWeaponTypeSyntax(old);
+      if (result.text === old) expect(result.diagnostic).toBeTruthy();
+      else expect(views(result.text)).toEqual(views(old));
+    }
+  });
+
+  test('text without a complete old block is reported, not silently ignored', () => {
+    const old = '< weapon type (HC) >\nunterminated';
+    const result = convertWeaponTypeSyntax(old);
+    expect(result.text).toBe(old);
+    expect(result.diagnostic).toMatch(/no complete old block/i);
+    expect(convertWeaponTypeSyntax('Plain\n<weapons Sword>\nx\n</weapons>')).toEqual({
+      text: 'Plain\n<weapons Sword>\nx\n</weapons>',
+    });
   });
 });
 
