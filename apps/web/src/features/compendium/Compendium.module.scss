@@ -185,3 +185,23 @@
     outline: 2px solid #76f49c;
   }
 }
+
+.review {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  select,
+  input {
+    max-width: 100%;
+  }
+  label {
+    display: block;
+  }
+  button {
+    white-space: normal;
+  }
+}
+.english {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}

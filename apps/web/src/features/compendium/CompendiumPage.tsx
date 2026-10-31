@@ -55,6 +55,9 @@ export function CompendiumPage() {
         Linked text and styling are compared with the last English save or review. Translation-only
         saves keep snapshots unchanged.
       </p>
+      <p>
+        <Link to="/compendium/review">Review matches — resolve unlinked and broken links</Link>
+      </p>
       <CompendiumFreshness />
       <p>Newest snapshots first.</p>
       {error && <p role="alert">{error}</p>}

@@ -19,10 +19,12 @@ export function CellPicker({
   data,
   initial,
   onChoose,
+  readOnly = false,
 }: {
   tab: CompendiumSheet;
   data: CompendiumData;
   initial?: CompendiumRow;
+  readOnly?: boolean;
   onChoose(match: CompendiumMatch): void;
 }) {
   const [anchor, setAnchor] = useState<CompendiumPosition | undefined>(initial?.anchor);
@@ -85,7 +87,12 @@ export function CellPicker({
             Name anchor: {row?.name}. Select description cells in reading order; click again to
             remove. Numbers show selection order.
           </p>
-          <div className={styles.sheetScroll}>
+          <div
+            className={styles.sheetScroll}
+            role="region"
+            aria-label="Sheet cells around the name anchor"
+            tabIndex={0}
+          >
             <table className={styles.sheet}>
               <tbody>
                 {Array.from({ length: lastRow - firstRow + 1 }, (_, index) => firstRow + index).map(
@@ -161,7 +168,7 @@ export function CellPicker({
           </button>{' '}
           <button
             type="button"
-            disabled={!accepted}
+            disabled={readOnly || !accepted}
             onClick={() => {
               if (accepted && selection) onChoose(selection);
             }}
