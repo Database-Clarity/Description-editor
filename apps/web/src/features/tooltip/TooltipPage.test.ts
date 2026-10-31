@@ -216,4 +216,21 @@ describe('tooltip screen composition', () => {
       expect(props.globals.imports?.[11]).toBe(base.text.en?.text);
     }
   });
+  it('passes the weapon types of the tooltip and of its aliases to the preview', () => {
+    useDataStore.setState({
+      data: {
+        ...data,
+        items: {
+          10: { ...data.items[10], weaponTypes: ['Sword', 'Hand Cannon'] },
+          11: { ...data.items[11], weaponTypes: ['Glaive', 'Sword'] },
+        },
+        aliases: { 11: { to: 10, kind: 'frame' } },
+      },
+    });
+    render();
+    const previews = vi.mocked(TooltipPreview).mock.calls.map(([props]) => props);
+    expect(previews.map((props) => props.weaponTypes)).toEqual([
+      ['Glaive', 'Hand Cannon', 'Sword'],
+    ]);
+  });
 });

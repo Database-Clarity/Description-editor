@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   markupLanguage,
   parseMarkup,
-  markupWeaponTypes,
   type Lang,
   type MarkupGlobals,
   type MarkupLine,
@@ -11,6 +10,7 @@ import {
   resolveAlias,
 } from '@clarity/core';
 import { useDataStore } from '../../stores/data';
+import { allLabelled, hasWeaponSections, previewLines, weaponChoices } from './weaponChoices';
 import { useDraftStore } from '../../stores/drafts';
 import { canonicalHash, itemFor, tooltipFor } from '../navigation/catalog';
 import styles from './TooltipPreview.module.scss';
@@ -23,6 +23,10 @@ export interface TooltipPreviewProps {
   categoryLabel?: string;
   globals: MarkupGlobals;
   tooltipHash?: number;
+  /** Weapon types the tooltip can appear on (from generator facts); all types when absent. */
+  weaponTypes?: readonly string[];
+  /** Initial picker value: a weapon type name, or "*" for all sections labelled. */
+  initialWeapon?: string;
 }
 
 function classNames(names?: (string | undefined)[]) {
@@ -33,7 +37,7 @@ function linkUrl(url: string): string | undefined {
   return /^(https?:\/\/|mailto:)/i.test(url.trim()) ? url.trim() : undefined;
 }
 
-function Content({ part, weapon }: { part: MarkupSpan; weapon: string }) {
+function Content({ part }: { part: MarkupSpan }) {
   const id = useId();
   const link = part.link ? linkUrl(part.link) : undefined;
   return (
@@ -42,7 +46,7 @@ function Content({ part, weapon }: { part: MarkupSpan; weapon: string }) {
         <span className={styles.titleAnchor} tabIndex={0} aria-describedby={id}>
           {part.text}
           <span className={styles.titleContainer} role="tooltip" id={id}>
-            <Lines lines={part.title} weapon={weapon} />
+            <Lines lines={part.title} />
           </span>
         </span>
       ) : link ? (
@@ -56,11 +60,10 @@ function Content({ part, weapon }: { part: MarkupSpan; weapon: string }) {
   );
 }
 
-function Lines({ lines, weapon }: { lines: MarkupLine[]; weapon: string }) {
+function Lines({ lines }: { lines: MarkupLine[] }) {
   return (
     <>
       {lines.map((line, index) => {
-        if (line.weaponTypes && !line.weaponTypes.includes(weapon)) return null;
         return line.table ? (
           <table className={classNames(line.classNames)} key={index}>
             <tbody>
@@ -74,7 +77,7 @@ function Lines({ lines, weapon }: { lines: MarkupLine[]; weapon: string }) {
                       className={classNames(cell.classNames)}
                     >
                       {cell.cellContent.map((part, partIndex) => (
-                        <Content key={partIndex} part={part} weapon={weapon} />
+                        <Content key={partIndex} part={part} />
                       ))}
                     </td>
                   ))}
@@ -85,7 +88,7 @@ function Lines({ lines, weapon }: { lines: MarkupLine[]; weapon: string }) {
         ) : (
           <div key={index} className={classNames(line.classNames)}>
             {line.linesContent?.map((part, partIndex) => (
-              <Content key={partIndex} part={part} weapon={weapon} />
+              <Content key={partIndex} part={part} />
             ))}
           </div>
         );
@@ -102,9 +105,22 @@ export function TooltipPreview({
   categoryLabel,
   globals,
   tooltipHash,
+  weaponTypes,
+  initialWeapon,
 }: TooltipPreviewProps) {
   const parsed = useMemo(() => parseMarkup(text, globals), [text, globals]);
-  const [weapon, setWeapon] = useState(markupWeaponTypes[0]);
+  const sections = useMemo(() => hasWeaponSections(parsed.lines), [parsed.lines]);
+  const choices = useMemo(
+    () => weaponChoices(parsed.lines, weaponTypes),
+    [parsed.lines, weaponTypes],
+  );
+  const [picked, setWeapon] = useState(initialWeapon ?? choices[0]);
+  // The tooltip or its facts can change under the picker; fall back to the first type.
+  const weapon = picked === allLabelled || choices.includes(picked) ? picked : choices[0];
+  const shown = useMemo(
+    () => previewLines(parsed.lines, weapon, weaponTypes),
+    [parsed.lines, weapon, weaponTypes],
+  );
   const iconUrl = icon?.startsWith('/common/') ? `https://www.bungie.net${icon}` : icon;
   return (
     <section className={styles.preview} lang={markupLanguage(lang)} aria-label={`${name} preview`}>
@@ -115,7 +131,7 @@ export function TooltipPreview({
           {categoryLabel && <div className={styles.category}>{categoryLabel}</div>}
         </div>
       </header>
-      {parsed.lines.some((line) => line.weaponTypes) && (
+      {sections && (
         <label className={styles.weapon}>
           Weapon type{' '}
           <select
@@ -123,14 +139,17 @@ export function TooltipPreview({
             value={weapon}
             onChange={(event) => setWeapon(event.target.value)}
           >
-            {markupWeaponTypes.map((type) => (
-              <option key={type}>{type}</option>
+            {choices.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
+            <option value={allLabelled}>All (labelled)</option>
           </select>
         </label>
       )}
       <div className={styles.description}>
-        <Lines lines={parsed.lines} weapon={weapon} />
+        <Lines lines={shown} />
       </div>
       {parsed.diagnostics.length > 0 && (
         <details className={styles.diagnostics}>

@@ -12,6 +12,7 @@ import {
   sharedPerkLabel,
   tooltipFor,
   variantHashes,
+  weaponTypesFor,
 } from '../navigation/catalog';
 import { ClarityEditor } from '../editor';
 import { TooltipPreview } from '../preview';
@@ -121,6 +122,7 @@ export function TooltipPage() {
                 categoryLabel={category?.label ?? entry?.categoryId}
                 globals={globals}
                 tooltipHash={variant}
+                weaponTypes={weaponTypesFor(variant, data)}
               />
             </div>
             <AssociationsPanel hash={variant} />
