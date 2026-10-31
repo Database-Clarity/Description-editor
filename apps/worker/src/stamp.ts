@@ -1,20 +1,20 @@
-import { resolveAlias, type Aliases, type LegacyEntry } from '@clarity/core';
+import { isLegacyAliasStub, type LegacyExportEntry } from '@clarity/core';
 
 /**
  * Mirrors the legacy editor's upload stamping: perks whose publishable content changed since
  * the last push get the push time and the pushing user; unchanged perks keep whatever the
- * live entry (canonical or alias copy) already carries.
+ * live entry already carries. Alias stubs reference their canonical entry and are never stamped.
  */
 export function stampUploads(
-  entries: Record<string, LegacyEntry>,
+  entries: Record<string, LegacyExportEntry>,
   changed: ReadonlySet<number>,
   livePerks: Record<string, unknown>,
-  aliases: Aliases,
   now: number,
   uploader: string,
 ): void {
   for (const [key, entry] of Object.entries(entries)) {
-    if (changed.has(resolveAlias(Number(key), aliases))) {
+    if (isLegacyAliasStub(entry)) continue;
+    if (changed.has(entry.hash)) {
       entry.lastUpload = now;
       entry.uploadedBy = uploader;
       continue;

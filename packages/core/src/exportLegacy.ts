@@ -1,5 +1,5 @@
 import { languages } from './languages.js';
-import type { LegacyCatalog, LegacyMetadata, LegacyPerk } from './legacy.js';
+import type { LegacyCatalog, LegacyFacts, LegacyMetadata, LegacyPerk } from './legacy.js';
 import { tooltipSchema, type Tooltip } from './schemas.js';
 import { resolveAlias, type Aliases } from './aliases.js';
 
@@ -7,23 +7,35 @@ export const translationMaxAge = 90 * 24 * 60 * 60 * 1000;
 export type LegacyEntry = LegacyMetadata &
   Pick<LegacyPerk, 'hash' | 'editor'> &
   Partial<Pick<LegacyPerk, 'name' | 'type' | 'itemHash' | 'itemName'>> & { associated?: number[] };
+/** An alias references its canonical tooltip; it carries only its own catalog facts, if any. */
+export type LegacyAliasStub = Partial<LegacyFacts> & {
+  hash: number;
+  aliasOf: number;
+  aliasKind: 'sandbox' | 'frame';
+};
+export type LegacyExportEntry = LegacyEntry | LegacyAliasStub;
+
+export function isLegacyAliasStub(entry: LegacyExportEntry): entry is LegacyAliasStub {
+  return 'aliasOf' in entry;
+}
 
 export function exportLegacy(
   tooltips: readonly Tooltip[],
   now: number,
   catalog?: LegacyCatalog,
   aliases: Aliases = {},
-): Record<string, LegacyEntry> {
+): Record<string, LegacyExportEntry> {
   if (!Number.isFinite(now) || now < 0 || !Number.isInteger(now)) {
     throw new TypeError('now must be nonnegative integer epoch milliseconds');
   }
-  const entries: Record<string, LegacyEntry> = {};
+  const entries: Record<string, LegacyExportEntry> = {};
+  const canonical: Record<string, LegacyEntry> = {};
   for (const input of tooltips) {
     const tooltip = tooltipSchema.parse(input);
     if (resolveAlias(tooltip.hash, aliases) !== tooltip.hash) {
       throw new Error(`Alias ${tooltip.hash} cannot have its own tooltip`);
     }
-    if (entries[tooltip.hash]) throw new Error(`Duplicate tooltip hash: ${tooltip.hash}`);
+    if (canonical[tooltip.hash]) throw new Error(`Duplicate tooltip hash: ${tooltip.hash}`);
     const english = tooltip.text.en;
     const editor: LegacyEntry['editor'] = {};
     const descriptions: NonNullable<LegacyEntry['updateTracker']>['descriptions'] = {
@@ -55,7 +67,7 @@ export function exportLegacy(
       ...new Set(tooltip.associated.map((hash) => resolveAlias(hash, aliases))),
     ]
       .filter((hash) => hash !== tooltip.hash);
-    entries[tooltip.hash] = {
+    canonical[tooltip.hash] = entries[tooltip.hash] = {
       ...tooltip.legacy,
       ...facts,
       hash: tooltip.hash,
@@ -68,23 +80,14 @@ export function exportLegacy(
       updateTracker: { ...tooltip.legacy?.updateTracker, descriptions },
     };
   }
-  for (const alias of Object.keys(aliases)) {
+  for (const [alias, { kind }] of Object.entries(aliases)) {
     const target = resolveAlias(Number(alias), aliases);
-    const entry = entries[target];
-    if (!entry) continue;
+    if (!canonical[target]) continue;
     const facts = catalog?.[alias];
-    if (catalog && aliases[alias].kind === 'frame' && !facts) {
+    if (catalog && kind === 'frame' && !facts) {
       throw new Error(`Missing manifest facts for frame alias ${alias}`);
     }
-    const aliased: LegacyEntry = { ...entry, hash: Number(alias) };
-    if (facts) {
-      delete aliased.name;
-      delete aliased.type;
-      delete aliased.itemHash;
-      delete aliased.itemName;
-      Object.assign(aliased, facts);
-    }
-    entries[alias] = aliased;
+    entries[alias] = { hash: Number(alias), aliasOf: target, aliasKind: kind, ...facts };
   }
   return entries;
 }

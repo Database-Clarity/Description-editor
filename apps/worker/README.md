@@ -74,8 +74,14 @@ Selected tooltips are read from one immutable data commit; generator `v2`
 items/categories supply the core export catalog, including optional item facts.
 Categories without a legacy type (verbs) retain their category id. Generic
 `aliases.json` resolves requested frame/sandbox aliases to canonical tooltips and
-deduplicates selections. Core export emits the shared text for every member;
-frame aliases retain their own manifest identity/category. Pushed markers refer
+deduplicates selections. Core export writes the shared text once, on the canonical
+entry; every frame/sandbox alias is written as a reference stub
+`{ hash, aliasOf, aliasKind, ...ownFacts }` (see `@clarity/core` `exportLegacy`), where
+frame aliases keep their own manifest identity/category and sandbox aliases only the
+facts the catalog has for them. Stubs are written as-is and never stamped.
+**Cut-over constraint:** the converter that understands stubs must be published before
+push-live targets the real `converter` branch; an older converter has no editor text on
+stubs and would drop frame aliases. Pushed markers refer
 only to canonical authored tooltips. Existing
 unselected perks, database settings and other root fields are preserved.
 The target Contents API PUT checks the file SHA and retries collisions up to
@@ -87,10 +93,10 @@ identity, excluding edit/upload metadata and snapshots. Save still uses full
 
 Upload stamping follows the legacy editor. Each attempt reads `live/pushed.json` at the
 data head and the live file fresh. A selected tooltip whose `publishableHash` differs
-from its pushed marker (or has none) is *changed*: its entry and every alias copy get
+from its pushed marker (or has none) is *changed*: its canonical entry gets
 `lastUpload` = one timestamp for the whole push and `uploadedBy` = the pushing user's
 GitHub login. An *unchanged* tooltip keeps `lastUpload`/`uploadedBy` from the current
-live entry for that hash (and for each alias hash); with no live entry the exported
+live entry for that hash; with no live entry the exported
 (migrated) values are left. Stored tooltip files are never stamped. A malformed marker
 file counts as "all changed" for stamping and is reported by the marker step.
 

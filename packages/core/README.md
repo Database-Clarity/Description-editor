@@ -61,12 +61,20 @@ npx tsc --noEmit
 - `aliasesSchema` validates generic `{ to, kind: 'sandbox' | 'frame' }` aliases;
   `resolveAlias(hash, aliases)` follows chains and rejects cycles.
 - `exportLegacy(tooltips, now, catalog?, aliases?)` returns legacy entries keyed by hash.
-  Supply canonical tooltips only. Shared text is emitted under every frame and
-  sandbox alias; each frame keeps its own catalog facts (required when a catalog
-  is supplied). Alias tooltips and cycles fail explicitly.
+  Supply canonical tooltips only. Every frame and sandbox alias is exported as a
+  reference stub `{ hash, aliasOf, aliasKind: 'frame' | 'sandbox', ...ownFacts }`
+  (`LegacyAliasStub`; `isLegacyAliasStub` narrows the `LegacyExportEntry` union).
+  `aliasOf` is the final canonical hash. `ownFacts` (`name`, `type`, `itemHash`,
+  `itemName`) are only the alias's own catalog facts: required for frames when a catalog
+  is supplied, present for sandbox aliases only if the catalog has them. Stubs carry no
+  editor text, `associated`, upload/update metadata or legacy fields; canonical entries
+  are unchanged. Consumers must resolve `aliasOf` to the canonical text, so the converter
+  that understands stubs has to be published before push-live writes them to the real
+  `converter` branch (an older converter would drop frame aliases). Alias tooltips and
+  cycles fail explicitly.
   `associated` lists the tooltip's associations in authored order, resolved to canonical
   hashes, deduplicated to the first occurrence, without the entry's own hash, and omitted
-  when empty; alias copies inherit it.
+  when empty (canonical entries only; stubs carry none).
   `now` is nonnegative integer epoch milliseconds, used only when no legacy upload
   timestamp exists; export does not manufacture new edit authorship. Main text
   supplies **both** legacy editor fields. A translation with known

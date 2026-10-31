@@ -15,7 +15,7 @@ test('generic aliases validate and resolve transitively without changing unrelat
     resolveAlias(1, { 1: { to: 2, kind: 'frame' }, 2: { to: 1, kind: 'frame' } }),
   ).toThrow('Cyclic');
 });
-test('export emits shared text under every alias while preserving each frame manifest identity', () => {
+test('export emits reference stubs for every alias, keeping only the alias own manifest facts', () => {
   const entries = exportLegacy(
     [tooltip()],
     0,
@@ -26,14 +26,19 @@ test('export emits shared text under every alias while preserving each frame man
     aliases,
   );
   expect(Object.keys(entries)).toEqual(['42', '43', '44']);
-  expect(entries[43]).toMatchObject({
+  expect(entries[43]).toEqual({
     hash: 43,
+    aliasOf: 42,
+    aliasKind: 'frame',
     name: 'Enhanced',
     type: 'Weapon Frame Enhanced',
     itemHash: 100,
   });
-  expect(entries[44].editor).toEqual(entries[42].editor);
-  expect(entries[43].editor).toEqual(entries[42].editor);
+  // 44 -> 43 -> 42: stubs always point at the final canonical tooltip, and a sandbox alias
+  // without catalog facts is a bare stub.
+  expect(entries[44]).toEqual({ hash: 44, aliasOf: 42, aliasKind: 'sandbox' });
+  expect(entries[42]).toHaveProperty('editor');
+  expect(entries[42]).not.toHaveProperty('aliasOf');
   const withoutOwner = exportLegacy(
     [tooltip()],
     0,
@@ -43,8 +48,13 @@ test('export emits shared text under every alias while preserving each frame man
     },
     aliases,
   );
-  expect(withoutOwner[43]).not.toHaveProperty('itemHash');
-  expect(withoutOwner[43]).not.toHaveProperty('itemName');
+  expect(withoutOwner[43]).toEqual({
+    hash: 43,
+    aliasOf: 42,
+    aliasKind: 'frame',
+    name: 'Shared',
+    type: 'Weapon Frame',
+  });
   expect(() => exportLegacy([{ ...tooltip(), hash: 43 }], 0, undefined, aliases)).toThrow(
     'own tooltip',
   );
@@ -52,7 +62,28 @@ test('export emits shared text under every alias while preserving each frame man
     exportLegacy([tooltip()], 0, { 42: { name: 'Base', type: 'Weapon Frame' } }, aliases),
   ).toThrow('Missing manifest facts for frame alias');
 });
-test('frame and sandbox alias copies carry the canonical associated list in authored order', () => {
+test('sandbox alias stubs carry their own catalog facts when the catalog has them', () => {
+  const entries = exportLegacy(
+    [tooltip()],
+    0,
+    {
+      42: { name: 'Base', type: 'Weapon Frame' },
+      43: { name: 'Enhanced', type: 'Weapon Frame' },
+      44: { name: 'Sandbox', type: 'Sandbox Perk', itemHash: 5, itemName: 'Item' },
+    },
+    aliases,
+  );
+  expect(entries[44]).toEqual({
+    hash: 44,
+    aliasOf: 42,
+    aliasKind: 'sandbox',
+    name: 'Sandbox',
+    type: 'Sandbox Perk',
+    itemHash: 5,
+    itemName: 'Item',
+  });
+});
+test('stubs omit editor text and every other canonical field; the canonical keeps the associated list', () => {
   const value = { ...tooltip(), associated: [300, 200, 43] };
   const entries = exportLegacy(
     [value],
@@ -60,5 +91,16 @@ test('frame and sandbox alias copies carry the canonical associated list in auth
     { 42: { name: 'Base', type: 'Weapon Frame' }, 43: { name: 'Enhanced', type: 'Weapon Frame' } },
     aliases,
   );
-  for (const hash of [42, 43, 44]) expect(entries[hash].associated).toEqual([300, 200]);
+  expect(entries[42]).toHaveProperty('associated', [300, 200]);
+  for (const hash of [43, 44]) {
+    for (const field of ['editor', 'associated', 'updateTracker', 'lastUpload', 'uploadedBy']) {
+      expect(entries[hash]).not.toHaveProperty(field);
+    }
+  }
+});
+test('canonical entries are unaffected by aliases', () => {
+  const catalog = { 42: { name: 'Base', type: 'Weapon Frame' }, 43: { name: 'E', type: 'Weapon Frame' } };
+  expect(exportLegacy([tooltip()], 7, catalog, aliases)[42]).toEqual(
+    exportLegacy([tooltip()], 7, catalog)[42],
+  );
 });

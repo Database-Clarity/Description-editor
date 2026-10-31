@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exportLegacy, translationMaxAge } from '../exportLegacy.js';
+import { exportLegacy, translationMaxAge, type LegacyEntry } from '../exportLegacy.js';
 import type { Tooltip } from '../schemas.js';
 import { bungieDrift, outdatedTranslations } from './index.js';
 
@@ -55,7 +55,7 @@ describe('outdated translations', () => {
       [2, true],
       [1, false],
     ]);
-    const exported = exportLegacy([exact, over], Date.parse('2030-01-01T00:00:00.000Z'));
+    const exported = exportLegacy([exact, over], Date.parse('2030-01-01T00:00:00.000Z')) as Record<string, LegacyEntry>;
     expect(exported[1].editor.de?.main).toBe('Deutsch');
     expect(exported[2].editor.de?.main).toBe('English');
   });

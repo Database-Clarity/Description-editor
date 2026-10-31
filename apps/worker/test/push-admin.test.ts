@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe('push-live', () => {
-  it('publishes canonical frame text under every member and sandbox hash with member facts', async () => {
+  it('publishes canonical text once and writes frame and sandbox aliases as reference stubs', async () => {
     fixture.aliases = {
       456: { to: 123, kind: 'frame' },
       789: { to: 456, kind: 'sandbox' },
@@ -28,15 +28,19 @@ describe('push-live', () => {
     expect(fixture.live).toMatchObject({
       perks: {
         123: { hash: 123, editor: { en: { main: 'original' } } },
-        456: {
-          hash: 456,
-          name: 'Another frame',
-          itemHash: 222,
-          editor: { en: { main: 'original' } },
-        },
-        789: { hash: 789, editor: { en: { main: 'original' } } },
       },
     });
+    const published = (fixture.live as { perks: Record<string, unknown> }).perks;
+    // Stubs are written as-is: own facts only, no editor text, no stamping.
+    expect(published['456']).toEqual({
+      hash: 456,
+      aliasOf: 123,
+      aliasKind: 'frame',
+      name: 'Another frame',
+      type: 'Weapon Perk',
+      itemHash: 222,
+    });
+    expect(published['789']).toEqual({ hash: 789, aliasOf: 123, aliasKind: 'sandbox' });
     expect(fixture.current()['live/pushed.json']).toEqual({
       123: await publishableHash(tooltip()),
     });
@@ -73,10 +77,14 @@ describe('push-live', () => {
             itemName: 'Demo item',
             editor: { en: { main: 'original', secondary: 'original' } },
           },
-          '789': { hash: 789, name: 'Demo perk', editor: { en: { main: 'original' } } },
           '999': { hash: 999, editor: { en: { main: 'untouched' } } },
         },
         databaseSettings: { folders: { saved: [] } },
+      });
+      expect((fixture.live as { perks: Record<string, unknown> }).perks['789']).toEqual({
+        hash: 789,
+        aliasOf: 123,
+        aliasKind: 'sandbox',
       });
       expect(fixture.current()['live/pushed.json']).toEqual({
         '123': await publishableHash(tooltip()),
@@ -92,11 +100,12 @@ describe('push-live', () => {
     beforeEach(() => vi.useFakeTimers({ toFake: ['Date'], now }));
     afterEach(() => vi.useRealTimers());
 
-    it('stamps a changed or brand-new tooltip and its alias copies with the pusher and push time', async () => {
+    it('stamps a changed or brand-new canonical tooltip with the pusher and push time, never its alias stub', async () => {
       fixture.moveData({ 'tooltips/123.json': { ...tooltip(), legacy: { uploadedBy: 'old', lastUpload: 5 } } });
       expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
       expect(perks()['123']).toMatchObject({ uploadedBy: 'bob', lastUpload: now });
-      expect(perks()['789']).toMatchObject({ uploadedBy: 'bob', lastUpload: now });
+      expect(perks()['789']).not.toHaveProperty('lastUpload');
+      expect(perks()['789']).not.toHaveProperty('uploadedBy');
       expect(perks()['999']).not.toHaveProperty('lastUpload');
     });
 
@@ -110,7 +119,7 @@ describe('push-live', () => {
       expect(perks()['123']).toMatchObject({ uploadedBy: 'alice', lastUpload: now });
     });
 
-    it('keeps the live stamp of an unchanged tooltip and each alias copy', async () => {
+    it('keeps the live stamp of an unchanged canonical tooltip and replaces an old alias copy with a stub', async () => {
       fixture.moveData({ 'live/pushed.json': { '123': await publishableHash(tooltip()) } });
       fixture.live = {
         ...fixture.live,
@@ -122,7 +131,7 @@ describe('push-live', () => {
       };
       expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
       expect(perks()['123']).toMatchObject({ lastUpload: 111, uploadedBy: 'old' });
-      expect(perks()['789']).toMatchObject({ lastUpload: 222, uploadedBy: 'older' });
+      expect(perks()['789']).toEqual({ hash: 789, aliasOf: 123, aliasKind: 'sandbox' });
     });
 
     it('leaves exported values for an unchanged tooltip with no live entry', async () => {
@@ -132,7 +141,7 @@ describe('push-live', () => {
       });
       expect((await fixture.request('/push-live', 'POST', { hashes: [123] }, 2)).status).toBe(200);
       expect(perks()['123']).toMatchObject({ lastUpload: 42, uploadedBy: 'migrated' });
-      expect(perks()['789']).toMatchObject({ lastUpload: 42, uploadedBy: 'migrated' });
+      expect(perks()['789']).not.toHaveProperty('lastUpload');
     });
 
     it('re-reads pushed and live data when retrying after a live race', async () => {

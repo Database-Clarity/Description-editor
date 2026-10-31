@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest';
 import { exportLegacy, translationMaxAge } from '../src/exportLegacy.js';
 import { migrateLegacy } from '../src/migrateLegacy.js';
-import { database, tooltip } from './helpers.js';
+import { database, exportCanonical, tooltip } from './helpers.js';
 
 test('exports main into both editor fields, including explicitly empty text', () => {
   const value = tooltip();
   value.text.de = { ...value.text.en!, text: '' };
-  const result = exportLegacy([value], 123);
+  const result = exportCanonical([value], 123);
   expect(result['42'].editor).toEqual({
     en: { main: 'English', secondary: 'English' }, de: { main: '', secondary: '' },
   });
@@ -23,7 +23,7 @@ test.each([
     text: 'Deutsch', updatedBy: 'bob', updatedAt: value.text.en!.updatedAt,
     sourceUpdatedAt: new Date(englishTime - age).toISOString(),
   };
-  const exported = exportLegacy([value], englishTime);
+  const exported = exportCanonical([value], englishTime);
   expect(exported['42'].editor.de).toEqual({ main: expected, secondary: expected });
   if (expected === 'English') {
     expect(exported['42'].updateTracker?.descriptions.de?.updatedBy).toBe('alice');
@@ -32,10 +32,10 @@ test.each([
 test('unknown source age or missing English never discards translation', () => {
   const value = tooltip();
   value.text.de = { ...value.text.en!, text: 'Deutsch' };
-  expect(exportLegacy([value], 0)['42'].editor.de?.main).toBe('Deutsch');
+  expect(exportCanonical([value], 0)['42'].editor.de?.main).toBe('Deutsch');
   delete value.text.en;
   value.text.de.sourceUpdatedAt = '1970-01-01T00:00:00Z';
-  expect(exportLegacy([value], 0)['42'].editor.de?.main).toBe('Deutsch');
+  expect(exportCanonical([value], 0)['42'].editor.de?.main).toBe('Deutsch');
 });
 test('catalog restores manifest facts without storing them in Tooltip', () => {
   expect(exportLegacy([tooltip()], 0, {
@@ -52,10 +52,10 @@ test('preserves historical tracker authorship even when that language has no edi
   value.legacy = {
     updateTracker: { descriptions: { ko: { lastUpdate: 1000, updatedBy: 'translator' } } },
   };
-  expect(exportLegacy([value], 0)['42'].updateTracker?.descriptions.ko).toEqual({
+  expect(exportCanonical([value], 0)['42'].updateTracker?.descriptions.ko).toEqual({
     lastUpdate: 1000, updatedBy: 'translator',
   });
-  expect(exportLegacy([value], 0)['42'].editor.ko).toBeUndefined();
+  expect(exportCanonical([value], 0)['42'].editor.ko).toBeUndefined();
 });
 test('all legacy stat fields and tracker credits are omitted from export', () => {
   const source = database('live');
@@ -68,7 +68,7 @@ test('all legacy stat fields and tracker credits are omitted from export', () =>
     descriptions: { en: { lastUpdate: 1000, updatedBy: 'author' } },
     stats: { lastUpdate: 2000, updatedBy: 'stat-author' },
   };
-  const result = exportLegacy(migrateLegacy(source), 0);
+  const result = exportCanonical(migrateLegacy(source), 0);
   for (const entry of Object.values(result)) {
     for (const field of ['stats', 'importStatsFrom', 'duration', 'activationCondition']) {
       expect(entry).not.toHaveProperty(field);
@@ -79,12 +79,12 @@ test('all legacy stat fields and tracker credits are omitted from export', () =>
 });
 test('associated keeps authored order, deduplicated to first occurrence, and is omitted when empty', () => {
   const value = tooltip();
-  expect(exportLegacy([value], 0)['42']).not.toHaveProperty('associated');
-  expect(JSON.stringify(exportLegacy([value], 0)['42'])).not.toContain('associated');
+  expect(exportCanonical([value], 0)['42']).not.toHaveProperty('associated');
+  expect(JSON.stringify(exportCanonical([value], 0)['42'])).not.toContain('associated');
   value.associated = [900, 7, 100, 43, 44, 42];
   const aliases = { 43: { to: 7, kind: 'frame' as const }, 44: { to: 42, kind: 'sandbox' as const } };
-  expect(exportLegacy([value], 0, undefined, aliases)['42'].associated).toEqual([900, 7, 100]);
-  expect(exportLegacy([value], 0)['42'].associated).toEqual([900, 7, 100, 43, 44]);
+  expect(exportLegacy([value], 0, undefined, aliases)['42']).toHaveProperty('associated', [900, 7, 100]);
+  expect(exportCanonical([value], 0)['42'].associated).toEqual([900, 7, 100, 43, 44]);
   value.associated = [44];
   expect(exportLegacy([value], 0, undefined, aliases)['42']).not.toHaveProperty('associated');
 });

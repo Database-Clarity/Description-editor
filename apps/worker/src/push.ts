@@ -77,7 +77,7 @@ export async function pushLive(
     const live = liveSchema.parse(file.value);
     const now = Date.now();
     const entries = exportLegacy(tooltips, now, facts, aliases);
-    stampUploads(entries, changed, live.perks, aliases, now, user.login);
+    stampUploads(entries, changed, live.perks, now, user.login);
     try {
       liveCommit = await github.putLive(
         file.sha,
