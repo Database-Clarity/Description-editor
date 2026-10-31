@@ -16,11 +16,18 @@ import {
   highlightActiveLine,
   drawSelection,
 } from '@codemirror/view';
-import { markupLanguage, validateText, type Lang, type MarkupGlobals } from '@clarity/core';
+import {
+  hasOldWeaponTypeSyntax,
+  markupLanguage,
+  validateText,
+  type Lang,
+  type MarkupGlobals,
+} from '@clarity/core';
 import { clarityCompletions } from './completion';
 import { clarityHighlighting, clarityLanguage } from './language';
 import { tableFormattingTransaction } from './formatTable';
 import { validationDiagnostics } from './diagnostics';
+import { weaponSyntaxConversion } from './weaponSyntax';
 import styles from './ClarityEditor.module.scss';
 
 export interface ClarityEditorProps {
@@ -159,9 +166,23 @@ export function ClarityEditor({
     editor.focus();
   }, [highlightLine]);
 
+  const convertWeaponSyntax = () => {
+    const editor = view.current;
+    const change = editor && weaponSyntaxConversion(editor.state);
+    // The update listener reports the new text, so the draft is updated like any other edit.
+    if (editor && change) editor.dispatch(change);
+  };
   return (
     <div className={styles.editor}>
       <div ref={host} />
+      {!readOnly && hasOldWeaponTypeSyntax(value) && (
+        <div className={styles.convert} role="status">
+          <span>This text uses the old weapon-type syntax.</span>
+          <button type="button" onClick={convertWeaponSyntax}>
+            Convert old weapon-type syntax
+          </button>
+        </div>
+      )}
       <details className={styles.help}>
         <summary>{issues.length ? `${issues.length} markup issue(s)` : 'Markup help'}</summary>
         <p>

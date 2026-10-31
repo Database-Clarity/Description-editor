@@ -1,8 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import { EditorState } from '@codemirror/state';
 import { CompletionContext } from '@codemirror/autocomplete';
-import { markupLanguage, type MarkupGlobals } from '@clarity/core';
+import { syntaxTree } from '@codemirror/language';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { markupLanguage, validateText, type MarkupGlobals } from '@clarity/core';
+import { ClarityEditor } from './ClarityEditor';
 import { clarityCompletions } from './completion';
+import { clarityLanguage } from './language';
+import { weaponSyntaxConversion } from './weaponSyntax';
 import { formatMarkupTables, tableFormattingTransaction } from './formatTable';
 
 const globals: MarkupGlobals = {
@@ -25,9 +31,22 @@ describe('shared parser symbols drive completion', () => {
     ['import Shared from ', 'global'],
     ['import main from 4', '42'],
     ['<so', '<solar/>'],
-    ['< weapon type (Sn', 'Sniper'],
+    ['< weapon type (Sn', 'Sniper Rifle'],
+    ['<weapons Sn', 'Sniper Rifle'],
+    ['<weapons Sword, Ha', 'Hand Cannon'],
+    ['<weapons Sword, ot', 'other'],
+    ['<wea', '<weapons'],
+    ['</we', '</weapons>'],
   ])('%s offers %s', (text, label) => {
     expect(complete(text)?.options.map((option) => option.label)).toContain(label);
+  });
+  test('weapon-type completion replaces only the name being typed', () => {
+    const text = '<weapons Sword, Hand Ca';
+    expect(complete(text)?.from).toBe('<weapons Sword, '.length);
+    expect(complete('<weapons Su')?.from).toBe('<weapons '.length);
+    expect(complete('Text <weapons Sn')?.options.map((option) => option.label)).not.toContain(
+      'Sniper Rifle',
+    );
   });
   test('completion replaces only the active reference', () => {
     expect(complete('<title More [De')?.from).toBe('<title More ['.length);
@@ -74,4 +93,71 @@ test('table formatting keeps the caret on its line and column and is one undoabl
     }),
   ).toBe(true);
   expect(state.doc.toString()).toBe(text);
+});
+
+describe('weapon-type syntax in the editor', () => {
+  test('the language highlights open and close tags as markup', () => {
+    const state = EditorState.create({
+      doc: '<weapons Sword, Hand Cannon>\nText\n</weapons>\n<WEAPONS other>',
+      extensions: clarityLanguage,
+    });
+    const names: string[] = [];
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        if (node.name === 'typeName') names.push(state.sliceDoc(node.from, node.to));
+      },
+    });
+    expect(names).toEqual(['<weapons Sword, Hand Cannon>', '</weapons>', '<WEAPONS other>']);
+  });
+
+  test('conversion is one undoable change that keeps the caret and the surrounding text', async () => {
+    const { history, undo } = await import('@codemirror/commands');
+    const text = 'Intro\n< weapon type (Bow, HC) >\nBows\n< (other) >\nRest\n<$$>\nOutro';
+    let state = EditorState.create({
+      doc: text,
+      selection: { anchor: text.indexOf('Outro') + 2 },
+      extensions: history(),
+    });
+    const conversion = weaponSyntaxConversion(state);
+    expect(conversion).toBeDefined();
+    state = state.update(conversion ?? {}).state;
+    expect(state.doc.toString()).toBe(
+      [
+        'Intro',
+        '<weapons Combat Bow, Hand Cannon>',
+        'Bows',
+        '</weapons>',
+        '<weapons other>',
+        'Rest',
+        '</weapons>',
+        'Outro',
+      ].join('\n'),
+    );
+    expect(state.sliceDoc(state.selection.main.head - 2, state.selection.main.head + 3)).toBe(
+      'Outro',
+    );
+    expect(weaponSyntaxConversion(state)).toBeUndefined();
+    expect(
+      undo({
+        state,
+        dispatch: (transaction) => {
+          state = transaction.state;
+        },
+      }),
+    ).toBe(true);
+    expect(state.doc.toString()).toBe(text);
+  });
+
+  test('the old-syntax warning and conversion button appear only for editable old text', () => {
+    const props = { lang: 'en' as const, globals, onChange: () => undefined };
+    const old = '< weapon type (HC) >\nx\n<$$>';
+    const markup = (value: string, readOnly = false) =>
+      renderToStaticMarkup(createElement(ClarityEditor, { ...props, value, readOnly }));
+    expect(markup(old)).toContain('<button type="button">Convert old weapon-type syntax</button>');
+    expect(markup(old, true)).not.toContain('<button');
+    expect(markup('<weapons Hand Cannon>\nx\n</weapons>')).not.toContain('Convert old');
+    expect(validateText(old, 'en', globals).map((issue) => issue.message)).toEqual([
+      expect.stringMatching(/Old weapon-type syntax/),
+    ]);
+  });
 });
