@@ -68,10 +68,13 @@ npx tsc --noEmit
   `itemName`) are only the alias's own catalog facts: required for frames when a catalog
   is supplied, present for sandbox aliases only if the catalog has them. Stubs carry no
   editor text, `associated`, upload/update metadata or legacy fields; canonical entries
-  are unchanged. Consumers must resolve `aliasOf` to the canonical text, so the converter
-  that understands stubs has to be published before push-live writes them to the real
-  `converter` branch (an older converter would drop frame aliases). Alias tooltips and
-  cycles fail explicitly.
+  are unchanged. Consumers must resolve `aliasOf` to the canonical text, so both the
+  stub-aware npm converter **and** the updated publisher `index.ts` on
+  Live-Clarity-Database `converter` must ship before push-live writes stubs to the real
+  `converter` branch (an older converter would drop frame aliases; the current publisher
+  throws on `perk.editor.en` for any stub). See "Publisher usage" in the `README.md` of
+  Database-Clarity/Description-converter, branch `agents/batch4-associated`. Alias
+  tooltips and cycles fail explicitly.
   `associated` lists the tooltip's associations in authored order, resolved to canonical
   hashes, deduplicated to the first occurrence, without the entry's own hash, and omitted
   when empty (canonical entries only; stubs carry none).

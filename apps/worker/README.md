@@ -79,9 +79,15 @@ entry; every frame/sandbox alias is written as a reference stub
 `{ hash, aliasOf, aliasKind, ...ownFacts }` (see `@clarity/core` `exportLegacy`), where
 frame aliases keep their own manifest identity/category and sandbox aliases only the
 facts the catalog has for them. Stubs are written as-is and never stamped.
-**Cut-over constraint:** the converter that understands stubs must be published before
-push-live targets the real `converter` branch; an older converter has no editor text on
-stubs and would drop frame aliases. Pushed markers refer
+**Cut-over constraint:** both the stub-aware npm converter **and** the updated
+publisher `index.ts` on Live-Clarity-Database `converter` must ship before push-live
+targets the real `converter` branch. An older converter has no editor text on stubs and
+would drop frame aliases; the current publisher dereferences `perk.editor.en` before
+calling any converter function, so it aborts the whole run with a `TypeError` on any
+stub. The ready publisher patch is the "Publisher usage" example in
+`README.md` of Database-Clarity/Description-converter, branch `agents/batch4-associated`.
+Smoke-test the real publisher loop with a canonical entry, a frame stub and a sandbox
+stub before enabling production writes. Pushed markers refer
 only to canonical authored tooltips. Existing
 unselected perks, database settings and other root fields are preserved.
 The target Contents API PUT checks the file SHA and retries collisions up to

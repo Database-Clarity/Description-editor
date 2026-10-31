@@ -3,6 +3,8 @@
 These are instructions for the owner to carry out later. Creating this Worker
 package does **not** deploy it, publish any tooltip, or merge anything into main.
 Keep `LIVE_BRANCH=converter-v2-test` until an explicit production cut-over.
+Production cut-over also requires the stub-aware npm converter and the updated publisher
+`index.ts` (see `apps/worker/README.md`, push-live safety).
 
 ## 1. Prepare the computer and Cloudflare account
 
