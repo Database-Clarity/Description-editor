@@ -579,12 +579,18 @@ export class Publisher {
           requestBlob: t[p.request],
         }),
       );
+      let credits = appCredits;
+      try {
+        credits = this.credits(t[p.request], opId);
+      } catch {
+        /* A forged or malformed duplicate has no verified requester. */
+      }
       delete t[p.request];
       try {
         this.git.cas(
           dataRef(this.options.dataBranch),
           h,
-          this.git.commit(h, t, `Close duplicate ${opId}`, appCredits),
+          this.git.commit(h, t, `Close duplicate ${opId}`, credits),
         );
         return;
       } catch (e) {

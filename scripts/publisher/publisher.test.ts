@@ -338,6 +338,11 @@ describe.each(['simulator', 'remote'] as const)('%s repository contract', (trans
     f.options.keyFingerprint = fingerprint;
     await f.pub.operation(A);
     expect(identity(f.git.head(D)!)).toBe(expected);
+    // Closing a retried request is still attributable to its signed requester.
+    await f.request();
+    await f.pub.operation(A);
+    expect(identity(f.git.head(D)!)).toBe(expected);
+    expect(f.git.head(L)).toBe(live);
     f.pub.bundle();
     expect(identity(f.git.head('refs/heads/editor-data-bundle')!)).toBe(
       'clarity-editor-backend[bot] <clarity-editor-backend[bot]@users.noreply.github.com>|clarity-editor-backend[bot] <clarity-editor-backend[bot]@users.noreply.github.com>',
