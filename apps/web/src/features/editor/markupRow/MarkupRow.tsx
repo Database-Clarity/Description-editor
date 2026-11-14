@@ -250,6 +250,7 @@ export const MarkupRow = memo(function MarkupRow({
       className={styles.row}
       data-markup-row
       data-docked={docked || undefined}
+      data-tag-wrap={(docked && wrapping) || undefined}
       data-disabled={disabled || undefined}
       aria-disabled={disabled || undefined}
       {...(disabled ? { inert: '' } : {})}
@@ -308,7 +309,7 @@ export const MarkupRow = memo(function MarkupRow({
         </div>
       </div>
       {/* The element symbols' outlined edge marks the mode; the label points back at them. On a
-        phone the bar's width goes to the six symbols instead. */}
+        phone the bar's width goes to the seven symbols instead. */}
       {tagMode.kind === 'wrap' && !docked ? (
         <span
           className={styles.tagLabel}
