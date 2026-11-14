@@ -120,19 +120,25 @@ describe('TR3 stamps: which move and which do not', () => {
   it('the 90-day boundary: exactly 90 days of English revision gap keeps the translation', () => {
     const next = withEnglish(saved, 'English two');
     const atLimit = stampRevisions(saved, next, 'editor', iso(NOW));
-    expect(Date.parse(atLimit.text.en!.updatedAt) - Date.parse(saved.text.ja!.sourceUpdatedAt!)).toBe(
-      LIMIT,
-    );
+    expect(
+      Date.parse(atLimit.text.en!.updatedAt) - Date.parse(saved.text.ja!.sourceUpdatedAt!),
+    ).toBe(LIMIT);
     expect(usesEnglishFallback(atLimit, 'ja')).toBe(false);
     const overLimit = stampRevisions(saved, next, 'editor', iso(NOW + 1));
     expect(usesEnglishFallback(overLimit, 'ja')).toBe(true);
     // Ticked, the same save one millisecond later flips nothing.
-    expect(usesEnglishFallback(stampRevisions(saved, next, 'editor', iso(NOW + 1), true), 'ja')).toBe(
-      false,
-    );
+    expect(
+      usesEnglishFallback(stampRevisions(saved, next, 'editor', iso(NOW + 1), true), 'ja'),
+    ).toBe(false);
   });
   it('a later unticked save measures its gap as if the ticked change never happened', () => {
-    const ticked = stampRevisions(saved, withEnglish(saved, 'English one, fixed'), 'e', iso(NOW), true);
+    const ticked = stampRevisions(
+      saved,
+      withEnglish(saved, 'English one, fixed'),
+      'e',
+      iso(NOW),
+      true,
+    );
     const later = NOW + 5 * DAY;
     const afterBoth = stampRevisions(ticked, withEnglish(ticked, 'English two'), 'f', iso(later));
     const direct = stampRevisions(saved, withEnglish(saved, 'English two'), 'f', iso(later));
@@ -155,9 +161,16 @@ describe('TR3 stamps: which move and which do not', () => {
       { ...saved, text: { ...saved.text, en: { ...saved.text.en!, text: '<solar/>Scorch' } } },
       '<solar Scorch />',
     );
-    expect(noImpactApplies({ ...saved, text: { ...saved.text, en: { ...saved.text.en!, text: '<solar/>Scorch' } } }, tagged)).toBe(false);
+    expect(
+      noImpactApplies(
+        { ...saved, text: { ...saved.text, en: { ...saved.text.en!, text: '<solar/>Scorch' } } },
+        tagged,
+      ),
+    ).toBe(false);
     expect(noImpactApplies(undefined, saved)).toBe(false);
-    expect(noImpactAvailable([{ hash: 124, base: saved, next: withEnglish(saved, 'x') }])).toBe(true);
+    expect(noImpactAvailable([{ hash: 124, base: saved, next: withEnglish(saved, 'x') }])).toBe(
+      true,
+    );
     expect(noImpactAvailable([{ hash: 9, base: lone, next: loneNext }])).toBe(false);
   });
   it('editing a translation in the same ticked save bases it on the kept English revision', () => {
@@ -174,8 +187,8 @@ describe('TR3 stamps: which move and which do not', () => {
 
   it('property: ticked saves never move a state; unticked saves equal the pre-TR3 enricher', () => {
     let seed = 0x7e3;
-    const random = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
-    const pick = <T,>(values: readonly T[]) => values[Math.floor(random() * values.length)];
+    const random = () => (seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;
+    const pick = <T>(values: readonly T[]) => values[Math.floor(random() * values.length)];
     const others = ['de', 'fr', 'ja'] as const satisfies readonly Lang[];
     for (let run = 0; run < 300; run++) {
       let clock = T0;
@@ -194,7 +207,10 @@ describe('TR3 stamps: which move and which do not', () => {
           const lang = pick(others);
           const edit = (tooltip: Tooltip): Tooltip => ({
             ...tooltip,
-            text: { ...tooltip.text, [lang]: { text: `${lang}${step}`, updatedAt: now, updatedBy: 't' } },
+            text: {
+              ...tooltip.text,
+              [lang]: { text: `${lang}${step}`, updatedAt: now, updatedBy: 't' },
+            },
           });
           current = stampRevisions(current, edit(current), 't', now);
           skipped = stampRevisions(skipped, edit(skipped), 't', now);
@@ -213,7 +229,13 @@ describe('TR3 stamps: which move and which do not', () => {
           current = stampRevisions(current, next, 'e', now, true);
           skipped = stampRevisions(skipped, withEnglish(skipped, `e${step}!`), 'e', now);
         } else {
-          const stamped = stampRevisions(current, withEnglish(current, `e${step}!`), 'e', now, true);
+          const stamped = stampRevisions(
+            current,
+            withEnglish(current, `e${step}!`),
+            'e',
+            now,
+            true,
+          );
           expect(states(stamped)).toEqual(states(current));
           expect(stamped.text.en?.updatedAt).toBe(current.text.en?.updatedAt);
           current = stamped;
@@ -280,7 +302,11 @@ describe('EXPORT-FALLBACK-VALIDATION: the live English fallback is validated', (
     expect(liveFallback([edit(english2)], iso(NOW), false)).toEqual({ 124: ['de'] });
     const t124 = data.bundle.tooltips[124]!;
     expect(
-      liveFallback([{ hash: 124, base: t124, next: { ...t124, associated: [5] } }], iso(NOW), false),
+      liveFallback(
+        [{ hash: 124, base: t124, next: { ...t124, associated: [5] } }],
+        iso(NOW),
+        false,
+      ),
     ).toEqual({});
   });
   it('a translation edited in the same save is stamped current: no flip', () => {

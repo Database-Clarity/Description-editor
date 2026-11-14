@@ -474,8 +474,8 @@ function SaveSession({ review, onSaved }: { review: SaveReview; onSaved(message:
             No translation impact
           </label>
           <p id="save-no-impact-hint" className={dialogStyles.caption}>
-            For wording fixes that keep the meaning. Translations stay current and keep their
-            90-day English fallback clock. History marks this save.
+            For wording fixes that keep the meaning. Translations stay current and keep their 90-day
+            English fallback clock. History marks this save.
           </p>
         </div>
       )}

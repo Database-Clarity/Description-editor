@@ -97,14 +97,16 @@ export function classifyInWorker(
  * can neither forge nor hide the mark. Display only.
  */
 export function noImpactFromTrailer(message: string, hash: number): boolean {
-  const block = (message ?? '').trimEnd().split(/\r?\n\r?\n/).at(-1)?.split(/\r?\n/) ?? [];
+  const block =
+    (message ?? '')
+      .trimEnd()
+      .split(/\r?\n\r?\n/)
+      .at(-1)
+      ?.split(/\r?\n/) ?? [];
   if (!block.at(-1)?.startsWith('Clarity-Changed: ')) return false;
   const line = block.find((entry) => entry.startsWith('Clarity-No-Translation-Impact: '));
   return (
-    line
-      ?.slice('Clarity-No-Translation-Impact: '.length)
-      .split(',')
-      .includes(String(hash)) ?? false
+    line?.slice('Clarity-No-Translation-Impact: '.length).split(',').includes(String(hash)) ?? false
   );
 }
 

@@ -58,7 +58,9 @@ export async function prepareChanges(
   if (denied) throw new Error(denied);
   const noTranslationImpact = options.noTranslationImpact === true;
   if (noTranslationImpact && user.role !== 'maintainer' && user.role !== 'editor')
-    throw new Error('Only editors and maintainers can mark a save as having no translation impact.');
+    throw new Error(
+      'Only editors and maintainers can mark a save as having no translation impact.',
+    );
   const now = new Date().toISOString();
   const issues = await requestSaveValidation(
     changes,

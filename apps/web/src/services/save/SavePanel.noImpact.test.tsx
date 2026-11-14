@@ -37,7 +37,12 @@ const translated: Tooltip = {
   ...tooltip,
   text: {
     en: english,
-    de: { text: 'Deutsch', updatedAt: english.updatedAt, updatedBy: 'dan', sourceUpdatedAt: english.updatedAt },
+    de: {
+      text: 'Deutsch',
+      updatedAt: english.updatedAt,
+      updatedBy: 'dan',
+      sourceUpdatedAt: english.updatedAt,
+    },
   },
 };
 const reworded: Tooltip = {
@@ -47,8 +52,16 @@ const reworded: Tooltip = {
 let root: Root;
 let host: HTMLDivElement;
 
-async function open(base: Tooltip, next: Tooltip, role: 'editor' | 'maintainer' | 'trial' = 'editor') {
-  useAuthStore.setState({ user: { id: 1, login: 'alice', role }, token: 'token-a', loading: false });
+async function open(
+  base: Tooltip,
+  next: Tooltip,
+  role: 'editor' | 'maintainer' | 'trial' = 'editor',
+) {
+  useAuthStore.setState({
+    user: { id: 1, login: 'alice', role },
+    token: 'token-a',
+    loading: false,
+  });
   await act(async () => root.render(createElement(SaveController)));
   await act(async () =>
     useSaveState.setState({
@@ -66,7 +79,9 @@ beforeEach(() => {
   mocks.save.mockReset().mockResolvedValue({ kind: 'retry', error: 'try later' });
   mocks.prepare.mockReset().mockImplementation(async (changes: unknown) => changes);
   mocks.validate.mockReset().mockResolvedValue([]);
-  useDataStore.setState({ data: { ...editorData(), bundle: { ...editorData().bundle, tooltips: { 123: translated } } } });
+  useDataStore.setState({
+    data: { ...editorData(), bundle: { ...editorData().bundle, tooltips: { 123: translated } } },
+  });
   useDraftStore.setState({
     drafts: { 123: { base: translated, next: reworded } },
     hydrated: true,
@@ -99,7 +114,10 @@ describe('"No translation impact" in the save review', () => {
   it('is never offered to trials, translation-only saves, or tooltips without translations', async () => {
     await open(translated, reworded, 'trial');
     expect(tick()).toBeNull();
-    const german = { ...translated, text: { ...translated.text, de: { ...translated.text.de!, text: 'Neu' } } };
+    const german = {
+      ...translated,
+      text: { ...translated.text, de: { ...translated.text.de!, text: 'Neu' } },
+    };
     await open(translated, german);
     expect(tick()).toBeNull();
     const lone = { ...tooltip };
@@ -109,7 +127,13 @@ describe('"No translation impact" in the save review', () => {
   it('unticked: prepares and sends the save exactly as before', async () => {
     await open(translated, reworded);
     await act(async () => saveButton().click());
-    expect(mocks.prepare).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), undefined, { noTranslationImpact: false });
+    expect(mocks.prepare).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      undefined,
+      { noTranslationImpact: false },
+    );
     expect(mocks.save).toHaveBeenCalledWith(expect.anything(), 'Update 1 tooltip(s)', false);
     // German is based on English from 2026-01-01: a new English revision now puts it over the
     // 90-day gap, so the review validates its live English fallback.
@@ -120,7 +144,13 @@ describe('"No translation impact" in the save review', () => {
     await act(async () => tick()!.click());
     expect(tick()!.checked).toBe(true);
     await act(async () => saveButton().click());
-    expect(mocks.prepare).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), undefined, { noTranslationImpact: true });
+    expect(mocks.prepare).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      undefined,
+      { noTranslationImpact: true },
+    );
     expect(mocks.save).toHaveBeenCalledWith(expect.anything(), 'Update 1 tooltip(s)', true);
     // Ticked, English keeps its revision: nothing falls back, the review revalidates without it.
     expect(mocks.validate.mock.calls.at(-1)?.[2]).toEqual({});

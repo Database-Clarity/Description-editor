@@ -58,7 +58,11 @@ export async function save(
     method: 'POST',
     credentials: 'omit',
     headers: { ...authorization(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ changes, message, ...(noTranslationImpact ? { noTranslationImpact } : {}) }),
+    body: JSON.stringify({
+      changes,
+      message,
+      ...(noTranslationImpact ? { noTranslationImpact } : {}),
+    }),
   });
   if (response.status === 409) {
     const data = z

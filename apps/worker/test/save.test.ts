@@ -434,16 +434,19 @@ describe('No translation impact (TR3)', () => {
   });
   beforeEach(() => fixture.moveData({ 'tooltips/123.json': translated() }));
 
-  it.each([1, 2])('lets role id %s keep the English revision, with the audit trailer', async (id) => {
-    const response = await fixture.request('/save', 'POST', ticked(), id);
-    expect(response.status).toBe(200);
-    const [saved] = (await response.json()).tooltips as Tooltip[];
-    expect(saved.text.en).toEqual({ ...translated().text.en, text: 'original, fixed' });
-    expect(saved.text.de).toEqual(translated().text.de);
-    expect(fixture.commits[0].message).toBe(
-      'Edit tooltip\n\nClarity-No-Translation-Impact: 123\nClarity-Changed: 123=en',
-    );
-  });
+  it.each([1, 2])(
+    'lets role id %s keep the English revision, with the audit trailer',
+    async (id) => {
+      const response = await fixture.request('/save', 'POST', ticked(), id);
+      expect(response.status).toBe(200);
+      const [saved] = (await response.json()).tooltips as Tooltip[];
+      expect(saved.text.en).toEqual({ ...translated().text.en, text: 'original, fixed' });
+      expect(saved.text.de).toEqual(translated().text.de);
+      expect(fixture.commits[0].message).toBe(
+        'Edit tooltip\n\nClarity-No-Translation-Impact: 123\nClarity-Changed: 123=en',
+      );
+    },
+  );
   it('refuses trials (403) and writes nothing', async () => {
     const response = await fixture.request('/save', 'POST', ticked(), 3);
     expect(response.status).toBe(403);

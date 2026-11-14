@@ -58,7 +58,9 @@ export function requestSaveValidation(
   let cache = results.get(data);
   if (!cache) results.set(data, (cache = new Map()));
   const live = Object.keys(fallback).length ? fallback : undefined;
-  const key = live ? `${JSON.stringify(changes)}\n${JSON.stringify(live)}` : JSON.stringify(changes);
+  const key = live
+    ? `${JSON.stringify(changes)}\n${JSON.stringify(live)}`
+    : JSON.stringify(changes);
   const cached = cache.get(key);
   if (cached) return cached;
   const promise = new Promise<TooltipValidationIssue[]>((resolve, reject) => {

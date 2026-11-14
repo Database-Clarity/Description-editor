@@ -45,7 +45,9 @@ const englishRevisions = new Map<string, number>();
 const revisionOf = (lang: string, text: string) => {
   if (lang !== 'en') return '2026-11-01T00:00:00Z';
   if (!englishRevisions.has(text)) englishRevisions.set(text, englishRevisions.size + 1);
-  return new Date(Date.parse('2026-11-01T00:00:00Z') + englishRevisions.get(text)! * 1000).toISOString();
+  return new Date(
+    Date.parse('2026-11-01T00:00:00Z') + englishRevisions.get(text)! * 1000,
+  ).toISOString();
 };
 const withText = (base: Tooltip, lang: 'en' | 'de' | 'fr', text: string): Tooltip => ({
   ...base,
