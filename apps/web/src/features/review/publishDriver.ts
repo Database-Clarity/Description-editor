@@ -83,6 +83,38 @@ export interface PublishInput {
   hash: number;
   digest: string;
   previous: string | undefined;
+  /** Pending imports, resolved against the reviewed saved snapshot. */
+  dependencies?: readonly number[];
+}
+
+/** Keep each not-yet-emitted transitive closure together, including cycles. */
+export function publishChunks(inputs: readonly PublishInput[]): PublishInput[][] {
+  const byHash = new Map(inputs.map((input) => [input.hash, input]));
+  if (byHash.size !== inputs.length) throw new Error('Duplicate publish hash. Nothing was sent.');
+  const emitted = new Set<number>();
+  const chunks: PublishInput[][] = [];
+  let chunk: PublishInput[] = [];
+  for (const root of [...inputs].sort((a, b) => a.hash - b.hash)) {
+    const closure = new Map<number, PublishInput>();
+    const visit = (hash: number) => {
+      if (emitted.has(hash) || closure.has(hash)) return;
+      const input = byHash.get(hash);
+      if (!input)
+        throw new Error(`Select pending imported tooltip ${hash} as well. Nothing was sent.`);
+      closure.set(hash, input);
+      for (const dependency of input.dependencies ?? []) visit(dependency);
+    };
+    visit(root.hash);
+    if (!closure.size) continue;
+    if (chunk.length && chunk.length + closure.size > publishTiming.chunkHashes) {
+      chunks.push(chunk);
+      chunk = [];
+    }
+    chunk.push(...closure.values());
+    for (const hash of closure.keys()) emitted.add(hash);
+  }
+  if (chunk.length) chunks.push(chunk);
+  return chunks;
 }
 
 /** Hashes covered by an operation that is still queued or being sent. */
@@ -154,16 +186,13 @@ export class PublishDriver {
         `Too many tooltips for one publish (${inputs.length}; the limit is ${publishTiming.maxHashes}). Select fewer and publish in several steps. Nothing was sent.`,
       );
     const now = this.deps.now();
-    const sorted = [...inputs].sort((a, b) => a.hash - b.hash);
+    const planned = publishChunks(inputs);
     const groupId = newOpId(now);
     const chunks: PublishOp[] = [];
-    for (let offset = 0; offset < sorted.length; offset += publishTiming.chunkHashes) {
-      const chunk = sorted.slice(offset, offset + publishTiming.chunkHashes);
+    for (const chunk of planned) {
       const op: PublishOp = {
-        opId: offset === 0 ? groupId : newOpId(now),
-        ...(sorted.length > publishTiming.chunkHashes
-          ? { groupId, groupSize: Math.ceil(sorted.length / publishTiming.chunkHashes) }
-          : {}),
+        opId: chunks.length === 0 ? groupId : newOpId(now),
+        ...(planned.length > 1 ? { groupId, groupSize: planned.length } : {}),
         userId,
         createdAt: now,
         hashes: chunk.map((input) => input.hash),

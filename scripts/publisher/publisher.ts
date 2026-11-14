@@ -1,3 +1,8 @@
+import {
+  buildLegacy,
+  deployedLegacyPresets,
+  type LegacyInput,
+} from '../../packages/export/src/legacy.js';
 import { createHash, createPublicKey, verify } from 'node:crypto';
 import {
   stableStringify,
@@ -42,7 +47,14 @@ import {
   type BatchPublishPayload,
 } from '@clarity/core/schedule';
 import { stampUploads } from '../../apps/worker/src/stamp.js';
-import { RefRace, type Repository, type Tree } from './git.js';
+import {
+  appCredits,
+  requesterCredits,
+  RefRace,
+  type CommitCredits,
+  type Repository,
+  type Tree,
+} from './git.js';
 import {
   batchMembers,
   editDue,
@@ -155,7 +167,14 @@ export interface Options {
   runUrl: string;
   backoff?: (attempt: number) => Promise<void>;
 }
+export class TextlessConsumerOutput extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TextlessConsumerOutput';
+  }
+}
 export class Publisher {
+  private readonly checkedOutputs = new Set<string>();
   constructor(
     readonly git: Repository,
     readonly options: Options,
@@ -340,7 +359,34 @@ export class Publisher {
     const permissions = permissionsSchema.parse(this.read(tree, 'config/permissions.json'));
     if (!['maintainer', 'editor'].includes(permissions.users[String(p.requester.id)]?.role))
       throw new Error('Requester revoked');
+    requesterCredits(p.requester);
     return p;
+  }
+  /** Recovery credits come from the signed envelope, never from an unverified log or receipt. */
+  credits(blob: string, opId: string): CommitCredits {
+    const envelope = JSON.parse(this.git.blob(blob));
+    const key = createPublicKey(this.options.publicKey);
+    if (
+      createHash('sha256')
+        .update(key.export({ type: 'spki', format: 'der' }))
+        .digest('hex') !== this.options.keyFingerprint ||
+      typeof envelope.payload !== 'string' ||
+      typeof envelope.sig !== 'string' ||
+      !verify(null, Buffer.from(envelope.payload), key, Buffer.from(envelope.sig, 'base64'))
+    )
+      throw new Error('Invalid credit envelope');
+    const raw = JSON.parse(envelope.payload);
+    const payload =
+      raw.kind === 'batch' ? batchPublishPayloadSchema.parse(raw) : publishPayloadSchema.parse(raw);
+    if (
+      stableStringify(payload) !== envelope.payload ||
+      payload.opId !== opId ||
+      payload.repo !== this.options.repo ||
+      payload.dataBranch !== this.options.dataBranch ||
+      payload.liveBranch !== this.options.liveBranch
+    )
+      throw new Error('Credit request target mismatch');
+    return requesterCredits(payload.requester);
   }
   receipt(commit: string, opId: string): Receipt | undefined {
     return this.read(this.git.tree(commit), paths(opId).receipt);
@@ -364,7 +410,35 @@ export class Publisher {
     const entries = structuredClone(r.exported);
     stampUploads(entries, new Set(r.changed), live.perks, r.now, r.requester.login);
     const picks = this.pickRecomputeAt(this.git.tree(r.sourceCommit));
-    const bytes = json({ ...live, perks: mergeLivePerks(live.perks, entries, picks) });
+    const merged = { ...live, perks: mergeLivePerks(live.perks, entries, picks) };
+    const bytes = json(merged);
+    const checkKey = createHash('sha256')
+      .update(tree['liveDescriptions.json'])
+      .update(bytes)
+      .digest('hex');
+    // Run the actual consumer converter at both snapshots. Historical empty rows are tolerated;
+    // newly empty rows stop candidate creation, including rebases and crash recovery.
+    if (!this.checkedOutputs.has(checkKey)) {
+      for (const preset of deployedLegacyPresets) {
+        const convert = (
+          input: unknown,
+        ): Record<string, { descriptions?: Record<string, unknown>; aliasOf?: number }> =>
+          JSON.parse(new TextDecoder().decode(buildLegacy(input as LegacyInput, preset)));
+        const before = convert(live),
+          after = convert(merged);
+        for (const [hash, row] of Object.entries(after)) {
+          const empty = (entry: typeof row | undefined) =>
+            entry !== undefined &&
+            entry.aliasOf === undefined &&
+            Object.keys(entry.descriptions ?? {}).length === 0;
+          if (empty(row) && !empty(before[hash]))
+            throw new TextlessConsumerOutput(
+              `TextlessConsumerOutput: ${preset} tooltip ${hash} has no descriptions; nothing published`,
+            );
+        }
+      }
+      this.checkedOutputs.add(checkKey);
+    }
     return {
       bytes,
       outcome: bytes === this.git.blob(tree['liveDescriptions.json']) ? 'unchanged' : 'published',
@@ -378,7 +452,7 @@ export class Publisher {
       'liveDescriptions.json': this.git.writeBlob(bytes),
       [paths(r.opId).receipt]: this.git.writeBlob(json(r)),
     };
-    return this.git.commit(parent, tree, `Publish ${r.opId}`);
+    return this.git.commit(parent, tree, `Publish ${r.opId}`, this.credits(r.requestBlob, r.opId));
   }
   async record(
     opId: string,
@@ -465,7 +539,16 @@ export class Publisher {
           times: { now: receipt?.now ?? this.options.now(), ...batchTimes },
         }),
       );
-      const c = this.git.commit(h, tree, `Record ${opId}`);
+      let credits = appCredits;
+      if (receipt) credits = this.credits(blob, opId);
+      else {
+        try {
+          credits = this.credits(blob, opId);
+        } catch {
+          /* Unverified rejection is app-only; successful recovery must retain its author. */
+        }
+      }
+      const c = this.git.commit(h, tree, `Record ${opId}`, credits);
       try {
         this.git.cas(dataRef(this.options.dataBranch), h, c);
         return;
@@ -501,7 +584,7 @@ export class Publisher {
         this.git.cas(
           dataRef(this.options.dataBranch),
           h,
-          this.git.commit(h, t, `Close duplicate ${opId}`),
+          this.git.commit(h, t, `Close duplicate ${opId}`, appCredits),
         );
         return;
       } catch (e) {
@@ -656,6 +739,8 @@ export class Publisher {
         return;
       }
       if (l === r.liveParent) {
+        // A candidate may predate this safety gate; validate it again before any live CAS.
+        this.merge(l, r);
         let pushed = false;
         try {
           this.git.cas(dataRef(this.options.liveBranch), l, c);
@@ -946,6 +1031,25 @@ export class Publisher {
       }
     const plan = await this.batchPlan(at, payload, frozenAliases);
     if ('failure' in plan) return fail(plan.failure);
+    const receipt: Receipt = {
+      opId,
+      requestBlob: blob,
+      sourceCommit: source,
+      liveParent: live,
+      now: plan.now,
+      publisherSha: this.options.publisherSha,
+      generatorSha: this.options.generatorSha,
+      outcome: 'published',
+      entries: plan.entries,
+      exported: plan.exported,
+      changed: plan.changed,
+      requester: payload.requester,
+      intentDigest: payload.intentDigest,
+      batchId: payload.batchId,
+      contentRevision: payload.contentRevision,
+    };
+    // A refused batch must not leave even a claim commit behind.
+    this.merge(live, receipt);
     let sourceCommit = source;
     if (!claimed) {
       const next = { ...tree };
@@ -963,7 +1067,12 @@ export class Publisher {
         { batchId: batch.id, opId, notBefore: payload.notBefore, claimed: true },
       ]);
       editIndex(this, next, updated, payload.hashes, claimedAt);
-      const c = this.git.commit(s, next, `Claim batch ${batch.id} for ${opId}`);
+      const c = this.git.commit(
+        s,
+        next,
+        `Claim batch ${batch.id} for ${opId}`,
+        this.credits(blob, opId),
+      );
       try {
         this.git.cas(dataRef(this.options.dataBranch), s, c);
         sourceCommit = c;
@@ -973,23 +1082,7 @@ export class Publisher {
         return undefined;
       }
     }
-    return {
-      opId,
-      requestBlob: blob,
-      sourceCommit,
-      liveParent: live,
-      now: plan.now,
-      publisherSha: this.options.publisherSha,
-      generatorSha: this.options.generatorSha,
-      outcome: 'published',
-      entries: plan.entries,
-      exported: plan.exported,
-      changed: plan.changed,
-      requester: payload.requester,
-      intentDigest: payload.intentDigest,
-      batchId: payload.batchId,
-      contentRevision: payload.contentRevision,
-    };
+    return { ...receipt, sourceCommit };
   }
   /**
    * The batch part of RECORD at head `tree` (edited in place). With a landed receipt: activation
@@ -1209,6 +1302,7 @@ export class Publisher {
       old,
       { ...oldTree, 'bundle.json': this.git.writeBlob(json(bundle)) },
       `Bundle ${h}`,
+      appCredits,
     );
     this.git.cas(ref, old, c);
   }

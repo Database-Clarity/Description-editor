@@ -3,6 +3,7 @@ import { PublishHttpError, type RemoteStatus } from '../../services/publisher/ap
 import { createMemoryOpStore, type OpStore } from '../../services/publisher/opStore';
 import {
   PublishDriver,
+  publishChunks,
   publishTiming,
   usePublishState,
   type DriverDeps,
@@ -710,4 +711,32 @@ it('persists every chunk before sending and reuses each identity after a lost re
     });
   }
   expect([...h.store.records.keys()]).toEqual(saved.map((entry) => entry.opId));
+});
+
+it('keeps the Nail, Meet Hammer pending import closure together across the old 50 boundary', async () => {
+  const h = harness();
+  const driver = h.make();
+  await driver.start('1');
+  const many = Array.from({ length: 50 }, (_, i) => ({
+    hash: i + 100,
+    digest: digest(1),
+    previous: undefined,
+  }));
+  await driver.create([
+    ...many,
+    { hash: 1209885908, digest: digest(2), previous: undefined, dependencies: [2152442764] },
+    { hash: 2152442764, digest: digest(3), previous: undefined },
+  ]);
+  await settle();
+  expect(ops().map((op) => op.hashes)).toEqual([many.map((x) => x.hash), [1209885908, 2152442764]]);
+});
+it('keeps transitive imports and cycles in one oversize closure, and refuses missing pending selections', () => {
+  const many = Array.from({ length: 60 }, (_, i) => ({
+    hash: i,
+    digest: digest(1),
+    previous: undefined,
+    dependencies: [(i + 1) % 60],
+  }));
+  expect(publishChunks(many).map((chunk) => chunk.length)).toEqual([60]);
+  expect(() => publishChunks(many.slice(0, 59))).toThrow(/Select pending imported tooltip 59/);
 });
