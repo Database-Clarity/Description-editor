@@ -10,18 +10,36 @@ import { useTermList } from './useTermList';
 import { insertAtCaret, translationView } from './insert';
 import styles from './TermLayer.module.scss';
 
-/** Highlight names (TermLayer.module.scss styles them): every term, and the one open. */
-const markName = 'clarity-term';
+/** The open term's background: a CSS highlight, registered only while a popover is open. */
 const openName = 'clarity-term-open';
 const openDelay = 150;
 const closeGrace = 200;
 
 const highlightsSupported = () =>
   typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight !== 'undefined';
-function highlight(name: string): Highlight {
-  let entry = CSS.highlights.get(name);
-  if (!entry) CSS.highlights.set(name, (entry = new Highlight()));
-  return entry;
+
+/**
+ * Draws each mark as a transparent box over its text with a dotted bottom edge, in an overlay
+ * beside the content: no character moves, and nothing repaints while the translation is typed (a
+ * registered CSS highlight makes Chrome repaint the marked text and the page on every DOM change
+ * anywhere, measured at about 1.8 ms per key). Returns how many marks it drew.
+ */
+function drawMarks(host: HTMLElement, overlay: HTMLElement, marks: Mark[]) {
+  const origin = host.getBoundingClientRect();
+  const boxes = document.createDocumentFragment();
+  for (const mark of marks)
+    for (const rect of mark.range.getClientRects()) {
+      if (rect.width < 1 || rect.height < 1) continue;
+      const box = document.createElement('span');
+      box.className = styles.mark!;
+      box.style.left = `${rect.left - origin.left}px`;
+      box.style.top = `${rect.top - origin.top}px`;
+      box.style.width = `${rect.width}px`;
+      box.style.height = `${rect.height}px`;
+      boxes.append(box);
+    }
+  overlay.replaceChildren(boxes);
+  host.dataset.termMarks = String(marks.length);
 }
 
 /** One insertable span in the English: what it offers and where it is (a DOM Range). */
@@ -33,7 +51,7 @@ export interface Mark {
 /**
  * A second source of marks that knows its spans from the rendering itself (number tokens: the
  * spans parseMarkup tags with data-slot): it returns a Range per span (Range.selectNodeContents
- * on the element) with what Insert puts in. Its marks share the highlight, hit-testing, popover,
+ * on the element) with what Insert puts in. Its marks share the drawing, hit-testing, popover,
  * click-to-insert (Term.insertOnClick), and the clearing on every rendering change.
  */
 export type SpanSource = (root: HTMLElement) => Mark[];
@@ -95,8 +113,8 @@ const within = (range: Range, x: number, y: number) =>
 
 /**
  * Term marks over rendered English (TR2 official names; the glossary adds a source to the same
- * list): a dotted underline drawn with CSS Custom Highlights over the existing text nodes, so no
- * element is added and no character moves. Hover (or tap) shows the term's in-game names in the
+ * list): a dotted underline drawn in an overlay over the existing text (drawMarks), so the
+ * rendering is untouched and no character moves. Hover (or tap) shows the term's in-game names in the
  * translator's language, each with Insert where the translation can be edited.
  * Nothing runs while stepping through tooltips; marks arrive once the step settles.
  */
@@ -121,6 +139,8 @@ export function TermLayer({
   children: ReactNode;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
   const hashRef = useRef(hash);
   hashRef.current = hash;
   const canInsertRef = useRef(canInsert);
@@ -135,27 +155,27 @@ export function TermLayer({
   openRef.current = open;
 
   const clearMarks = useCallback(() => {
-    if (!highlightsSupported()) return;
-    const all = highlight(markName);
-    for (const mark of marks.current) all.delete(mark.range);
     marks.current = [];
-    highlight(openName).clear();
+    overlay.current?.replaceChildren();
+    if (host.current) delete host.current.dataset.termMarks;
   }, []);
 
   // Marks: requested once the text has settled, rebuilt when the rendering changes.
   useLayoutEffect(() => {
-    const root = host.current;
-    if (!root || (!list && !hasSpans) || stepping || !highlightsSupported()) return;
+    const frameHost = host.current;
+    const root = content.current;
+    const layer = overlay.current;
+    if (!frameHost || !root || !layer || (!list && !hasSpans) || stepping) return;
     let current = true;
     let frame = 0;
+    let redraw = 0;
+    const draw = () => drawMarks(frameHost, layer, marks.current);
     const build = () => {
       frame = 0;
       clearMarks();
       if (openRef.current) setOpen(null);
-      const all = highlight(markName);
-      const spans = spanSourceRef.current?.(root) ?? [];
-      for (const mark of spans) all.add(mark.range);
-      marks.current = spans;
+      marks.current = spanSourceRef.current?.(root) ?? [];
+      if (marks.current.length) draw();
       const { nodes, starts, text } = readText(root);
       if (!list || !nodes.length) return;
       void requestTermMatches(list, text).then((matches) => {
@@ -166,13 +186,25 @@ export function TermLayer({
           const range = document.createRange();
           range.setStart(start.node, start.offset);
           range.setEnd(end.node, end.offset);
-          all.add(range);
           return { term: list.terms[match.entry]!, range };
         });
         marks.current = [...marks.current, ...found];
+        draw();
       });
     };
     build();
+    // Rewrapped text (a narrower pane, a font that loaded late) moves the marks with it.
+    const resize =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(() => {
+            if (!redraw && marks.current.length)
+              redraw = requestAnimationFrame(() => {
+                redraw = 0;
+                draw();
+              });
+          });
+    resize?.observe(frameHost);
     const observer = new MutationObserver(() => {
       // Stale ranges go before the next paint; new ones follow once the rendering settles.
       clearMarks();
@@ -182,17 +214,18 @@ export function TermLayer({
     return () => {
       current = false;
       observer.disconnect();
+      resize?.disconnect();
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(redraw);
       clearMarks();
     };
   }, [list, hasSpans, stepping, clearMarks]);
 
-  // The open term's background.
+  // The open term's background, registered only while open (see drawMarks on why).
   useLayoutEffect(() => {
-    if (!highlightsSupported()) return;
-    const entry = highlight(openName);
-    entry.clear();
-    if (open) entry.add(open.mark.range);
+    if (!open || !highlightsSupported()) return;
+    CSS.highlights.set(openName, new Highlight(open.mark.range));
+    return () => void CSS.highlights.delete(openName);
   }, [open]);
 
   // Hover: one hit test per frame while the pointer moves over the English.
@@ -284,7 +317,10 @@ export function TermLayer({
 
   return (
     <div ref={host} className={styles.layer}>
-      {children}
+      <div ref={content} className={styles.content}>
+        {children}
+      </div>
+      <div ref={overlay} className={styles.marks} aria-hidden="true" />
       {open && (
         <TermPopover
           term={open.mark.term}

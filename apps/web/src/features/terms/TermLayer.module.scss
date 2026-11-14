@@ -1,18 +1,28 @@
 @use '../../ui/controls';
 
-// Term marks are CSS Custom Highlights over the pane's own text nodes: decoration and background
-// only, never a box or a metric, so no character moves when marks appear, change, or clear.
-::highlight(clarity-term) {
-  text-decoration: underline dotted var(--text3) 1px;
-  text-underline-offset: 3px;
-}
+// The open term: a CSS highlight over its text (registered only while its popover is open).
 ::highlight(clarity-term-open) {
   background-color: var(--sel);
 }
 
-// No box of its own in the layout: the pane lays out its content exactly as before.
+// The content lays out exactly as before; the marks sit in an overlay above it (TermLayer
+// drawMarks): a transparent box per line of a term with a dotted bottom edge, so no character
+// moves when marks appear, change, or clear, and the pointer still reaches the text below.
 .layer {
+  position: relative;
+}
+.content {
   display: contents;
+}
+.marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mark {
+  position: absolute;
+  border-bottom: 1px dotted var(--text3);
+  pointer-events: none;
 }
 
 // Dense, like the reference popover: 12px on the popover surface, token colours in both themes.

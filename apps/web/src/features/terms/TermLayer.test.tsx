@@ -65,8 +65,11 @@ it('marks spans from a span source and inserts on click for a single exact inser
       </TermLayer>,
     ),
   );
-  const marks = CSS.highlights.get('clarity-term') as unknown as FakeHighlight;
-  expect([...marks].map((range) => range.toString())).toEqual(['5']);
+  // One mark drawn in the overlay (a box per line), none of it inside the rendered content.
+  expect(host.querySelector('[data-term-marks]')?.getAttribute('data-term-marks')).toBe('1');
+  expect(host.querySelectorAll('[aria-hidden="true"] > span')).toHaveLength(1);
+  expect(host.querySelector('p')!.innerHTML).toBe('Lasts <span data-slot="0">5</span> seconds.');
+  expect(CSS.highlights.size).toBe(0);
   const slot = host.querySelector('[data-slot]')!;
   (document as unknown as { caretPositionFromPoint: unknown }).caretPositionFromPoint = () => ({
     offsetNode: slot.firstChild,
