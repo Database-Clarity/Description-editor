@@ -1,10 +1,11 @@
 {
-  "sourceSha": "78268384d35a1d3e51f72d9215696c30dcfb4775",
-  "sha256": "a5311042db1620e00b245ef61b0fef5ed2d71d4d9dc7a293a6a8015e9c455d8c",
+  "sourceSha": "bfa489d80d3095e9da243b08d73459e4e7b03aa9",
+  "sha256": "8558913919f032aaf414a573cfd3afb572fdab6c333b568e093a78e20f529e12",
   "capabilities": [
     "elementTags",
     "sandboxPointers",
     "scheduledBatches",
-    "markupBraces"
+    "markupBraces",
+    "prismaticTags"
   ]
 }

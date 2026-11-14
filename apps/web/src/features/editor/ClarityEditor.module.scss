@@ -207,12 +207,12 @@
     text-decoration-color: color-mix(in srgb, currentcolor 60%, transparent);
     text-underline-offset: 0.2em;
   }
-  @each $element in (kinetic, arc, solar, void, stasis, strand) {
+  @each $element in (kinetic, arc, solar, void, stasis, strand, prismatic) {
     :global(.cm-el-#{$element}) {
       color: var(--el-#{$element});
     }
   }
-  // The six elements in the popover of element-tagged text (Change element): icon buttons, the
+  // The seven elements in the popover of element-tagged text (Change element): icon buttons, the
   // current one pressed.
   :global(.cm-symbol-elements) {
     display: inline-flex;
