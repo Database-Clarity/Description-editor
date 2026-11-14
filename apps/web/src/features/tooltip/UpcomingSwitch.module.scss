@@ -232,9 +232,14 @@ span.badge {
   }
 }
 
-// The queue is the primary destination label on desktop. Phones keep the badge.
+// The queue names the batch on desktop; retain its visible clock badge across language changes.
 @media (min-width: 701px) {
-  span.destination {
-    display: none !important;
+  span.destination .badgeText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

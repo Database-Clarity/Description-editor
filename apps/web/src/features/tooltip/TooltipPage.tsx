@@ -274,7 +274,13 @@ function TooltipWorkspace({
   const work = hashOverride === undefined ? workThrough : null;
   function changeLanguage(next: Lang) {
     setRemembered(next);
-    setSearch(withLanguage(search, next));
+    if (
+      import.meta.env.VITE_SCHEDULED_ENABLED === '1' &&
+      work?.mode === 'active' &&
+      work.queue.destination?.kind === 'batch'
+    )
+      setSearch(withLanguage(search, next), { state: routeState });
+    else setSearch(withLanguage(search, next));
   }
   const selectedGlobal = useGlobalDefinition(
     hashOverride ?? Number(parameter),
