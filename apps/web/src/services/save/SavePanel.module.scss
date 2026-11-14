@@ -1,0 +1,21 @@
+// "No translation impact" (TR3): checkbox, label, and its caption aligned under the label text.
+.impact {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.375rem;
+  row-gap: 0.125rem;
+  align-items: center;
+  margin-block: 0.75rem;
+
+  input {
+    margin: 0;
+  }
+
+  p {
+    grid-column: 2;
+    margin: 0;
+    color: var(--text2);
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+}

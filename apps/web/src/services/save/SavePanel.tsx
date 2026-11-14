@@ -19,7 +19,7 @@ import { SourceRef } from '../../features/compendium/SourceRef';
 import { linkLocation, matchLocation } from '../../features/compendium/sourceLocation';
 import { useCompendiumStore } from '../../features/compendium/store';
 import { Dialog } from '../../ui/Dialog';
-import dialogStyles from '../../ui/Dialog.module.scss';
+import styles from './SavePanel.module.scss';
 import { acceptSaved } from './drafts';
 import { useSaveNotice } from './notice';
 import { permissionError, prepareChanges } from './pipeline';
@@ -462,20 +462,19 @@ function SaveSession({ review, onSaved }: { review: SaveReview; onSaved(message:
         <p>Warnings do not block saving.</p>
       )}
       {showImpact && (
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={noImpact}
-              disabled={pending}
-              aria-describedby="save-no-impact-hint"
-              onChange={(event) => setNoImpact(event.target.checked)}
-            />{' '}
-            No translation impact
-          </label>
-          <p id="save-no-impact-hint" className={dialogStyles.caption}>
-            For wording fixes that keep the meaning. Translations stay current and keep their 90-day
-            English fallback clock. History marks this save.
+        <div className={styles.impact}>
+          <input
+            id="save-no-impact"
+            type="checkbox"
+            checked={noImpact}
+            disabled={pending}
+            aria-describedby="save-no-impact-hint"
+            onChange={(event) => setNoImpact(event.target.checked)}
+          />
+          <label htmlFor="save-no-impact">No translation impact</label>
+          <p id="save-no-impact-hint">
+            For wording fixes that keep the meaning: translations stay current, and this change does
+            not count toward their 90-day English fallback. History marks this save.
           </p>
         </div>
       )}

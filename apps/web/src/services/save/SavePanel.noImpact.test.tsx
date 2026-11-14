@@ -106,7 +106,9 @@ describe('"No translation impact" in the save review', () => {
   it('is offered to editors and maintainers for English wording on a translated tooltip', async () => {
     for (const role of ['editor', 'maintainer'] as const) {
       await open(translated, reworded, role);
-      expect(tick()?.closest('label')?.textContent).toContain('No translation impact');
+      expect(host.querySelector(`label[for="${tick()?.id}"]`)?.textContent).toBe(
+        'No translation impact',
+      );
       expect(tick()?.checked).toBe(false);
       expect(host.textContent).toContain('History marks this save');
     }
