@@ -38,8 +38,15 @@ export function readStoredQueues(): Stored {
       const stored = raw as Stored;
       const queues: Record<string, WorkQueue> = {};
       for (const [id, record] of Object.entries(stored.queues ?? {})) {
-        const items: unknown = JSON.parse(sessionStorage.getItem(itemsKey(id)) ?? 'null');
+        let items: unknown;
+        try {
+          items = JSON.parse(sessionStorage.getItem(itemsKey(id)) ?? 'null');
+        } catch {
+          // A corrupt item list must not hide the tab's other queues.
+          continue;
+        }
         const queue = { ...record, items } as WorkQueue;
+        if (queue.version !== 1 || !Array.isArray(items) || !Array.isArray(queue.skipped)) continue;
         if (queue.destination != null) {
           const destination = queue.destination;
           if (
@@ -52,13 +59,14 @@ export function readStoredQueues(): Stored {
             queue.source !== 'translations' ||
             queue.items.some(
               (item) =>
+                !item ||
+                typeof item !== 'object' ||
                 (item.detail as { batchId?: unknown } | null)?.batchId !== destination.batchId,
             )
           )
             continue;
         } else queue.destination = null;
-        if (queue?.version === 1 && Array.isArray(queue.items) && Array.isArray(queue.skipped))
-          queues[id] = queue;
+        queues[id] = queue;
       }
       return { active: stored.active && queues[stored.active] ? stored.active : null, queues };
     }

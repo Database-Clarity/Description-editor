@@ -641,7 +641,7 @@ function TooltipWorkspace({
       <HistoryPanel
         language={lang}
         hash={activeHash}
-        readOnly={readOnly}
+        readOnly={readOnly || !!batchEditing}
         suspended={suspended}
         attribution={
           <LanguageSummary
@@ -674,6 +674,9 @@ function TooltipWorkspace({
   const translation = translationQueue([activeBase], [lang], data.aliases)[0];
   const compendiumPane = selectedGlobal ? (
     <GlobalUsages hash={selectedGlobal.hash} name={selectedGlobal.name} />
+  ) : batchEditing ? (
+    // Batch text must never reach Compendium actions that write to Current drafts.
+    <SavedCompendiumPane base={activeBase} name={item?.name} />
   ) : readOnly ? null : user?.role !== 'translator' ? (
     <SteppingCompendium
       base={activeBase}

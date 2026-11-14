@@ -52,8 +52,16 @@ vi.mock('../preview', () => ({
     );
   },
 }));
-vi.mock('../history/HistoryPanel', () => ({ HistoryPanel: () => null }));
-vi.mock('../compendium/CompendiumPanel', () => ({ CompendiumPanel: () => null }));
+vi.mock('../history/HistoryPanel', () => ({
+  HistoryPanel: ({ readOnly }: { readOnly: boolean }) => (
+    <div data-history-readonly={String(readOnly)} />
+  ),
+}));
+vi.mock('../compendium/CompendiumPanel', () => ({
+  CompendiumPanel: ({ base }: { base: Tooltip }) => (
+    <div data-editable-compendium={base.text.en?.text} />
+  ),
+}));
 vi.mock('../associations/AssociationsPanel', () => ({ AssociationsPanel: () => null }));
 
 const stamp = { updatedAt: '2026-11-01T00:00:00.000Z', updatedBy: 'a' };
@@ -147,7 +155,7 @@ async function seedBatch() {
 }
 
 async function mount(
-  role: 'maintainer' | 'translator' | 'trial',
+  role: 'maintainer' | 'editor' | 'translator' | 'trial',
   path = '/t/10',
   state?: unknown,
   assigned: Lang[] = ['de'],
@@ -563,29 +571,27 @@ it('keeps the active batch destination on de to fr and saves the next edit only 
   const { useDataStore } = await import('../../stores/data');
   await useBatchDraftStore.getState().activate('1');
   const key = `${batch.id}:10:de`;
-  useWorkQueues
-    .getState()
-    .start({
-      version: 1,
-      id: 'batch-language',
-      source: 'translations',
-      scope: 'shown',
-      origin: { path: '/translations', restore: { language: 'de' } },
-      items: [
-        {
-          key,
-          hash: 10,
-          lang: 'de',
-          name: 'A base',
-          detail: { path: '/t/10?lang=de', batchId: batch.id },
-        },
-      ],
-      skipped: [],
-      current: key,
-      finished: false,
-      createdAt: Date.now(),
-      destination: { kind: 'batch', batchId: batch.id, batchName: 'December patch' },
-    });
+  useWorkQueues.getState().start({
+    version: 1,
+    id: 'batch-language',
+    source: 'translations',
+    scope: 'shown',
+    origin: { path: '/translations', restore: { language: 'de' } },
+    items: [
+      {
+        key,
+        hash: 10,
+        lang: 'de',
+        name: 'A base',
+        detail: { path: '/t/10?lang=de', batchId: batch.id },
+      },
+    ],
+    skipped: [],
+    current: key,
+    finished: false,
+    createdAt: Date.now(),
+    destination: { kind: 'batch', batchId: batch.id, batchName: 'December patch' },
+  });
   fixture.setUser({ id: 1, login: 'm', role: 'translator', languages: ['de', 'fr'] });
   const state = { workThrough: { id: 'batch-language', key } };
   const page = await mount('translator', '/t/10?lang=de', state, ['de', 'fr']);
@@ -637,26 +643,85 @@ it('keeps the active batch destination on de to fr and saves the next edit only 
   }
 });
 
-it('keeps ordinary Current queue language switching unchanged', async () => {
-  vi.stubEnv('VITE_SCHEDULED_ENABLED', '1');
-  const { useWorkQueues } = await import('../queue/store');
-  useWorkQueues
-    .getState()
-    .start({
+it.each(['maintainer', 'editor', 'translator'] as const)(
+  'keeps History Restore and editable Compendium out of a %s batch visit',
+  async (role) => {
+    vi.stubEnv('VITE_SCHEDULED_ENABLED', '1');
+    const batch = await seedBatch();
+    const { useWorkQueues } = await import('../queue/store');
+    const { useBatchDraftStore } = await import('../../services/scheduled/batchDrafts');
+    const { useDraftStore } = await import('../../stores/drafts');
+    await useBatchDraftStore.getState().activate('1');
+    const key = `${batch.id}:10:de`;
+    useWorkQueues.getState().start({
       version: 1,
-      id: 'current-language',
+      id: 'batch-panes',
       source: 'translations',
       scope: 'shown',
       origin: { path: '/translations', restore: {} },
-      items: [
-        { key: '10:de', hash: 10, lang: 'de', name: 'A base', detail: { path: '/t/10?lang=de' } },
-      ],
+      items: [{ key, hash: 10, lang: 'de', name: 'A base', detail: { batchId: batch.id } }],
       skipped: [],
-      current: '10:de',
+      current: key,
       finished: false,
       createdAt: Date.now(),
-      destination: null,
+      destination: { kind: 'batch', batchId: batch.id, batchName: 'December patch' },
     });
+    const page = await mount(role, '/t/10?lang=de', {
+      workThrough: { id: 'batch-panes', key },
+    });
+    try {
+      await page.settle(() => editorProps.current?.sourceText?.startsWith('Upcoming') === true);
+      expect(page.host.querySelector('[data-history-readonly="true"]')).not.toBeNull();
+      const compendium = () =>
+        [...page.host.querySelectorAll<HTMLButtonElement>('button')].find(
+          (button) => button.textContent === 'Compendium',
+        )!;
+      await act(async () => compendium().click());
+      await page.settle(() => !!page.host.querySelector('[data-saved-compendium]'));
+      expect(page.host.querySelector('[data-saved-compendium]')).not.toBeNull();
+      expect(page.host.querySelector('[data-editable-compendium]')).toBeNull();
+      expect(useDraftStore.getState().drafts).toEqual({});
+      // Leaving the queue restores the existing Current-pane permissions and Current base.
+      await act(async () => page.router.navigate('/t/10?lang=de'));
+      await page.settle(() => !!page.host.querySelector('[data-history-readonly="false"]'));
+      expect(page.host.querySelector('[data-history-readonly="false"]')).not.toBeNull();
+      await act(async () => compendium().click());
+      await page.settle();
+      if (role === 'translator') {
+        expect(page.host.querySelector('[data-saved-compendium]')).not.toBeNull();
+        expect(page.host.querySelector('[data-editable-compendium]')).toBeNull();
+      } else {
+        expect(
+          page.host
+            .querySelector('[data-editable-compendium]')
+            ?.getAttribute('data-editable-compendium'),
+        ).toBe('English 10 import 13 from tooltip');
+      }
+      expect(useDraftStore.getState().drafts).toEqual({});
+    } finally {
+      await page.dispose();
+    }
+  },
+);
+
+it('keeps ordinary Current queue language switching unchanged', async () => {
+  vi.stubEnv('VITE_SCHEDULED_ENABLED', '1');
+  const { useWorkQueues } = await import('../queue/store');
+  useWorkQueues.getState().start({
+    version: 1,
+    id: 'current-language',
+    source: 'translations',
+    scope: 'shown',
+    origin: { path: '/translations', restore: {} },
+    items: [
+      { key: '10:de', hash: 10, lang: 'de', name: 'A base', detail: { path: '/t/10?lang=de' } },
+    ],
+    skipped: [],
+    current: '10:de',
+    finished: false,
+    createdAt: Date.now(),
+    destination: null,
+  });
   const page = await mount('maintainer', '/t/10?lang=de', {
     workThrough: { id: 'current-language', key: '10:de' },
   });

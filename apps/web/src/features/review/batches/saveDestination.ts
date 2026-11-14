@@ -214,7 +214,12 @@ export async function saveReviewToBatch(
   let kept = 0;
   const notes: string[] = [];
   if (sameAccount()) {
-    onConfirmed?.(confirmed.map((hash) => shown.get(hash)!));
+    try {
+      onConfirmed?.(confirmed.map((hash) => shown.get(hash)!));
+    } catch {
+      // The Worker receipt remains authoritative even if the local preview cannot refresh.
+      notes.push('Saved changes could not be shown in the preview. Reload to see them.');
+    }
     // Current drafts: drop the confirmed ones that nobody edited during the save.
     const store = useDraftStore.getState();
     for (const hash of confirmed) {

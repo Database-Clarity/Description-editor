@@ -96,6 +96,32 @@ describe('work-through store', () => {
     sessionStorage.setItem('clarity-work-through:v1', '{not json');
     expect(readStoredQueues()).toEqual({ active: null, queues: {} });
   });
+
+  it.each(['{}', 'null', '[null]', '{bad json'])(
+    'keeps valid queues when another batch queue has corrupt items: %s',
+    (corrupt) => {
+      vi.stubEnv('VITE_SCHEDULED_ENABLED', '1');
+      try {
+        useWorkQueues.getState().start(queue('valid'));
+        useWorkQueues.getState().start({
+          ...queue('broken'),
+          source: 'translations',
+          destination: {
+            kind: 'batch',
+            batchId: '01JF00000000000000000000AA',
+            batchName: 'December patch',
+          },
+        });
+        sessionStorage.setItem('clarity-work-through:v1:items:broken', corrupt);
+        const restored = readStoredQueues();
+        expect(Object.keys(restored.queues)).toEqual(['valid']);
+        expect(restored.queues.valid).toEqual(queue('valid'));
+        expect(restored.active).toBeNull();
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+  );
 });
 
 it('restores only valid batch destinations while scheduled changes are enabled', () => {

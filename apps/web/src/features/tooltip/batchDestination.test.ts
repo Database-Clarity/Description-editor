@@ -126,6 +126,31 @@ it('a closed batch retains its drafts and refuses a save', async () => {
   expect(s.useDraftStore.getState().drafts).toBe(s.before);
 });
 
+it('reconciles a confirmed save even when the local preview update fails', async () => {
+  const s = await setup();
+  const { saveReviewToBatch } = await import('../review/batches/saveDestination');
+  s.runtime.edit(s.batch.id, s.future, s.future, 'de', 'Confirmed German', 'm');
+  const notice = await saveReviewToBatch(
+    { kind: 'batch', id: s.batch.id },
+    [],
+    '',
+    {},
+    () => true,
+    async (changes) => changes,
+    () => {
+      throw new Error('Local preview failed');
+    },
+  );
+  expect(notice).toContain('Saved 1 tooltip to December patch');
+  expect(notice).toContain('Reload to see them.');
+  expect(s.fixture.members.get(s.batch.id)?.get(123)?.proposed.text.de?.text).toBe(
+    'Confirmed German',
+  );
+  expect(s.useBatchDraftStore.getState().drafts).toEqual({});
+  expect(s.useDraftStore.getState().drafts).toBe(s.before);
+  expect(s.useDataStore.getState().data!.bundle.tooltips).toBe(s.saved);
+});
+
 it('batch completion follows its own drafts, discard, and closed loads', async () => {
   const s = await setup();
   const { done } = await import('../queue/batchQueue');
