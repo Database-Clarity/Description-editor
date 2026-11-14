@@ -366,15 +366,29 @@ export function TermPopover({
       const rects = [...anchor.getClientRects()];
       const rect = rects[0] ?? anchor.getBoundingClientRect();
       if (!anchor.startContainer.isConnected) return close.current();
+      const area = visibleArea();
+      const placement = placeAnchored({
+        trigger: rect,
+        area,
+        width: element.offsetWidth,
+        height: element.scrollHeight,
+        align: 'start',
+      });
+      // Above the term when it fits there, so the popover never hides the next line of English
+      // while it is read (visual review 2026-11-14); below otherwise, as placeAnchored chose.
+      const aboveBottom = rect.top - 4;
+      const fitsAbove = aboveBottom - area.top >= element.scrollHeight;
       applyPlacement(
         element,
-        placeAnchored({
-          trigger: rect,
-          area: visibleArea(),
-          width: element.offsetWidth,
-          height: element.scrollHeight,
-          align: 'start',
-        }),
+        fitsAbove
+          ? {
+              ...placement,
+              side: 'above',
+              top: 'auto',
+              bottom: area.layoutHeight - aboveBottom,
+              maxHeight: aboveBottom - area.top,
+            }
+          : placement,
       );
     };
     place();

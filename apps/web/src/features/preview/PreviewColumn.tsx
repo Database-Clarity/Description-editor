@@ -262,22 +262,14 @@ export function VersionSwitch({
   value,
   hasEnhanced,
   onChange,
-  fill,
 }: {
   label: string;
   value: PreviewMode;
   hasEnhanced: boolean;
   onChange(mode: PreviewMode): void;
-  /** In a pane header: take the row's free room on phones (RightPane `data-pane-fill`). */
-  fill?: boolean;
 }) {
   return (
-    <div
-      className={styles.segmented}
-      role="group"
-      aria-label={label}
-      data-pane-fill={fill ? '' : undefined}
-    >
+    <div className={styles.segmented} role="group" aria-label={label}>
       {(['base', 'enhanced', 'compare'] as const).map((mode) => {
         const missing = !hasEnhanced && mode !== 'base';
         return (

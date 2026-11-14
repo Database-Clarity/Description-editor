@@ -1,3 +1,4 @@
+@use '../../data/variables' as theme;
 @use '../../ui/controls';
 
 // The open term: a CSS highlight over its text (registered only while its popover is open).
@@ -83,4 +84,9 @@
   padding: 1px 0.5rem;
   font-size: 0.75rem;
   white-space: nowrap;
+  // Touch: the app's small touch size (28px compact, 44px Large), one easy tap.
+  @include theme.mobile-or-coarse {
+    min-height: var(--tap-sm);
+    padding: 0 0.75rem;
+  }
 }

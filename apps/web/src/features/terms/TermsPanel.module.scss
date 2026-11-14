@@ -16,6 +16,9 @@
   padding: 1px 0.25rem;
   border-radius: 2px;
 }
+.row:has(.insert) {
+  cursor: pointer;
+}
 .row[aria-selected='true'] {
   background: var(--sel);
 }
@@ -46,6 +49,9 @@
 @media (max-width: 700px), (pointer: coarse) {
   .row {
     min-height: 2.75rem;
+  }
+  .insert {
+    min-height: var(--tap-sm);
   }
   .hint.hint {
     display: none;

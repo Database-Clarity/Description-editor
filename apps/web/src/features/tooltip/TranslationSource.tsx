@@ -16,8 +16,8 @@ import styles from './TooltipPage.module.scss';
  * this device and Settings gives the default until then.
  *
  * An item with an enhanced version shows Base, Enhanced, or Compare (default: both versions as
- * one text, the enhanced values beside the base ones), the preview's own switch; Raw shows the
- * English markup. Both picks are remembered on this device.
+ * one text, the enhanced values beside the base ones), the preview's own switch; Markup shows the
+ * English markup of the picked version. Both picks are remembered on this device.
  */
 export function TranslationSource({
   text,
@@ -80,37 +80,36 @@ export function TranslationSource({
               </select>
             </label>
           )}
-          {!showChanges && text && (
-            <>
-              {!raw && (
-                <VersionSwitch
-                  label="English version"
-                  value={version}
-                  hasEnhanced={Boolean(enhanced)}
-                  onChange={(next) => remember({ englishVersion: next })}
-                  fill
-                />
-              )}
-              <button
-                type="button"
-                role="switch"
-                aria-label="Raw English markup"
-                aria-checked={raw}
-                className={styles.rawToggle}
-                title={
-                  raw
-                    ? 'Show the English rendered (term marks show there)'
-                    : 'Show the English markup, read-only and copyable'
-                }
-                onClick={() => remember({ englishRaw: !raw })}
-              >
-                Raw
-              </button>
-            </>
-          )}
         </RightPaneHeader>
       }
     >
+      {!showChanges && text && (
+        // Its own row under the header: the header also holds the pane tabs, and a 384px pane
+        // cannot fit both (visual review 2026-11-14).
+        <div className={styles.englishBar}>
+          <VersionSwitch
+            label="English version"
+            value={version}
+            hasEnhanced={Boolean(enhanced)}
+            onChange={(next) => remember({ englishVersion: next })}
+          />
+          <button
+            type="button"
+            role="switch"
+            aria-label="English markup"
+            aria-checked={raw}
+            className={styles.markupToggle}
+            title={
+              raw
+                ? 'Show the English rendered (term marks show there; Ctrl+K, then G lists them)'
+                : 'Show the English markup, read-only and copyable'
+            }
+            onClick={() => remember({ englishRaw: !raw })}
+          >
+            Markup
+          </button>
+        </div>
+      )}
       {diff && showChanges ? (
         <EnglishDiffContent {...diff} />
       ) : raw && text ? (

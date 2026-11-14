@@ -78,6 +78,9 @@ export function TermsPanel({
             aria-selected={index === active}
             className={styles.row}
             onPointerMove={() => setActive(index)}
+            // The whole row inserts (one easy tap on a phone); Insert shows what a tap does.
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={canInsert ? () => onInsert(row.name) : undefined}
           >
             <span className={styles.english} lang="en">
               {row.term.en}
@@ -89,8 +92,6 @@ export function TermsPanel({
                 className={styles.insert}
                 tabIndex={-1}
                 title="Insert at the caret in the translation"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => onInsert(row.name)}
               >
                 Insert
               </button>
