@@ -1,6 +1,6 @@
 import { createPublicKey, generateKeyPairSync, verify } from 'node:crypto';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { contentHash, publishMonth, type Tooltip } from '@clarity/core';
+import { contentHash, publishMonth, translationStateOf, type Tooltip } from '@clarity/core';
 import {
   activate,
   approvedDigest,
@@ -341,7 +341,7 @@ describe('role x route matrix on stored members', () => {
     const newer = await rebase({
       ...current.text.en!,
       text: 'reworded',
-      updatedAt: '2026-12-01T00:00:00Z',
+      updatedAt: '2026-10-20T00:00:00Z',
     });
     expect(newer.status).toBe(200);
   });
@@ -830,6 +830,43 @@ describe('resolve', () => {
     expect(String(f.commits.at(-1)!.message).trimEnd().split('\n').at(-1)).toBe(
       'Clarity-Changed: 123=de',
     );
+  });
+  it('choosing upcoming English older than current restamps it, so current translations show outdated', async () => {
+    const { current } = published();
+    const withFrench: Tooltip = {
+      ...current,
+      text: {
+        ...current.text,
+        fr: {
+          text: 'courant',
+          updatedAt: current.text.en!.updatedAt,
+          updatedBy: 'eve',
+          sourceUpdatedAt: current.text.en!.updatedAt,
+        },
+      },
+    };
+    f.moveData({ 'tooltips/123.json': withFrench });
+    const file = stored('schedule/activation-conflicts/123.json') as BatchMember & {
+      currentAtRecord: Tooltip;
+    };
+    // The upcoming English is the older revision here.
+    expect(Date.parse(file.proposed.text.en!.updatedAt)).toBeLessThan(
+      Date.parse(current.text.en!.updatedAt),
+    );
+    const ok = await call(`/batches/${ID}/resolve`, {
+      hash: 123,
+      expectedCurrent: await contentHash(withFrench),
+      choices: { 'text.en': 'upcoming' },
+    });
+    expect(ok.status).toBe(200);
+    const written = stored('tooltips/123.json') as Tooltip;
+    expect(written.text.en?.text).toBe('upcoming');
+    expect(Date.parse(written.text.en!.updatedAt)).toBeGreaterThan(
+      Date.parse(current.text.en!.updatedAt),
+    );
+    expect(written.text.en?.updatedBy).toBe('alice');
+    expect(written.text.fr).toEqual(withFrench.text.fr);
+    expect(translationStateOf(written, 'fr').state).toBe('outdated');
   });
   it('refuses #{d} and <enhanced/> from the upcoming text unless the PIN declares markupBraces', async () => {
     const { current } = published();

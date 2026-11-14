@@ -557,7 +557,7 @@ describe('No translation impact (TR3)', () => {
     return next;
   };
   it('P1: a reworded save followed by a stamp-only save cannot reach a kept revision', async () => {
-    const first = translated('original, fixed', '2027-03-01T00:00:00Z');
+    const first = translated('original, fixed', '2026-10-20T00:00:00Z');
     expect((await fixture.request('/save', 'POST', change(translated(), first), 3)).status).toBe(
       200,
     );
@@ -604,6 +604,45 @@ describe('No translation impact (TR3)', () => {
     expect((await fixture.request('/save', 'POST', change(withoutEnglish, fresh), 3)).status).toBe(
       200,
     );
+  });
+  // Triage 1: translation stamps (O1) and future English revisions (O2).
+  it('O1 R5: a reworded English cannot mark an unchanged translation current', async () => {
+    const next = translated('original, fixed', '2026-10-20T00:00:00Z');
+    next.text.de = { ...next.text.de!, sourceUpdatedAt: '2026-10-20T00:00:00Z' };
+    const response = await fixture.request('/save', 'POST', change(translated(), next), 3);
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: 'Tooltip 123: unchanged de text must keep its stored revision',
+    });
+    expect(fixture.commits).toHaveLength(0);
+  });
+  it('O1 R6: a translation cannot claim a source revision newer than its English', async () => {
+    for (const text of ['Deutsch', 'Deutsch neu']) {
+      const next = translated();
+      next.text.de = { ...next.text.de!, text, sourceUpdatedAt: '2099-01-01T00:00:00Z' };
+      const response = await fixture.request('/save', 'POST', change(translated(), next), 4);
+      expect(response.status).toBe(422);
+    }
+    // Changed text stamped against the stored English (the editor's stamp) still saves.
+    const honest = translated();
+    honest.text.de = { ...honest.text.de!, text: 'Deutsch neu', updatedAt: '2026-10-03T00:00:00Z' };
+    expect((await fixture.request('/save', 'POST', change(translated(), honest), 4)).status).toBe(
+      200,
+    );
+  });
+  it('O2: refuses an English revision far in the future, except the stored + 1 ms clamp', async () => {
+    const future = translated('original, fixed', '2099-01-01T00:00:00Z');
+    const refused = await fixture.request('/save', 'POST', change(translated(), future), 2);
+    expect(refused.status).toBe(422);
+    expect(await refused.json()).toMatchObject({
+      error: 'Tooltip 123: the English revision is in the future; check your device clock',
+    });
+    // A stored revision already ahead (another device's clock): the editor's clamp still saves.
+    const ahead = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const stored = translated('original', ahead);
+    fixture.moveData({ 'tooltips/123.json': stored });
+    const clamp = translated('original, fixed', new Date(Date.parse(ahead) + 1).toISOString());
+    expect((await fixture.request('/save', 'POST', change(stored, clamp), 2)).status).toBe(200);
   });
   it('a commit message cannot forge the audit line in the final trailer block', async () => {
     const body = {

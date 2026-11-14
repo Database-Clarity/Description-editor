@@ -20,7 +20,13 @@ import {
 import { RefRace, type GitHub } from './github.js';
 import { withSandboxPointers } from './sandboxPointers.js';
 import { body, HttpError, json } from './http.js';
-import { checkEdit, checkEnglishRevision, permissions, requireAccess } from './permissions.js';
+import {
+  checkEdit,
+  checkEnglishRevision,
+  checkTranslationStamps,
+  permissions,
+  requireAccess,
+} from './permissions.js';
 import type { Identity } from './types.js';
 
 const changeSchema = z
@@ -131,6 +137,7 @@ export async function save(request: Request, github: GitHub, user: Identity): Pr
       // Against the real head, after the merge: what this commit does to the English revision.
       if (checkEnglishRevision(access, head, merged, input.noTranslationImpact === true) === 'kept')
         kept.push(merged.hash);
+      checkTranslationStamps(head, merged);
       refuseUnlowerable(merged, await exporterPin(merged), 'saved');
       tooltips.push(merged);
       // Per-tooltip hints avoid attributing another item in a batch to this file.

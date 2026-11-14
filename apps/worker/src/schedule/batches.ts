@@ -30,7 +30,12 @@ import { loadAliases } from '../catalog.js';
 import { refuseUnlowerable } from '../elementTags.js';
 import { blobContent, RefRace, type GitHub, type TreeNode } from '../github.js';
 import { body, HttpError, json } from '../http.js';
-import { checkEdit, checkEnglishRevision, type Access } from '../permissions.js';
+import {
+  checkEdit,
+  checkEnglishRevision,
+  checkTranslationStamps,
+  type Access,
+} from '../permissions.js';
 import { withSandboxPointers } from '../sandboxPointers.js';
 import type { Identity } from '../types.js';
 import {
@@ -427,6 +432,7 @@ export async function saveBatch(
         // A batch save has no "No translation impact" tick (direct saves only, with their audit
         // trailer): an English change needs a new, newer revision.
         checkEnglishRevision(access, stored.proposed, proposed, false);
+        checkTranslationStamps(stored.proposed, proposed);
         refuseUnlowerable(proposed, pin, 'saved');
         const member = batchMemberSchema.parse({
           ...stored,
@@ -469,6 +475,7 @@ export async function saveBatch(
         if (!changed.length) continue; // nothing to stage
         const proposed = overlay(current, change.next, changed);
         checkEnglishRevision(access, current, proposed, false);
+        checkTranslationStamps(current, proposed);
         refuseUnlowerable(proposed, pin, 'saved');
         const member = batchMemberSchema.parse({
           hash: change.hash,
@@ -573,6 +580,7 @@ export async function rebaseBatch(
     const proposed = overlay(current, input.next, changed);
     // Activation commits the proposal's English stamps: same revision rule as a batch save.
     checkEnglishRevision(state.access, current, proposed, false);
+    checkTranslationStamps(current, proposed);
     refuseUnlowerable(proposed, exporterPin(state), 'saved');
     const member = batchMemberSchema.parse({
       hash: input.hash,

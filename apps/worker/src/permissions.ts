@@ -116,11 +116,24 @@ export function checkEnglishRevision(
   head: Tooltip | null,
   next: Tooltip,
   noTranslationImpact: boolean,
+  now = Date.now(),
 ): 'none' | 'new' | 'kept' {
   const before = head?.text.en;
   const after = next.text.en;
   if (!after) return 'none';
+  // A far-future revision would flip every translation to the English fallback and freeze the
+  // gap (later saves clamp to it + 1 ms): refuse one more than 5 minutes ahead of Worker time,
+  // except exactly the stored revision + 1 ms (the editor's clamp behind such a stamp).
+  const future = () => {
+    const at = Date.parse(after.updatedAt);
+    if (at > now + 5 * 60_000 && !(before && at === Date.parse(before.updatedAt) + 1))
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: the English revision is in the future; check your device clock`,
+      );
+  };
   if (!before) {
+    future();
     const sources = languages
       .map((lang) => (lang === 'en' ? undefined : head?.text[lang]?.sourceUpdatedAt))
       .filter((source): source is string => source !== undefined)
@@ -163,5 +176,75 @@ export function checkEnglishRevision(
       422,
       `Tooltip ${next.hash}: the new English revision must be newer than the stored one`,
     );
+  future();
   return 'new';
+}
+
+/**
+ * Translation stamps, by the same rule (TR3 triage O1): a translation whose text is unchanged or
+ * changed only in markup keeps the stored `updatedAt`, `updatedBy`, and `sourceUpdatedAt`
+ * exactly; a changed one may not claim a source revision later than the English it is saved
+ * with. Otherwise a crafted save could mark a translation current through an English rewrite
+ * (the tick's effect, unflagged) or make it permanently immune to outdated and fallback state.
+ * The editor's enricher always satisfies both (it reuses the stored entry, and stamps a changed
+ * translation with the English revision).
+ */
+export function checkTranslationStamps(head: Tooltip | null, next: Tooltip): void {
+  const english = next.text.en;
+  for (const lang of languages) {
+    if (lang === 'en') continue;
+    const before = head?.text[lang];
+    const after = next.text[lang];
+    if (!after) continue;
+    if (before && (after.text === before.text || isMarkupOnly(before.text, after.text))) {
+      if (
+        after.updatedAt !== before.updatedAt ||
+        after.updatedBy !== before.updatedBy ||
+        after.sourceUpdatedAt !== before.sourceUpdatedAt
+      )
+        throw new HttpError(
+          422,
+          `Tooltip ${next.hash}: unchanged ${lang} text must keep its stored revision`,
+        );
+      continue;
+    }
+    if (
+      english &&
+      after.sourceUpdatedAt !== undefined &&
+      !(Date.parse(after.sourceUpdatedAt) <= Date.parse(english.updatedAt))
+    )
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: the ${lang} source revision is newer than the English revision`,
+      );
+  }
+}
+
+/**
+ * The Worker twin of the editor's stampEnglish, for English composed on the Worker (resolving a
+ * batch activation conflict): the same or markup-only text keeps current's English revision;
+ * other text keeps its own revision when that is newer than current's, else gets `at` (or
+ * current's plus 1 ms) with `login` as author. Translations are untouched.
+ */
+export function alignEnglishRevision(
+  current: Tooltip | null,
+  next: Tooltip,
+  login: string,
+  at: string,
+): Tooltip {
+  const english = next.text.en;
+  const previous = current?.text.en;
+  if (!english || !previous) return next;
+  let en = english;
+  if (english.text === previous.text || isMarkupOnly(previous.text, english.text))
+    en = { ...previous, text: english.text };
+  else if (!(Date.parse(english.updatedAt) > Date.parse(previous.updatedAt))) {
+    const kept = Date.parse(previous.updatedAt);
+    en = {
+      ...english,
+      updatedAt: kept >= Date.parse(at) ? new Date(kept + 1).toISOString() : at,
+      updatedBy: login,
+    };
+  }
+  return en === english ? next : { ...next, text: { ...next.text, en } };
 }
