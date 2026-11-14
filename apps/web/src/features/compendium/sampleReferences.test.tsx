@@ -1,3 +1,4 @@
+import { prepareMarkup } from '../../../../../packages/core/src/markup/prepare';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -314,4 +315,54 @@ it('keeps arrow approvals and validated newer raw proofs, while rejecting change
     )[0].entries[0];
     expect(referenceCurrent(raw, next, ref.baseline, source)).toBe(false);
   }
+});
+
+it.each([
+  ['import main from 11', { '11': 'var e5 = 10' }],
+  ['import vars from 11', { '11': 'export vars (\nvar e5 = 10\n)' }],
+  ['import main from global', { '1': 'var e5 = 10' }],
+  ['import main from 11', { '11': 'import main from 12', '12': 'var e5 = 10' }],
+] as const)('invalidates numeric arrow changes with imported variables: %s', (line, imports) => {
+  const { source, editor, proposal } = fixture();
+  const oldText = `${line}\n#e5`;
+  const newText = `${line}\n<enhanced/>5`;
+  const globals = { variables: 'var e = ARROW', titles: '', imports };
+  expect(prepareMarkup(oldText, globals, []).text).toBe('10');
+  expect(prepareMarkup(newText, globals, []).text).toBe('ARROW5');
+  const categories = () =>
+    reviewCategories(
+      reviewQueue(editor, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+      editor,
+      new Map(),
+      false,
+    );
+  editor.bundle.tooltips[10].text.en = { text: oldText, updatedAt: 'same', updatedBy: 'same' };
+  const before = categories()[0].entries[0];
+  const baseline = `commit|${sourceFingerprint(source.tabs)}`;
+  const id = categoryId(before.category);
+  const ref = sampleReference(before, id, baseline, '', 'accepted', proposal.match, source);
+  const document = guidanceSchema.parse({
+    version: 1,
+    scope: 'test',
+    baseline,
+    categories: {
+      [id]: {
+        id,
+        name: 'Traits',
+        rule: '',
+        count: 1,
+        hashes: [10],
+        active: true,
+        comment: '',
+        references: { 10: ref },
+      },
+    },
+  });
+  editor.bundle.tooltips[10].text.en!.text = newText;
+  const after = categories();
+  expect(after[0].entries[0].sampleEvidence).not.toBe(before.sampleEvidence);
+  expect(referenceCurrent(ref, after[0].entries[0], baseline, source)).toBe(false);
+  const result = rebaselineGuidance(document, after, source, 'new', 'test');
+  expect(result.renewed).toEqual([]);
+  expect(result.changed.map((entry) => entry.hash)).toEqual([10]);
 });
