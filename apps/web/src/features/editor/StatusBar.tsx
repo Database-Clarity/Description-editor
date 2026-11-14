@@ -219,7 +219,9 @@ export function StatusBar({
       issues.length,
       retiredCount,
       glyphCount,
-      parityCount,
+      // The parity label's width changes only with its digit count and "differs"/"differ": typing a
+      // number can change the count on every key, and each refit lays the bar out again.
+      parityCount <= 1 ? parityCount : `n${String(parityCount).length}`,
       terms === undefined ? '' : terms.count,
       conflicts?.count ?? 0,
       rawView !== undefined && Boolean(onRawView),
