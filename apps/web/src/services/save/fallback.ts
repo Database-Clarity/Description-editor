@@ -22,6 +22,18 @@ export function liveFallback(
 ): LiveFallback {
   const result: LiveFallback = {};
   for (const { hash, base, next } of changes) {
+    // Only a translation with a source revision can fall back (usesEnglishFallback). A stamped
+    // entry is the base's (unchanged text) or the draft's restamped to the new English (gap 0),
+    // so without such an entry on either side nothing can fall back: skip the stamping work.
+    if (
+      !languages.some(
+        (lang) =>
+          lang !== 'en' &&
+          (base?.text[lang]?.sourceUpdatedAt !== undefined ||
+            next.text[lang]?.sourceUpdatedAt !== undefined),
+      )
+    )
+      continue;
     let stamped;
     try {
       stamped = stampRevisions(base ?? undefined, next, '', now, noTranslationImpact);

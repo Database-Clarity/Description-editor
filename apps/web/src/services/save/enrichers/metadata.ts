@@ -18,8 +18,9 @@ export function noImpactApplies(before: Tooltip | undefined, next: Tooltip): boo
     previous &&
     english &&
     english.text !== previous.text &&
-    !isMarkupOnly(previous.text, english.text) &&
-    hasTranslation(next),
+    // Cheapest first: the review evaluates this for every change on the main thread.
+    hasTranslation(next) &&
+    !isMarkupOnly(previous.text, english.text),
   );
 }
 
