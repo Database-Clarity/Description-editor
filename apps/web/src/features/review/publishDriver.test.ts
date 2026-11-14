@@ -45,6 +45,7 @@ function harness(store = createMemoryOpStore()): Harness {
     make() {
       const tracked: OpStore = {
         ...store,
+        list: (userId) => store.list(userId),
         add: async (op) => {
           log.push('store.add');
           return store.add(op);
@@ -757,7 +758,7 @@ it('does not send later group chunks after a definite earlier POST failure, even
   const saved = [...h.store.records.values()];
   expect(h.api.post).toHaveBeenCalledTimes(1);
   expect(saved.map((entry) => entry.status)).toEqual(['failed', 'failed']);
-  expect(saved[1]!.error).toContain('This chunk was not sent');
+  expect(saved[1]!.error).toContain('Further sends of this chunk were stopped');
   await first.dismiss(saved[0]!.opId);
   first.stop();
   const second = h.make();
@@ -788,4 +789,40 @@ it('uses persisted chunk order rather than random ULID order after reloading an 
   await second.start('1');
   await vi.advanceTimersByTimeAsync(publishTiming.foreignAttemptMs + 100);
   expect(new Set(h.api.post.mock.calls.map(([body]) => body.hashes[0]))).toEqual(new Set([0]));
+});
+
+it('backs off a group acceptance check when browser storage cannot be read', async () => {
+  const h = harness();
+  const driver = h.make();
+  await driver.start('1');
+  h.api.post.mockRejectedValue(new Error('offline'));
+  await driver.create(
+    Array.from({ length: 51 }, (_, hash) => ({ hash, digest: digest(1), previous: undefined })),
+  );
+  await settle();
+  const list = vi.spyOn(h.store, 'list').mockRejectedValue(new Error('storage unavailable'));
+  const posts = h.api.post.mock.calls.length;
+  await vi.advanceTimersByTimeAsync(60_000);
+  expect(h.api.post).toHaveBeenCalledTimes(posts);
+  expect(list.mock.calls.length).toBeLessThan(20);
+});
+
+it('never sends an old account’s operation after switching accounts during the attempt write', async () => {
+  const h = harness();
+  const update = h.store.update;
+  let release!: () => void;
+  const blocked = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  h.store.update = async (opId, change) => {
+    await blocked;
+    return update(opId, change);
+  };
+  const driver = h.make();
+  await driver.start('1');
+  await driver.create(inputs);
+  await driver.start('2');
+  release();
+  await settle();
+  expect(h.api.post).not.toHaveBeenCalled();
 });

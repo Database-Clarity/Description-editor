@@ -511,7 +511,7 @@ export class PublishDriver {
         {
           status: 'failed',
           error:
-            'An earlier chunk was not accepted. This chunk was not sent; review the remaining tooltips and publish again.',
+            'An earlier chunk was not accepted. Further sends of this chunk were stopped; it may already be queued. Check live status before publishing again.',
         },
         true,
       );
@@ -532,8 +532,14 @@ export class PublishDriver {
         try {
           stored = await this.deps.store.list(op.userId);
         } catch {
-          if (generation === this.generation)
+          if (generation === this.generation) {
+            const count = (this.attempts.get(opId)?.count ?? 0) + 1;
+            this.attempts.set(opId, {
+              count,
+              at: this.deps.now() + publishTiming.sendBackoffMs(count - 1),
+            });
             this.note(opId, 'Could not check earlier chunks; retrying.');
+          }
           return;
         }
         if (generation !== this.generation) return;
@@ -572,6 +578,7 @@ export class PublishDriver {
       await this.deps.store
         .update(opId, (current) => ({ ...current, polledAt: now }))
         .catch(() => undefined);
+      if (generation !== this.generation) return;
       let result: Awaited<ReturnType<PublishApi['post']>>;
       try {
         result = await this.deps.api.post({ opId, hashes: op.hashes, expected: op.expected });

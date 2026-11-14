@@ -167,7 +167,13 @@ export interface Options {
   runUrl: string;
   backoff?: (attempt: number) => Promise<void>;
 }
-export class TextlessConsumerOutput extends Error {
+export class ConsumerOutputRejected extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConsumerOutputRejected';
+  }
+}
+export class TextlessConsumerOutput extends ConsumerOutputRejected {
   constructor(message: string) {
     super(message);
     this.name = 'TextlessConsumerOutput';
@@ -422,8 +428,13 @@ export class Publisher {
       for (const preset of deployedLegacyPresets) {
         const convert = (
           input: unknown,
-        ): Record<string, { descriptions?: Record<string, unknown>; aliasOf?: number }> =>
-          JSON.parse(new TextDecoder().decode(buildLegacy(input as LegacyInput, preset)));
+        ): Record<string, { descriptions?: Record<string, unknown>; aliasOf?: number }> => {
+          try {
+            return JSON.parse(new TextDecoder().decode(buildLegacy(input as LegacyInput, preset)));
+          } catch (error) {
+            throw new ConsumerOutputRejected(`${preset} conversion failed: ${String(error)}`);
+          }
+        };
         const before = convert(live),
           after = convert(merged);
         for (const [hash, row] of Object.entries(after)) {
@@ -433,7 +444,7 @@ export class Publisher {
             Object.keys(entry.descriptions ?? {}).length === 0;
           if (empty(row) && !empty(before[hash]))
             throw new TextlessConsumerOutput(
-              `TextlessConsumerOutput: ${preset} tooltip ${hash} has no descriptions; nothing published`,
+              `${preset} tooltip ${hash} has no descriptions; nothing published`,
             );
         }
       }
@@ -603,6 +614,29 @@ export class Publisher {
     const p = paths(opId),
       s = this.head(this.options.dataBranch),
       tree = this.git.tree(s);
+    try {
+      await this.publishOperation(opId, s, tree);
+    } catch (error) {
+      if (!(error instanceof ConsumerOutputRejected)) throw error;
+      // A content refusal is terminal: only the rejection Record changes data. Never
+      // leave it at the queue head, where it would block every later user's publish.
+      await this.record(
+        opId,
+        undefined,
+        undefined,
+        { status: 'rejected', error: String(error) },
+        tree[p.request],
+      );
+      try {
+        const candidate = this.git.head(p.candidate);
+        if (candidate) this.git.cas(p.candidate, candidate, undefined);
+      } catch {
+        /* A terminal Record is authoritative; candidate cleanup is best effort. */
+      }
+    }
+  }
+  private async publishOperation(opId: string, s: string, tree: Tree): Promise<void> {
+    const p = paths(opId);
     if (tree[p.log]) {
       await this.duplicate(opId);
       return;
@@ -746,7 +780,12 @@ export class Publisher {
       }
       if (l === r.liveParent) {
         // A candidate may predate this safety gate; validate it again before any live CAS.
-        this.merge(l, r);
+        const checked = this.merge(l, r);
+        const candidateBytes = this.git.blob(this.git.tree(c)['liveDescriptions.json']);
+        if (candidateBytes !== checked.bytes)
+          throw new ConsumerOutputRejected(
+            'stored candidate differs from its checked receipt; nothing published',
+          );
         let pushed = false;
         try {
           this.git.cas(dataRef(this.options.liveBranch), l, c);

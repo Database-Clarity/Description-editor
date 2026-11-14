@@ -307,12 +307,31 @@ describe.each(['simulator', 'remote'] as const)('%s repository contract', (trans
     });
     f.change(D, { 'tooltips/1209885908.json': source });
     await f.request(A, [source.hash], { [source.hash]: await publishableHash(source) });
-    const live = f.git.head(L),
-      data = f.git.head(D);
-    await expect(f.pub.operation(A)).rejects.toThrow(/TextlessConsumerOutput.*1209885908/);
+    f.change(D, {
+      'config/permissions.json': {
+        users: { '1': { login: 'alice', role: 'editor' }, '2': { login: 'bob', role: 'editor' } },
+      },
+    });
+    await f.request(B, [123], undefined, { requester: { id: 2, login: 'bob' } });
+    const live = f.git.head(L);
+    await f.pub.operation(A);
     expect(f.git.head(L)).toBe(live);
-    expect(f.git.head(D)).toBe(data);
+    const rejected = f.git.head(D)!;
+    expect(f.pub.read(f.git.tree(rejected), paths(A).log)).toMatchObject({
+      result: {
+        status: 'rejected',
+        error: expect.stringMatching(/TextlessConsumerOutput.*1209885908/),
+      },
+    });
+    expect(f.git.git(['show', '-s', '--format=%an <%ae>|%cn <%ce>', rejected]).trim()).toBe(
+      'alice <1+alice@users.noreply.github.com>|clarity-editor-backend[bot] <clarity-editor-backend[bot]@users.noreply.github.com>',
+    );
     expect(f.git.head(paths(A).candidate)).toBeUndefined();
+    await f.pub.run();
+    f.assertDone(B);
+    expect(
+      f.pub.read<Record<string, string>>(f.git.tree(f.git.head(D)!), 'live/pushed.json'),
+    ).not.toHaveProperty('1209885908');
   });
 
   it('credits Publish, recovered Record, and bundle commits from the signed requester and app', async () => {
@@ -398,6 +417,37 @@ describe.each(['simulator', 'remote'] as const)('%s repository contract', (trans
     await f.request();
     await f.pub.operation(A);
     f.assertDone();
+  });
+
+  it('rejects an unsafe stored candidate before live CAS and continues the queue', async () => {
+    const f = await setup();
+    await f.request();
+    const cas = f.git.cas.bind(f.git);
+    f.git.cas = (ref, old, next) => {
+      if (ref === L) throw new Error('hold live');
+      cas(ref, old, next);
+    };
+    f.options.backoff = async () => {
+      throw new Error('stop before live');
+    };
+    await expect(f.pub.operation(A)).rejects.toThrow('stop before live');
+    f.git.cas = cas;
+    f.options.backoff = async () => {};
+    const live = f.git.head(L),
+      candidate = f.git.head(paths(A).candidate)!;
+    const tree = f.git.tree(candidate);
+    tree['liveDescriptions.json'] = f.git.writeBlob(encode({ perks: {}, databaseSettings: {} }));
+    const unsafe = f.git.commit(live, tree, 'Simulate an older unsafe candidate');
+    f.git.cas(paths(A).candidate, candidate, unsafe);
+    await f.request(B);
+    await f.pub.operation(A);
+    expect(f.git.head(L)).toBe(live);
+    expect(f.git.head(paths(A).candidate)).toBeUndefined();
+    expect(f.pub.read(f.git.tree(f.git.head(D)!), paths(A).log)).toMatchObject({
+      result: { status: 'rejected', error: expect.stringContaining('stored candidate differs') },
+    });
+    await f.pub.run();
+    f.assertDone(B);
   });
 
   async function setup() {
