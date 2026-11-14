@@ -288,7 +288,7 @@ export const HistoryEntry = memo(function HistoryEntry(props: HistoryEntryProps)
         {props.noTranslationImpact && (
           <span
             className={styles.noImpact}
-            title="The editor marked this English change as having no translation impact: translations stayed current."
+            title="Marked at save as having no translation impact: translations stayed current."
           >
             English change marked: no translation impact
           </span>

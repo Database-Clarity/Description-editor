@@ -80,5 +80,34 @@ export function stampRevisions(
   return { ...next, text };
 }
 
+/**
+ * `next` with its English aligned to `current` by the Worker's English revision rule, for writes
+ * that compose English from elsewhere (a batch rebase choosing the upcoming English): the same or
+ * markup-only text keeps current's revision; other text keeps its own revision when that is newer
+ * than current's, else gets a new one (now, or current's plus 1 ms). Translations are untouched.
+ */
+export function stampEnglish(
+  current: Tooltip | null,
+  next: Tooltip,
+  login: string,
+  now: string,
+): Tooltip {
+  const english = next.text.en;
+  const previous = current?.text.en;
+  if (!english || !previous) return next;
+  let en = english;
+  if (english.text === previous.text || isMarkupOnly(previous.text, english.text))
+    en = { ...previous, text: english.text };
+  else if (!(Date.parse(english.updatedAt) > Date.parse(previous.updatedAt))) {
+    const kept = Date.parse(previous.updatedAt);
+    en = {
+      ...english,
+      updatedAt: kept >= Date.parse(now) ? new Date(kept + 1).toISOString() : now,
+      updatedBy: login,
+    };
+  }
+  return en === english ? next : { ...next, text: { ...next.text, en } };
+}
+
 export const metadata: SaveEnricher = async ({ before, next, user, now, noTranslationImpact }) =>
   stampRevisions(before, next, user.login, now ?? new Date().toISOString(), noTranslationImpact);

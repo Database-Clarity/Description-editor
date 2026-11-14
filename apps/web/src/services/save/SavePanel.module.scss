@@ -1,3 +1,5 @@
+@use '../../data/variables' as theme;
+
 // "No translation impact" (TR3): checkbox, label, and its caption aligned under the label text.
 .impact {
   display: grid;
@@ -7,8 +9,12 @@
   align-items: center;
   margin-block: 0.75rem;
 
+  // Native checkboxes ignore the root font size: size it in rem so it follows the UI scale.
   input {
+    width: 0.875rem;
+    height: 0.875rem;
     margin: 0;
+    accent-color: var(--accent-ink);
   }
 
   p {
@@ -17,5 +23,13 @@
     color: var(--text2);
     font-size: 0.75rem;
     line-height: 1.35;
+  }
+}
+
+@include theme.coarse-pointer {
+  .impact label {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
   }
 }

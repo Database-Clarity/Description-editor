@@ -1,6 +1,7 @@
 import {
   hasTooltipText,
   isMarkupOnly,
+  languages,
   isTextlessDescription,
   permissionsSchema,
   stableStringify,
@@ -104,7 +105,11 @@ export function checkEdit(access: Access, base: Tooltip | null, next: Tooltip): 
  * - otherwise the new revision must be newer than the stored one: a backdated revision would
  *   keep translations current without the flag.
  * Saves without such an English change (translation-only, fields, markup-only) return 'none'
- * and ignore the flag.
+ * and ignore the flag. Their English must keep the stored revision exactly (the editor's
+ * enricher does): otherwise a later save could move the stamps back and arrive at a kept
+ * revision unflagged, or move them forward and flip translations to the English fallback.
+ * English (re-)added to a stored tooltip that kept translations must be newer than the English
+ * those translations were based on.
  */
 export function checkEnglishRevision(
   access: Access,
@@ -114,8 +119,27 @@ export function checkEnglishRevision(
 ): 'none' | 'new' | 'kept' {
   const before = head?.text.en;
   const after = next.text.en;
-  if (!before || !after || after.text === before.text || isMarkupOnly(before.text, after.text))
+  if (!after) return 'none';
+  if (!before) {
+    const sources = languages
+      .map((lang) => (lang === 'en' ? undefined : head?.text[lang]?.sourceUpdatedAt))
+      .filter((source): source is string => source !== undefined)
+      .map((source) => Date.parse(source));
+    if (sources.length && !(Date.parse(after.updatedAt) > Math.max(...sources)))
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: the new English revision must be newer than its translations' source`,
+      );
     return 'none';
+  }
+  if (after.text === before.text || isMarkupOnly(before.text, after.text)) {
+    if (after.updatedAt !== before.updatedAt || after.updatedBy !== before.updatedBy)
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: unchanged English must keep its stored revision`,
+      );
+    return 'none';
+  }
   if (after.updatedAt === before.updatedAt) {
     if (!noTranslationImpact)
       throw new HttpError(

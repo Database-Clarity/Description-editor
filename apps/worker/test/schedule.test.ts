@@ -311,6 +311,40 @@ describe('role x route matrix on stored members', () => {
     );
   });
 
+  it('rebase refuses an English change that keeps or backdates the current revision', async () => {
+    const proposed = (stored(memberPath()) as BatchMember).proposed;
+    const current = withText(tooltip(), 'fr', 'courant');
+    f.moveData({ 'tooltips/123.json': current });
+    const rebase = (en: Tooltip['text']['en']) =>
+      call(
+        `/batches/${ID}/rebase`,
+        {
+          revision: storedBatch().revision,
+          hash: 123,
+          base: current,
+          next: { ...proposed, text: { ...proposed.text, en } },
+        },
+        EDITOR,
+      );
+    const kept = await rebase({ ...current.text.en!, text: 'silently reworded' });
+    expect(kept.status).toBe(422);
+    expect(kept.body.error).toBe(
+      'Tooltip 123: English text changed without a new English revision',
+    );
+    const older = await rebase({
+      ...current.text.en!,
+      text: 'reworded',
+      updatedAt: '2026-09-01T00:00:00Z',
+    });
+    expect(older.status).toBe(422);
+    expect(stored(memberPath())).toMatchObject({ proposed });
+    const newer = await rebase({
+      ...current.text.en!,
+      text: 'reworded',
+      updatedAt: '2026-12-01T00:00:00Z',
+    });
+    expect(newer.status).toBe(200);
+  });
   it('rebase and remove: maintainer and editor only', async () => {
     const proposed = (stored(memberPath()) as BatchMember).proposed;
     f.moveData({ 'tooltips/123.json': withText(tooltip(), 'fr', 'courant') });

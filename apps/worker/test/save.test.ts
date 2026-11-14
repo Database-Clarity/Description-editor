@@ -550,6 +550,61 @@ describe('No translation impact (TR3)', () => {
       'Edit tooltip\n\nClarity-No-Translation-Impact: 123\nClarity-Changed: 123=en;124=en',
     );
   });
+  // Security review round 1 (M1): stamps of unchanged English, and English re-added after a delete.
+  const stampOnly = (updatedAt: string, updatedBy = 'alice', text = 'original') => {
+    const next = translated(text, updatedAt);
+    next.text.en!.updatedBy = updatedBy;
+    return next;
+  };
+  it('P1: a reworded save followed by a stamp-only save cannot reach a kept revision', async () => {
+    const first = translated('original, fixed', '2027-03-01T00:00:00Z');
+    expect((await fixture.request('/save', 'POST', change(translated(), first), 3)).status).toBe(
+      200,
+    );
+    fixture.moveData({ 'tooltips/123.json': first });
+    const back = stampOnly('2026-10-01T00:00:00Z', 'alice', 'original, fixed');
+    const response = await fixture.request('/save', 'POST', change(first, back), 3);
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: 'Tooltip 123: unchanged English must keep its stored revision',
+    });
+  });
+  it('P2, P4, P6: unchanged or markup-only English cannot move its stamps (any role)', async () => {
+    fixture.moveData({ 'tooltips/123.json': translated('<solar/>Scorch') });
+    const markup = translated('<solar Scorch />', '2026-09-01T00:00:00Z');
+    const bodies = [
+      change(translated('<solar/>Scorch'), markup),
+      change(
+        translated('<solar/>Scorch'),
+        stampOnly('2099-01-01T00:00:00Z', 'alice', '<solar/>Scorch'),
+      ),
+      change(
+        translated('<solar/>Scorch'),
+        stampOnly('2026-10-01T00:00:00Z', 'mallory', '<solar/>Scorch'),
+      ),
+    ];
+    for (const body of bodies)
+      for (const id of [1, 3]) {
+        const response = await fixture.request('/save', 'POST', body, id);
+        expect(response.status).toBe(422);
+      }
+    expect(fixture.commits).toHaveLength(0);
+  });
+  it("P10: English re-added after a delete must be newer than its translations' source", async () => {
+    const withoutEnglish = translated();
+    delete withoutEnglish.text.en;
+    fixture.moveData({ 'tooltips/123.json': withoutEnglish });
+    const readded = translated('reworded', '2026-10-01T00:00:00Z');
+    const refused = await fixture.request('/save', 'POST', change(withoutEnglish, readded), 3);
+    expect(refused.status).toBe(422);
+    expect(await refused.json()).toMatchObject({
+      error: "Tooltip 123: the new English revision must be newer than its translations' source",
+    });
+    const fresh = translated('reworded', '2026-10-05T00:00:00Z');
+    expect((await fixture.request('/save', 'POST', change(withoutEnglish, fresh), 3)).status).toBe(
+      200,
+    );
+  });
   it('a commit message cannot forge the audit line in the final trailer block', async () => {
     const body = {
       ...change(translated(), translated('original, fixed', '2026-10-05T00:00:00Z')),

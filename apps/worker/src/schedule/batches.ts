@@ -571,6 +571,8 @@ export async function rebaseBatch(
     if (!changed.length)
       throw new HttpError(422, 'Nothing left to publish; remove the tooltip from the batch');
     const proposed = overlay(current, input.next, changed);
+    // Activation commits the proposal's English stamps: same revision rule as a batch save.
+    checkEnglishRevision(state.access, current, proposed, false);
     refuseUnlowerable(proposed, exporterPin(state), 'saved');
     const member = batchMemberSchema.parse({
       hash: input.hash,

@@ -8,7 +8,7 @@ import {
 } from '@clarity/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Change, Me } from '../api';
-import { noImpactApplies, stampRevisions } from './enrichers/metadata';
+import { noImpactApplies, stampEnglish, stampRevisions } from './enrichers/metadata';
 import { liveFallback, noImpactAvailable } from './fallback';
 import { editorData } from './fixtures.testSupport';
 import { prepareChanges, validateChanges } from './pipeline';
@@ -377,5 +377,24 @@ describe('EXPORT-FALLBACK-VALIDATION: the live English fallback is validated', (
     const change = { hash: 124, base: t124, next: { ...t124, associated: [5] } };
     const fallback = liveFallback([change], iso(NOW), false);
     expect(errors(validateChanges([change], data, fallback))).toEqual([]);
+  });
+});
+
+describe('stampEnglish (batch rebase): the Worker revision rule, translations untouched', () => {
+  const current = saved;
+  const upcoming = (text: string, at: number) => ({
+    ...saved,
+    text: { ...saved.text, en: { text, updatedAt: iso(at), updatedBy: 'proposer' } },
+  });
+  it('keeps a newer upcoming revision, restamps an older one, and aligns unchanged text', () => {
+    const newer = upcoming('Upcoming', T0 + DAY);
+    expect(stampEnglish(current, newer, 'e', iso(NOW))).toBe(newer);
+    const older = stampEnglish(current, upcoming('Upcoming', T0 - DAY), 'e', iso(NOW));
+    expect(older.text.en).toEqual({ text: 'Upcoming', updatedAt: iso(NOW), updatedBy: 'e' });
+    expect(older.text.de).toBe(saved.text.de);
+    const behind = stampEnglish(current, upcoming('Upcoming', T0 - DAY), 'e', iso(T0 - 2 * DAY));
+    expect(behind.text.en?.updatedAt).toBe(iso(T0 + 1));
+    const same = stampEnglish(current, upcoming('English one', T0 + DAY), 'e', iso(NOW));
+    expect(same.text.en).toEqual(saved.text.en);
   });
 });
