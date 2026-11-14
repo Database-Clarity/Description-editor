@@ -1,8 +1,9 @@
 /**
  * The term matcher (TR2 official names now; the glossary, TR9, adds entries from its own source).
  * Matches English terms in the English text a translator reads: whole words (Unicode letters and
- * digits), longest term first, the words of a term joined by one space or hyphen, case-insensitive
- * unless the entry asks for case. The last word also matches the regular English endings (-s,
+ * digits), longest term first, the words of a term joined as the term joins them (one space or
+ * hyphen, either way; any other punctuation exactly, so "Ager's Scepter" needs its apostrophe,
+ * straight or curly), case-insensitive unless the entry asks for case. The last word also matches the regular English endings (-s,
  * -es, -ed, -d, -ing, e-drop, y to ies/ied, a doubled final consonant), so "Jolt" marks "Jolts"
  * and "Jolted". Runs in the diagnostics worker (requestTermMatches); pure, so tests run it here.
  */
@@ -26,6 +27,8 @@ interface Pattern {
   entry: number;
   tokens: string[];
   lower: string[];
+  /** What joins each word to the one before it (sepKey), index 0 unused. */
+  seps: string[];
   last: Set<string>;
   matchCase: boolean;
 }
@@ -56,19 +59,37 @@ export function englishEndings(word: string): Set<string> {
   return out;
 }
 
-const words = (text: string) => [...text.matchAll(wordPattern)].map((match) => match[0]);
+const tokensOf = (text: string) =>
+  [...text.matchAll(wordPattern)].map((match) => ({
+    text: match[0],
+    from: match.index,
+    to: match.index + match[0].length,
+  }));
+
+/** A joint between two words, comparable: curly quotes as straight, one space or hyphen as one. */
+function sepKey(sep: string): string | null {
+  const key = sep.replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'");
+  if (key === ' ' || key === '-') return ' ';
+  // A joint of words is short punctuation ("'", "' ", ": "); anything longer is not one term.
+  return key.length <= 3 && /^[\s\p{P}]+$/u.test(key) ? key : null;
+}
 
 export function compileTerms(entries: readonly TermEntry[]): CompiledTerms {
   const byFirst: CompiledTerms = new Map();
   entries.forEach((entry, index) => {
     for (const form of [entry.en, ...(entry.also ?? [])]) {
-      const tokens = words(form);
-      if (!tokens.length) continue;
+      const found = tokensOf(form);
+      if (!found.length) continue;
+      const tokens = found.map((token) => token.text);
       const lower = tokens.map((token) => token.toLowerCase());
+      const seps = found.map((token, k) =>
+        k === 0 ? '' : (sepKey(form.slice(found[k - 1]!.to, token.from)) ?? '\u0000'),
+      );
       const pattern: Pattern = {
         entry: index,
         tokens,
         lower,
+        seps,
         last: englishEndings(tokens.at(-1)!),
         matchCase: entry.matchCase === true,
       };
@@ -86,12 +107,7 @@ export function compileTerms(entries: readonly TermEntry[]): CompiledTerms {
 
 /** Every term in `text`, left to right, never overlapping. */
 export function matchTerms(text: string, compiled: CompiledTerms): TermMatch[] {
-  const tokens = [...text.matchAll(wordPattern)].map((match) => ({
-    text: match[0],
-    lower: match[0].toLowerCase(),
-    from: match.index,
-    to: match.index + match[0].length,
-  }));
+  const tokens = tokensOf(text).map((token) => ({ ...token, lower: token.text.toLowerCase() }));
   const found: TermMatch[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const candidates = compiled.get(tokens[i]!.lower);
@@ -105,7 +121,8 @@ export function matchTerms(text: string, compiled: CompiledTerms): TermMatch[] {
         const last = k === n - 1;
         if (last ? !pattern.last.has(token.lower) : token.lower !== pattern.lower[k]) ok = false;
         else if (pattern.matchCase && !token.text.startsWith(pattern.tokens[k]!)) ok = false;
-        else if (k > 0 && !/^[ -]$/.test(text.slice(tokens[i + k - 1]!.to, token.from))) ok = false;
+        else if (k > 0 && sepKey(text.slice(tokens[i + k - 1]!.to, token.from)) !== pattern.seps[k])
+          ok = false;
       }
       if (!ok) continue;
       found.push({ from: tokens[i]!.from, to: tokens[i + n - 1]!.to, entry: pattern.entry });

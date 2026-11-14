@@ -115,4 +115,27 @@ describe('readableProse', () => {
       'For     seconds.',
     ]);
   });
+
+  // Code review 2026-11-14: coloured, bold, PvE, link, and title text is visible; targets are not.
+  it.each([
+    ['Applies <yellow Voltshot />.', 'Applies  Voltshot .'],
+    ['<bold Grants /> <pve 3 /> stacks', ' Grants   3  stacks'],
+    ['<title Accuracy Cone Growth [G_conegrowth] /> up', ' Accuracy Cone Growth  up'],
+    ['See <link the wiki [https://example.com] /> now', 'See  the wiki  now'],
+    ['<arc/> <center/>Arc', '     Arc'],
+  ])('reads %j as %j', (line, expected) => {
+    expect(readableProse(line)).toBe(expected);
+  });
+});
+
+describe('translationParity with visible token text', () => {
+  it('counts numbers inside colour, PvE, and title tokens', () => {
+    expect(translationParity('Grants <green 10 /> handling.', 'Gewährt Handhabung.')).toEqual([
+      gap('number', '10', 1, 0),
+    ]);
+    expect(translationParity('Grants <green 10 /> handling.', 'Gewährt <green 10 />.')).toEqual([]);
+    expect(translationParity('<pve 3 /> stacks', '3 Stapel')).toEqual([]);
+    // A title's target is not read: its digits are not the reader's numbers.
+    expect(translationParity('<title Cone [G_cone2] />', '<title Kegel [G_cone2] />')).toEqual([]);
+  });
 });

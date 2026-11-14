@@ -51,6 +51,20 @@ describe('matchTerms', () => {
       ['Voltshot=Voltshot'],
     ],
     ['also forms', 'Frozen targets', [{ en: 'Freeze', also: ['Frozen'] }], ['Frozen=Freeze']],
+    [
+      'punctuation inside a name, straight or curly (code review 2026-11-14)',
+      "Ager's Scepter, Traveler’s Chosen, and Fourth Time's the Charm; Agers Scepter",
+      [
+        { en: "Ager's Scepter", matchCase: true },
+        { en: "Traveler's Chosen", matchCase: true },
+        { en: "Fourth Time's the Charm", matchCase: true },
+      ],
+      [
+        "Ager's Scepter=Ager's Scepter",
+        "Traveler’s Chosen=Traveler's Chosen",
+        "Fourth Time's the Charm=Fourth Time's the Charm",
+      ],
+    ],
     ['separate lines never join', 'Kinetic\nTremors', [{ en: 'Kinetic Tremors' }], []],
   ])('%s', (_name, text, entries, expected) => {
     expect(found(text, entries)).toEqual(expected);

@@ -1,7 +1,9 @@
 import {
   elementTagNames,
   findElementTags,
+  markupColors,
   markupCommentContext,
+  markupEmpty,
   markupIcons,
   variableReferencePattern,
 } from '@clarity/core';
@@ -68,6 +70,32 @@ function variablesOf(lines: readonly string[]): string[] {
 }
 
 const elementTag = new RegExp(`^<(?:${elementTagNames.join('|')}) (.*) />$`);
+const wrapped: ReadonlySet<string> = new Set([...markupColors, 'background', 'bold']);
+const blank: ReadonlySet<string> = new Set([...markupIcons, ...markupEmpty]);
+
+/**
+ * The text a reader sees of one inline token, by the renderer's own rules (core markup lines.ts
+ * lineSpans): an element tag's text; a colour, bold, PvE, or PvP token's body; a link's or a
+ * title's label (its [target] is not shown); nothing for icons and anything else.
+ */
+export function visibleToken(token: string): string {
+  const element = elementTag.exec(token)?.[1];
+  if (element !== undefined) return element;
+  const wrapper = /^<(\w+) /.exec(token)?.[1];
+  // No body (`<arc/>`, `<center/>`): an icon or a line class.
+  if (wrapper === undefined) return '';
+  if (wrapped.has(wrapper)) return token.replace(new RegExp(`<${wrapper} | />`, 'g'), '');
+  if (blank.has(wrapper) || (wrapper !== 'link' && wrapper !== 'title')) return '';
+  if (!/\[.+\]/.test(token)) return '';
+  return token.replace(/ \[.+\] \/>/g, '').replace(`<${wrapper} `, '');
+}
+
+/** A line with its inline tokens reduced to their visible text, maths and variable names removed. */
+const readable = (line: string) =>
+  line
+    .replace(inlineToken, (token) => ` ${visibleToken(token)} `)
+    .replace(mathPattern, ' ')
+    .replace(variableReferencePattern, ' ');
 
 /**
  * The numbers a reader sees: outside tags, maths, and variable names. A decimal comma reads as a
@@ -79,11 +107,7 @@ const elementTag = new RegExp(`^<(?:${elementTagNames.join('|')}) (.*) />$`);
 export function numbersOf(lines: readonly string[]): string[] {
   const found: string[] = [];
   for (const line of lines) {
-    const prose = line
-      .replace(inlineToken, (token) => ` ${elementTag.exec(token)?.[1] ?? ''} `)
-      .replace(mathPattern, ' ')
-      .replace(variableReferencePattern, ' ');
-    for (const match of prose.matchAll(numberPattern))
+    for (const match of readable(line).matchAll(numberPattern))
       found.push(String(Number(match[0].replace(',', '.'))));
   }
   return found;
@@ -94,14 +118,7 @@ export function numbersOf(lines: readonly string[]): string[] {
  * variable names removed. For matching terms when the rendered pane is not on screen.
  */
 export function readableProse(text: string): string {
-  return proseLines(text)
-    .map((line) =>
-      line
-        .replace(inlineToken, (token) => ` ${elementTag.exec(token)?.[1] ?? ''} `)
-        .replace(mathPattern, ' ')
-        .replace(variableReferencePattern, ' '),
-    )
-    .join('\n');
+  return proseLines(text).map(readable).join('\n');
 }
 
 const rules: readonly [Exclude<ParityKind, 'lines'>, (lines: readonly string[]) => string[]][] = [
