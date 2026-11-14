@@ -366,3 +366,53 @@ it.each([
   expect(result.renewed).toEqual([]);
   expect(result.changed.map((entry) => entry.hash)).toEqual([10]);
 });
+
+it.each([
+  ['var e5x = 10\n#e5x', 'var e5x = 10\n<enhanced/>5x', '10', 'ARROW5x', false],
+  ['var e5x = 10\n#e', 'var e5x = 10\n<enhanced/>', 'ARROW', 'ARROW', true],
+  ['#e', '<enhanced/>', 'ARROW', 'ARROW', true],
+] as const)(
+  'validates local-variable and plain-arrow approvals: %s',
+  (oldText, newText, oldOutput, newOutput, valid) => {
+    const { source, editor, proposal } = fixture();
+    const globals = { variables: 'var e = ARROW', titles: '' };
+    expect(prepareMarkup(oldText, globals, []).text).toBe(oldOutput);
+    expect(prepareMarkup(newText, globals, []).text).toBe(newOutput);
+    const categories = () =>
+      reviewCategories(
+        reviewQueue(editor, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+        editor,
+        new Map(),
+        false,
+      );
+    editor.bundle.tooltips[10].text.en = { text: oldText, updatedAt: 'same', updatedBy: 'same' };
+    const before = categories()[0].entries[0];
+    const baseline = `commit|${sourceFingerprint(source.tabs)}`;
+    const id = categoryId(before.category);
+    const ref = sampleReference(before, id, baseline, '', 'accepted', proposal.match, source);
+    const document = guidanceSchema.parse({
+      version: 1,
+      scope: 'test',
+      baseline,
+      categories: {
+        [id]: {
+          id,
+          name: 'Traits',
+          rule: '',
+          count: 1,
+          hashes: [10],
+          active: true,
+          comment: '',
+          references: { 10: ref },
+        },
+      },
+    });
+    editor.bundle.tooltips[10].text.en!.text = newText;
+    const after = categories();
+    expect(after[0].entries[0].sampleEvidence === before.sampleEvidence).toBe(valid);
+    expect(referenceCurrent(ref, after[0].entries[0], baseline, source)).toBe(valid);
+    const result = rebaselineGuidance(document, after, source, 'new', 'test');
+    expect(result.renewed).toEqual(valid ? [10] : []);
+    expect(result.changed.map((entry) => entry.hash)).toEqual(valid ? [] : [10]);
+  },
+);
