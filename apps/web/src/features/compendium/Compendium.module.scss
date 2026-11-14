@@ -433,7 +433,7 @@
   cursor: help;
   &:focus-visible {
     outline: 2px solid var(--style-edge);
-    outline-offset: 1px;
+    outline-offset: var(--focus-offset, 1px);
   }
   // A 44px touch area around the small marker, without moving the line.
   @include theme.mobile-or-coarse {
@@ -680,4 +680,15 @@
 .cellScale {
   width: 100%;
   min-width: 0;
+}
+
+// The translator's saved snapshot pane (SavedCompendiumPane).
+.savedMeta {
+  align-items: baseline;
+}
+.savedEmpty {
+  // A phone hides an empty pane header: keep the line off the panel tabs.
+  @include theme.mobile {
+    padding-top: 0.5rem;
+  }
 }
