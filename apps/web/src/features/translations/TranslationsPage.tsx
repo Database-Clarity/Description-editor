@@ -49,7 +49,7 @@ import skeletonStyles from '../../ui/Skeleton.module.scss';
 const searchDelayMs = 200;
 const noRows: readonly QueueRow[] = [];
 
-function ChangeCount({
+export function ChangeCount({
   value,
   identity,
   name,
@@ -87,7 +87,14 @@ function ChangeCount({
           type="button"
           className={styles.retrySize}
           aria-label={`Retry English change size for ${name}`}
-          onClick={onRetry}
+          onClick={(event) => {
+            // The pending/result cell replaces this button. Keep keyboard navigation on its row.
+            event.currentTarget
+              .closest('li')
+              ?.querySelector<HTMLAnchorElement>('a')
+              ?.focus({ preventScroll: true });
+            onRetry();
+          }}
         >
           Unavailable
         </button>

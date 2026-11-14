@@ -4,7 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Tooltip } from '@clarity/core';
-import { TranslationsPage } from './TranslationsPage';
+import { TranslationsPage, ChangeCount } from './TranslationsPage';
+import type { ChangeSize } from './changeSize';
 import { QueueList } from './QueueList';
 import { translationIndex } from './queue';
 import { useAuthStore } from '../../stores/auth';
@@ -118,6 +119,39 @@ afterEach(async () => {
 });
 
 describe('TranslationsPage queue', () => {
+  it('returns keyboard focus to the row link when retry replaces an unavailable size', async () => {
+    const queued = translationIndex(small).queue('de').slice(0, 1);
+    const render = (value: ChangeSize): void =>
+      root.render(
+        <MemoryRouter>
+          <QueueList
+            rows={queued}
+            signature="retry-size-focus"
+            label="Retry translation sizes"
+            linkTo={(row) => ({ to: `/t/${row.hash}`, state: null })}
+            extra={(row) => (
+              <ChangeCount
+                value={value}
+                identity={row.key}
+                name={row.name}
+                onRetry={() => render({ count: 0 })}
+              />
+            )}
+          />
+        </MemoryRouter>,
+      );
+    await act(async () => render({ error: 'Offline' }));
+    const retry = host.querySelector<HTMLButtonElement>('button')!;
+    await act(async () => {
+      retry.focus();
+      retry.click();
+    });
+    expect(host.querySelector('button')).toBeNull();
+    expect(host.textContent).toContain('0 words');
+    expect(document.activeElement).toBe(host.querySelector('li a'));
+    expect(host.querySelector('a[data-selected]')).toBe(document.activeElement);
+  });
+
   it('keeps keyboard selection on the same tooltip when learned sizes reorder rows', async () => {
     const queued = translationIndex(small).queue('de');
     const render = async (ordered: typeof queued) =>
