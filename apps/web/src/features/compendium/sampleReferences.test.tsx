@@ -9,9 +9,10 @@ import { useCompendiumStore } from './store';
 import { LinkPicker } from './LinkPicker';
 import { guidanceSchema } from './guidanceSchema';
 import { mayDraftLink, reviewQueue } from './reviewQueue';
-import { emptyProgress, sourceFingerprint } from './reviewProgress';
+import { emptyProgress, rawFingerprint, sourceFingerprint } from './reviewProgress';
 import { proposalFor } from './rapidReview';
 import { categoryId, reviewCategories } from './reviewCategories';
+import { rebaselineGuidance } from './rebaselineGuidance';
 import { referenceCurrent, sampleReference } from './sampleReferences';
 
 vi.mock('./store', async (importOriginal) => {
@@ -220,4 +221,97 @@ it('validates reference identity and decision/source consistency while accepting
       categories: { [id]: { ...category, references: { 10: { ...reference, link: undefined } } } },
     }).success,
   ).toBe(false);
+});
+
+it('keeps arrow approvals and validated newer raw proofs, while rejecting changed mechanics', () => {
+  const { source, editor, proposal } = fixture();
+  const current = () =>
+    reviewCategories(
+      reviewQueue(editor, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+      editor,
+      new Map(),
+      false,
+    )[0].entries[0];
+  editor.bundle.tooltips[10].text.en = {
+    text: '#e5 #element',
+    updatedAt: 'same',
+    updatedBy: 'same',
+  };
+  const old = current();
+  const ref = sampleReference(
+    old,
+    categoryId(old.category),
+    `commit|${sourceFingerprint(source.tabs)}`,
+    '',
+    'accepted',
+    proposal.match,
+    source,
+  );
+  editor.bundle.tooltips[10].text.en!.text = '<enhanced/>5 #element';
+  const entry = current();
+  expect(entry.sampleEvidence).toBe(old.sampleEvidence);
+  expect(referenceCurrent(ref, entry, ref.baseline, source)).toBe(true);
+  const id = categoryId(entry.category);
+  const document = guidanceSchema.parse({
+    version: 1,
+    scope: 'test',
+    baseline: ref.baseline,
+    categories: {
+      [id]: {
+        id,
+        name: 'Traits',
+        rule: '',
+        count: 1,
+        hashes: [10],
+        active: true,
+        comment: '',
+        references: { 10: ref },
+      },
+    },
+  });
+  const categories = reviewCategories(
+    reviewQueue(editor, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+    editor,
+    new Map(),
+    false,
+  );
+  expect(rebaselineGuidance(document, categories, source, 'new', 'test').renewed).toEqual([10]);
+  for (const text of [
+    '<enhanced/>5 #elementChanged',
+    '<enhanced/>5 #element\nvar e5 = 10',
+    '<enhanced/>6 #element',
+  ]) {
+    const changed = structuredClone(editor);
+    changed.bundle.tooltips[10].text.en!.text = text;
+    const next = reviewCategories(
+      reviewQueue(changed, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+      changed,
+      new Map(),
+      false,
+    )[0].entries[0];
+    expect(referenceCurrent(ref, next, ref.baseline, source)).toBe(false);
+  }
+  for (const hash of [rawFingerprint, sourceFingerprint]) {
+    const evidence = hash([
+      sourceFingerprint(source.tabs),
+      entry.name,
+      entry.category,
+      entry.base.text.en,
+      entry.base.compendium,
+    ]);
+    const raw = { ...ref, evidence: hash([entry.hash, evidence, entry.evidenceManifest]) };
+    expect(referenceCurrent(raw, entry, ref.baseline, source)).toBe(true);
+    expect(referenceCurrent({ ...raw, sourceHash: 'forged' }, entry, ref.baseline, source)).toBe(
+      false,
+    );
+    const changed = structuredClone(editor);
+    changed.bundle.tooltips[10].text.en!.text += ' extra mechanic';
+    const next = reviewCategories(
+      reviewQueue(changed, source, {}, emptyProgress(), sourceFingerprint(source.tabs)),
+      changed,
+      new Map(),
+      false,
+    )[0].entries[0];
+    expect(referenceCurrent(raw, next, ref.baseline, source)).toBe(false);
+  }
 });
