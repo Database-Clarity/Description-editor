@@ -1,5 +1,6 @@
 import {
   hasTooltipText,
+  isMarkupOnly,
   isTextlessDescription,
   permissionsSchema,
   stableStringify,
@@ -92,4 +93,51 @@ export function checkEdit(access: Access, base: Tooltip | null, next: Tooltip): 
   if (stableStringify(withoutAllowed(original)) !== stableStringify(withoutAllowed(next))) {
     throw new HttpError(403, 'Translators may change only text in their assigned languages');
   }
+}
+
+/**
+ * The English revision rule (TR3 "No translation impact"). `head` is the stored tooltip the save
+ * replaces, `next` what it commits. When the English text changes beyond markup:
+ * - a kept English revision (same `updatedAt`) keeps every translation's outdated and 90-day
+ *   fallback state, so it needs the save's `noTranslationImpact` flag and an editor or maintainer
+ *   (never trials or translators), and must keep `updatedBy` too: returns 'kept' (the trailer);
+ * - otherwise the new revision must be newer than the stored one: a backdated revision would
+ *   keep translations current without the flag.
+ * Saves without such an English change (translation-only, fields, markup-only) return 'none'
+ * and ignore the flag.
+ */
+export function checkEnglishRevision(
+  access: Access,
+  head: Tooltip | null,
+  next: Tooltip,
+  noTranslationImpact: boolean,
+): 'none' | 'new' | 'kept' {
+  const before = head?.text.en;
+  const after = next.text.en;
+  if (!before || !after || after.text === before.text || isMarkupOnly(before.text, after.text))
+    return 'none';
+  if (after.updatedAt === before.updatedAt) {
+    if (!noTranslationImpact)
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: English text changed without a new English revision`,
+      );
+    if (access.role !== 'maintainer' && access.role !== 'editor')
+      throw new HttpError(
+        403,
+        'Only editors and maintainers can mark a save as having no translation impact',
+      );
+    if (after.updatedBy !== before.updatedBy)
+      throw new HttpError(
+        422,
+        `Tooltip ${next.hash}: a change with no translation impact keeps the English revision author`,
+      );
+    return 'kept';
+  }
+  if (!(Date.parse(after.updatedAt) > Date.parse(before.updatedAt)))
+    throw new HttpError(
+      422,
+      `Tooltip ${next.hash}: the new English revision must be newer than the stored one`,
+    );
+  return 'new';
 }

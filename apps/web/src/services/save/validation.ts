@@ -7,12 +7,15 @@ import {
   resolveAlias,
   validateGlobalAdditions,
   validateTooltip,
+  type Lang,
   type Tooltip,
   type TooltipValidationIssue,
 } from '@clarity/core';
+import { languageLabel } from '../../languageLabels';
 import type { EditorData } from '../../stores/data';
 import type { Change } from '../api';
 import { saveDependencies } from './dependencies';
+import type { LiveFallback } from './fallback';
 
 /** The tooltip with conflict blocks reduced to "mine", so validation sees real text only. */
 function withoutMarkers(tooltip: Tooltip): Tooltip {
@@ -49,7 +52,31 @@ export function conflictMarkerIssues(changes: Change[]): TooltipValidationIssue[
 export const noTooltipYet =
   'This item has no tooltip yet. Add a Compendium link or write English text before saving.';
 
-export function validateChanges(changes: Change[], data: EditorData): TooltipValidationIssue[] {
+/**
+ * The live form of a changed tooltip (EXPORT-FALLBACK-VALIDATION): each language in `fallback`
+ * holds the English text, which live output exports for it after this save. Validation then
+ * checks that text in the language's catalogue as edited text, and every dependent importing
+ * it, by the usual rule.
+ */
+function withLiveFallback(tooltip: Tooltip, fallback: readonly Lang[] | undefined): Tooltip {
+  const english = tooltip.text.en;
+  if (!fallback?.length || !english) return tooltip;
+  const text = { ...tooltip.text };
+  for (const lang of fallback) {
+    const entry = text[lang];
+    if (entry) text[lang] = { ...entry, text: english.text };
+  }
+  return { ...tooltip, text };
+}
+
+export const fallbackNote = (lang: Lang) =>
+  `After this save, live ${languageLabel(lang)} output uses the English text: the translation is more than 90 days of English revisions behind.`;
+
+export function validateChanges(
+  changes: Change[],
+  data: EditorData,
+  fallback: LiveFallback = {},
+): TooltipValidationIssue[] {
   const tooltips = { ...data.bundle.tooltips };
   for (const change of changes) {
     if (resolveAlias(change.hash, data.aliases) !== change.hash) {
@@ -57,7 +84,7 @@ export function validateChanges(changes: Change[], data: EditorData): TooltipVal
         `Tooltip ${change.hash} is an alias. Recover its draft into the canonical tooltip first.`,
       );
     }
-    tooltips[change.hash] = withoutMarkers(change.next);
+    tooltips[change.hash] = withLiveFallback(withoutMarkers(change.next), fallback[change.hash]);
   }
   // Restore draft bases for the before snapshot, including recovered drafts and new tooltips.
   const before = { ...data.bundle.tooltips };
@@ -69,7 +96,7 @@ export function validateChanges(changes: Change[], data: EditorData): TooltipVal
         before[change.hash] = base;
     } else delete before[change.hash];
   }
-  const dependencies = saveDependencies(changes, before, tooltips, data);
+  const dependencies = saveDependencies(changes, before, tooltips, data, fallback);
   const issues = changes.flatMap(({ base, next: unmasked }) => {
     const next = tooltips[unmasked.hash]!;
     return [
@@ -112,6 +139,11 @@ export function validateChanges(changes: Change[], data: EditorData): TooltipVal
               (!base || !hasTooltipText(base)) &&
               issue.message === noTooltipYet
             ),
+        )
+        .map((issue) =>
+          fallback[next.hash]?.includes(issue.lang)
+            ? { ...issue, message: `${issue.message} ${fallbackNote(issue.lang)}` }
+            : issue,
         ),
     ];
   });

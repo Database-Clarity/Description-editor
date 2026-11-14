@@ -39,11 +39,19 @@ const EDITOR = 2;
 const TRIAL = 3;
 const TRANSLATOR = 4;
 
+// A new English text is a newer revision, as the editor's save stamps it (the Worker refuses an
+// English change that keeps its revision in a batch). The same text always gets the same stamp.
+const englishRevisions = new Map<string, number>();
+const revisionOf = (lang: string, text: string) => {
+  if (lang !== 'en') return '2026-11-01T00:00:00Z';
+  if (!englishRevisions.has(text)) englishRevisions.set(text, englishRevisions.size + 1);
+  return new Date(Date.parse('2026-11-01T00:00:00Z') + englishRevisions.get(text)! * 1000).toISOString();
+};
 const withText = (base: Tooltip, lang: 'en' | 'de' | 'fr', text: string): Tooltip => ({
   ...base,
   text: {
     ...base.text,
-    [lang]: { text, updatedAt: '2026-11-01T00:00:00Z', updatedBy: 'alice' },
+    [lang]: { text, updatedAt: revisionOf(lang, text), updatedBy: 'alice' },
   },
 });
 
@@ -627,6 +635,25 @@ describe('Q2 one open batch per tooltip', () => {
 });
 
 describe('save semantics', () => {
+  it('refuses an English change that keeps its revision: batches have no "No translation impact"', async () => {
+    const storedProposal = (stored(memberPath()) as BatchMember).proposed;
+    const next = {
+      ...storedProposal,
+      text: { ...storedProposal.text, en: { ...storedProposal.text.en!, text: 'kept revision' } },
+    };
+    const response = await call(
+      `/batches/${ID}/save`,
+      { ...saveBody(next, storedProposal), noTranslationImpact: true },
+      EDITOR,
+    );
+    expect(response.status).toBe(400);
+    const plain = await call(`/batches/${ID}/save`, saveBody(next, storedProposal), EDITOR);
+    expect(plain.status).toBe(422);
+    expect(plain.body.error).toBe(
+      'Tooltip 123: English text changed without a new English revision',
+    );
+    expect((stored(memberPath()) as BatchMember).proposed).toEqual(storedProposal);
+  });
   it('merges against the stored proposal and reports conflicts like /save', async () => {
     const storedProposal = (stored(memberPath()) as BatchMember).proposed;
     // A client that started before a translator's save still merges cleanly.

@@ -83,7 +83,10 @@ describe('save guard for element-tagged text', () => {
     const plain = fixture.graphqlCalls - plainStart;
     fixture.moveData({ 'tooltips/123.json': tooltip('plain') });
     const taggedStart = fixture.graphqlCalls;
-    const response = await save(tooltip('plain'), tooltip('Gain <solar Scorch /> stacks.'));
+    const response = await save(
+      tooltip('plain'),
+      tooltip('Gain <solar Scorch /> stacks.', '2026-10-01T00:00:02Z'),
+    );
     expect(response.status).toBe(200);
     // The PIN rides in the batched tooltip read: a tagged save costs what an untagged one does.
     expect(fixture.graphqlCalls - taggedStart).toBe(plain);

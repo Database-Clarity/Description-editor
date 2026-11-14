@@ -10,8 +10,10 @@ import {
   type ValidationReads,
 } from '@clarity/core';
 import type { EditorData } from '../../stores/data';
+import { languageLabel } from '../../languageLabels';
 import type { Change } from '../api';
 import { tooltipImports } from '../tooltipImports';
+import type { LiveFallback } from './fallback';
 
 type Dependent = {
   hash: number;
@@ -36,6 +38,7 @@ export function saveDependencies(
   before: Record<string, Tooltip>,
   after: Record<string, Tooltip>,
   data: EditorData,
+  fallback: LiveFallback = {},
 ) {
   const catalogs = (tooltips: Record<string, Tooltip>) => {
     const cache = new Map<Lang, Record<string, string>>();
@@ -66,7 +69,10 @@ export function saveDependencies(
       const oldText = before[hash]?.text[lang]?.text ?? '';
       const newText = after[hash]?.text[lang]?.text ?? '';
       if (oldText === newText) continue;
-      documents.set(hash, `"${data.items[hash]?.name ?? `Tooltip ${hash}`}" (${hash})`);
+      documents.set(
+        hash,
+        `"${data.items[hash]?.name ?? `Tooltip ${hash}`}" (${hash})${fallback[hash]?.includes(lang) ? ` (live ${languageLabel(lang)} output falls back to its English text)` : ''}`,
+      );
       if (hash === 2) {
         globals.push(
           ...changedNames(extractVariables(oldText), extractVariables(newText)).map((name) => ({
