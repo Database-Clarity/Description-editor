@@ -111,7 +111,7 @@ describe('save guard for element-tagged text', () => {
     // prismaticTags alone is not enough: it extends elementTags.
     const alone = await save(
       tooltip('Gain <solar Scorch /> and <prismatic/>Light.'),
-      tooltip('Gain <prismatic Transcendence />.'),
+      tooltip('Gain <prismatic Transcendence />.', '2026-10-01T00:00:02Z'),
     );
     expect(alone.status).toBe(422);
     expect((await alone.json()).error).toContain('lacks the "elementTags" capability');
@@ -120,7 +120,7 @@ describe('save guard for element-tagged text', () => {
     });
     const response = await save(
       tooltip('Gain <solar Scorch /> and <prismatic/>Light.'),
-      tooltip('Gain <prismatic Transcendence />.'),
+      tooltip('Gain <prismatic Transcendence />.', '2026-10-01T00:00:02Z'),
     );
     expect(response.status).toBe(200);
     expect((await response.json()).tooltips[0].text.en.text).toBe(
