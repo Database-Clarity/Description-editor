@@ -272,9 +272,12 @@ export function TermLayer({
       point = { x: event.clientX, y: event.clientY };
       if (!frame) frame = requestAnimationFrame(test);
     };
-    const leave = () => {
+    const leave = (event: PointerEvent) => {
       hovered.current = null;
       clearTimeout(timers.current.open);
+      // Into the popover (portaled outside the pane): it stays open; leaving it closes it.
+      const into = event.relatedTarget;
+      if (into instanceof Element && into.closest('[data-term-popover]')) return;
       scheduleClose();
     };
     // A click (or a tap) on a term pins it open.
