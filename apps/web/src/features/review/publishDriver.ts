@@ -124,6 +124,8 @@ export function activeHashes(ops: readonly PublishOp[]): Set<number> {
 
 export class PublishDriver {
   private userId: string | null = null;
+  /** Includes dismissed group predecessors; their acceptance still orders unsent chunks. */
+  private storedOps: PublishOp[] = [];
   private timer: unknown;
   private running = false;
   private again = false;
@@ -140,6 +142,7 @@ export class PublishDriver {
     this.stopTimer();
     const generation = ++this.generation;
     this.userId = userId;
+    this.storedOps = [];
     this.paused.clear();
     this.attempts.clear();
     this.inFlight.clear();
@@ -161,6 +164,7 @@ export class PublishDriver {
   stop() {
     this.generation++;
     this.userId = null;
+    this.storedOps = [];
     this.running = false;
     this.stopTimer();
     usePublishState.setState({ userId: null, hydrated: false, ops: [], notes: {} });
@@ -192,7 +196,9 @@ export class PublishDriver {
     for (const chunk of planned) {
       const op: PublishOp = {
         opId: chunks.length === 0 ? groupId : newOpId(now),
-        ...(planned.length > 1 ? { groupId, groupSize: planned.length } : {}),
+        ...(planned.length > 1
+          ? { groupId, groupSize: planned.length, groupIndex: chunks.length }
+          : {}),
         userId,
         createdAt: now,
         hashes: chunk.map((input) => input.hash),
@@ -218,6 +224,7 @@ export class PublishDriver {
       );
     }
     if (generation !== this.generation) return chunks[0]!;
+    this.storedOps.push(...chunks);
     usePublishState.setState((state) => ({ ops: [...state.ops, ...chunks] }));
     this.deps.broadcast();
     // Send in sequence to avoid a burst of CAS collisions between our own chunks.
@@ -294,6 +301,7 @@ export class PublishDriver {
       if (generation !== this.generation) return;
     }
     const kept = stored.filter((op) => !expired.includes(op)).sort(byAge);
+    this.storedOps = kept;
     for (const op of kept) {
       // Acknowledgments are tab memory, so rebuild them from finished operations after a reload.
       // Each finished operation is acknowledged exactly once per tab, so a bundle that has caught
@@ -360,6 +368,7 @@ export class PublishDriver {
       if (this.paused.has(op.opId)) continue;
       const now = this.deps.now();
       if (op.status === 'created') {
+        if (!(await this.groupReady(op))) continue;
         const retry = this.attempts.get(op.opId);
         const due = retry ? retry.at : (op.polledAt ?? 0) + publishTiming.foreignAttemptMs;
         if (due <= now) await this.send(op.opId);
@@ -404,6 +413,7 @@ export class PublishDriver {
       )
         continue;
       if (op.status === 'created') {
+        if (this.unacceptedPredecessors(op).length) continue;
         const retry = this.attempts.get(op.opId);
         next = Math.min(
           next,
@@ -454,6 +464,7 @@ export class PublishDriver {
       )
       .catch(() => undefined);
     if (!stored) return;
+    this.storedOps = this.storedOps.map((op) => (op.opId === opId ? stored : op));
     this.note(opId, undefined);
     usePublishState.setState((state) => ({
       ops: state.ops.map((op) => (op.opId === opId ? stored : op)),
@@ -480,6 +491,34 @@ export class PublishDriver {
     return usePublishState.getState().ops.find((op) => op.opId === opId);
   }
 
+  private unacceptedPredecessors(op: PublishOp): PublishOp[] {
+    if (!op.groupId) return [];
+    return this.storedOps.filter(
+      (earlier) =>
+        earlier.groupId === op.groupId &&
+        byAge(earlier, op) < 0 &&
+        earlier.acceptedAt === undefined &&
+        (earlier.status === 'created' || earlier.status === 'failed'),
+    );
+  }
+
+  private async groupReady(op: PublishOp): Promise<boolean> {
+    const earlier = this.unacceptedPredecessors(op);
+    if (!earlier.length) return true;
+    if (earlier.some((entry) => isTerminal(entry.status))) {
+      await this.settle(
+        op.opId,
+        {
+          status: 'failed',
+          error:
+            'An earlier chunk was not accepted. This chunk was not sent; review the remaining tooltips and publish again.',
+        },
+        true,
+      );
+    } else this.note(op.opId, 'Waiting for an earlier chunk to be received.');
+    return false;
+  }
+
   /** POST the stored body. Re-sending is always safe: the Worker is idempotent per opId. */
   private async send(opId: string) {
     const op = this.current(opId);
@@ -487,6 +526,20 @@ export class PublishDriver {
     const generation = this.generation;
     this.inFlight.add(opId);
     try {
+      if (op.status === 'created' && op.groupId) {
+        // Consult persisted predecessors even after another tab dismisses a failed chunk.
+        let stored: PublishOp[];
+        try {
+          stored = await this.deps.store.list(op.userId);
+        } catch {
+          if (generation === this.generation)
+            this.note(opId, 'Could not check earlier chunks; retrying.');
+          return;
+        }
+        if (generation !== this.generation) return;
+        this.storedOps = stored;
+        if (!(await this.groupReady(op))) return;
+      }
       const now = this.deps.now();
       if (op.status === 'created' && now - op.createdAt > publishTiming.sendExpiryMs) {
         // The window for (re)creating the request has closed, but the Worker may already hold it (a
@@ -693,5 +746,10 @@ export class PublishDriver {
 }
 
 function byAge(a: PublishOp, b: PublishOp) {
+  if (a.groupId && a.groupId === b.groupId) {
+    // Old stored groups were sorted by hash; new groups persist their dependency order.
+    const order = (a.groupIndex ?? Math.min(...a.hashes)) - (b.groupIndex ?? Math.min(...b.hashes));
+    if (order) return order;
+  }
   return a.createdAt - b.createdAt || a.opId.localeCompare(b.opId);
 }

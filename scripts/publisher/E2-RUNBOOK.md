@@ -17,6 +17,11 @@ re-install of .publisher with `publishWritesEnabled: true` (`install.mjs --pipel
 With an older (enabled: false) build, `publishWritesEnabled: true` in the installed
 config throws "Remote publishing disabled by config", and a hand-edited publisher.mjs fails its PIN.
 
+Signing-key rotation must wait until pending requests and landed receipts have been recorded.
+Recovery verifies requester credits against the trusted public key and fingerprint; a mismatch
+halts recording. Retain the original trusted verification key for operator recovery, and never
+rewrite a published commit or infer author credits from an unsigned receipt field.
+
 ## Install dry-run pipeline (root operator in E2)
 
 Template source PIN: `9adffd3ab0b8e0b6ec4b79b69c16172607f33e1c`.

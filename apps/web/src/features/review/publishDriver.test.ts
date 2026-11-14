@@ -697,19 +697,23 @@ it('persists every chunk before sending and reuses each identity after a lost re
   const saved = [...h.store.records.values()];
   expect(saved.map((entry) => entry.hashes.length)).toEqual([50, 50, 1]);
   expect(new Set(saved.map((entry) => entry.groupId)).size).toBe(1);
-  expect(h.api.post).toHaveBeenCalledTimes(3);
+  expect(h.api.post).toHaveBeenCalledTimes(1);
   first.stop();
   const second = h.make();
   h.api.post.mockRejectedValue(new Error('Still offline'));
   await second.start('1');
   await vi.advanceTimersByTimeAsync(publishTiming.foreignAttemptMs + 100);
-  for (const entry of saved) {
+  expect(new Set(h.api.post.mock.calls.map(([body]) => body.opId))).toEqual(
+    new Set([saved[0]!.opId]),
+  );
+  h.api.post.mockResolvedValue({ status: 'pending' });
+  await vi.advanceTimersByTimeAsync(70_000);
+  for (const entry of saved)
     expect(h.api.post).toHaveBeenCalledWith({
       opId: entry.opId,
       hashes: entry.hashes,
       expected: entry.expected,
     });
-  }
   expect([...h.store.records.keys()]).toEqual(saved.map((entry) => entry.opId));
 });
 
@@ -739,4 +743,49 @@ it('keeps transitive imports and cycles in one oversize closure, and refuses mis
   }));
   expect(publishChunks(many).map((chunk) => chunk.length)).toEqual([60]);
   expect(() => publishChunks(many.slice(0, 59))).toThrow(/Select pending imported tooltip 59/);
+});
+
+it('does not send later group chunks after a definite earlier POST failure, even after dismissal and reload', async () => {
+  const h = harness();
+  const first = h.make();
+  await first.start('1');
+  h.api.post.mockRejectedValue(new PublishHttpError(413, 'Too large'));
+  await first.create(
+    Array.from({ length: 51 }, (_, hash) => ({ hash, digest: digest(1), previous: undefined })),
+  );
+  await settle();
+  const saved = [...h.store.records.values()];
+  expect(h.api.post).toHaveBeenCalledTimes(1);
+  expect(saved.map((entry) => entry.status)).toEqual(['failed', 'failed']);
+  expect(saved[1]!.error).toContain('This chunk was not sent');
+  await first.dismiss(saved[0]!.opId);
+  first.stop();
+  const second = h.make();
+  await second.start('1');
+  await settle();
+  expect(h.api.post).toHaveBeenCalledTimes(1);
+});
+
+it('uses persisted chunk order rather than random ULID order after reloading an unsent group', async () => {
+  const h = harness();
+  const first = h.make();
+  await first.start('1');
+  h.api.post.mockRejectedValue(new Error('offline'));
+  await first.create(
+    Array.from({ length: 51 }, (_, hash) => ({ hash, digest: digest(1), previous: undefined })),
+  );
+  await settle();
+  first.stop();
+  const saved = [...h.store.records.values()];
+  h.store.records.clear();
+  for (const [index, entry] of saved.entries()) {
+    entry.opId = entry.opId.slice(0, 10) + (index === 0 ? 'Z' : '0').repeat(16);
+    entry.groupId = 'reload-order';
+    h.store.records.set(entry.opId, entry);
+  }
+  const second = h.make();
+  h.api.post.mockRejectedValue(new Error('offline'));
+  await second.start('1');
+  await vi.advanceTimersByTimeAsync(publishTiming.foreignAttemptMs + 100);
+  expect(new Set(h.api.post.mock.calls.map(([body]) => body.hashes[0]))).toEqual(new Set([0]));
 });
