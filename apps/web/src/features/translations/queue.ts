@@ -1,5 +1,6 @@
 import {
   isTranslatable,
+  isPairedEnhancedMod,
   translationStateOf,
   type Lang,
   type Tooltip,
@@ -108,6 +109,7 @@ export function translatableEntry(
   let name = String(tooltip.hash);
   if (item) {
     if (isSetSelector(item)) return null;
+    if (isPairedEnhancedMod(item)) return null;
     const classified = listingCategoryId(item, classifyItem(item, tooltip));
     if (classified === inactiveCategory || classified === enhancedPartCategory) return null;
     categoryId = classified;

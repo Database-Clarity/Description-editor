@@ -226,6 +226,31 @@ describe('translation queue', () => {
     expect(index.queue('de')).toBe(index.queue('de'));
   });
 
+  it('excludes paired enhanced mods from queues and coverage but keeps orphan enhanced mods', () => {
+    const data = fixture();
+    const before = translationIndex(data).coverage('de');
+    data.items[40] = item(40, 'Base mod', 'weapon-mod');
+    data.items[41] = item(41, 'Paired enhanced mod', 'weapon-mod-enhanced', { baseHash: 40 });
+    data.items[42] = item(42, 'Orphan enhanced mod', 'weapon-mod-enhanced');
+    data.bundle.tooltips[40] = tooltip(40, 'Base mod text');
+    data.bundle.tooltips[41] = tooltip(41, 'Paired enhanced text', {
+      de: { source: '2026-02-01T00:00:00.000Z' },
+    });
+    data.bundle.tooltips[42] = tooltip(42, 'Orphan enhanced text', {
+      de: { source: '2026-02-01T00:00:00.000Z' },
+    });
+    const index = translationIndex({ ...data });
+    expect(index.translatable.map((entry) => entry.hash)).not.toContain(41);
+    expect(index.translatable.map((entry) => entry.hash)).toContain(42);
+    expect(index.queue('de').map((row) => row.hash)).not.toContain(41);
+    expect(index.queue('de').find((row) => row.hash === 42)?.state).toBe('outdated');
+    expect(index.coverage('de')).toEqual({
+      ...before,
+      outdated: before.outdated + 1,
+      missing: before.missing + 1,
+    });
+  });
+
   it('filters by state, category, and text', () => {
     const rows = index.queue('de');
     const hashes = (filters: Partial<Parameters<typeof filterRows>[1]>) =>
