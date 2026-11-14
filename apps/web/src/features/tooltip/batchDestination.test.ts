@@ -19,12 +19,17 @@ beforeEach(() => {
   for (const name of ['localStorage', 'sessionStorage'])
     vi.stubGlobal(name, { getItem: () => null, setItem() {}, removeItem() {} });
 });
-afterEach(() => {
+afterEach(async () => {
+  // Drain save-triggered reloads and storage writes before the next test opens this bucket.
+  const { refreshBatches } = await import('./UpcomingSwitch.load');
+  const { useBatchDraftStore } = await import('../../services/scheduled/batchDrafts');
+  await refreshBatches();
+  await useBatchDraftStore.getState().activate(null);
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
 
-async function setup() {
+async function setup(movedGerman?: string) {
   const current = { ...tooltip, text: { en: { ...tooltip.text.en!, text: 'Current English' } } };
   const future: Tooltip = {
     ...current,
@@ -46,6 +51,21 @@ async function setup() {
     [{ hash: 123, base: current, next: future }],
     '',
   );
+  const shownCurrent: Tooltip = movedGerman
+    ? {
+        ...current,
+        text: {
+          ...current.text,
+          de: {
+            text: movedGerman,
+            updatedAt: '2026-11-14T12:30:00.000Z',
+            updatedBy: 'other-translator',
+            sourceUpdatedAt: current.text.en!.updatedAt,
+          },
+        },
+      }
+    : current;
+  if (movedGerman) fixture.setCurrent(123, shownCurrent);
   const { useDataStore } = await import('../../stores/data');
   const { useAuthStore } = await import('../../stores/auth');
   const { useDraftStore } = await import('../../stores/drafts');
@@ -55,7 +75,7 @@ async function setup() {
   const { upcomingStore } = await import('./UpcomingSwitch.store');
   const runtime = await import('./batchDestination.live');
   const data = editorData();
-  data.bundle.tooltips[123] = current;
+  data.bundle.tooltips[123] = shownCurrent;
   useDataStore.setState({ data, status: 'ready' });
   useAuthStore.setState({
     user: { id: 1, login: 'm', role: 'translator', languages: ['de'] },
@@ -79,7 +99,7 @@ async function setup() {
   loader.ensureBatch(batch.id);
   await vi.waitFor(() => expect(upcomingStore().getState().loads[batch.id]?.state).toBe('ready'));
   return {
-    current,
+    current: shownCurrent,
     future,
     fixture,
     batch,
@@ -124,6 +144,48 @@ it('a closed batch retains its drafts and refuses a save', async () => {
   await expect(s.runtime.saveBatchDrafts(s.batch.id)).rejects.toThrow(/editable|Reload/);
   expect(s.useBatchDraftStore.getState().drafts).toBe(before);
   expect(s.useDraftStore.getState().drafts).toBe(s.before);
+});
+
+it('restoring the shown future translation leaves no phantom change or new source stamp', async () => {
+  const s = await setup('Current German after the batch base');
+  const { useAuthStore } = await import('../../stores/auth');
+  const { upcomingRowState } = await import('../translations/upcoming');
+  useAuthStore.setState({
+    user: { id: 1, login: 'm', role: 'translator', languages: ['de', 'fr'] },
+  });
+  s.fixture.setUser({ id: 1, login: 'm', role: 'translator', languages: ['de', 'fr'] });
+  const load = s.upcomingStore().getState().loads[s.batch.id]!;
+  if (load.state !== 'ready') throw new Error('Batch did not load');
+  const future = load.upcoming.overlay[123]!.next;
+  const member = load.upcoming.members[123]!;
+  const key = s.batchDraftKey(s.batch.id, 123);
+  expect(future.text.de).toEqual(s.current.text.de);
+  expect(upcomingRowState(member, s.current, future, 'de').state).toBe('needs');
+  const edit = (language: 'de' | 'fr', text: string) =>
+    s.runtime.edit(s.batch.id, member.proposed, future, language, text, 'm');
+  edit('de', 'Temporary German rework');
+  expect(s.useBatchDraftStore.getState().drafts[key]?.next.text.de?.text).toBe(
+    'Temporary German rework',
+  );
+  edit('de', future.text.de!.text);
+  expect(s.useBatchDraftStore.getState().drafts[key]).toBeUndefined();
+  // Restoring German must also leave other authored languages intact during the same save.
+  edit('fr', 'Français pour le lot');
+  edit('de', 'Another temporary rework');
+  edit('de', future.text.de!.text);
+  expect(s.useBatchDraftStore.getState().drafts[key]?.next.text.de).toEqual(
+    member.proposed.text.de,
+  );
+  expect(await s.runtime.saveBatchDrafts(s.batch.id)).toContain('Saved 1 tooltip');
+  const savedMember = s.fixture.members.get(s.batch.id)!.get(123)!;
+  expect(savedMember.proposed.text.de).toEqual(member.proposed.text.de);
+  expect(savedMember.proposed.text.fr?.text).toBe('Français pour le lot');
+  const savedFuture = s.loader.upcomingState([savedMember], s.useDataStore.getState().data!)
+    .overlay[123]!.next;
+  expect(savedFuture.text.de).toEqual(s.current.text.de);
+  expect(upcomingRowState(savedMember, s.current, savedFuture, 'de').state).toBe('needs');
+  expect(s.useDraftStore.getState().drafts).toBe(s.before);
+  expect(s.useDataStore.getState().data!.bundle.tooltips).toBe(s.saved);
 });
 
 it('reconciles a confirmed save even when the local preview update fails', async () => {

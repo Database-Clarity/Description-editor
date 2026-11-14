@@ -69,7 +69,7 @@ export function edit(
       base,
       update: (current) => {
         const next = { ...current, text: { ...current.text } };
-        if (text === (base.text[lang]?.text ?? '')) {
+        if (text === (base.text[lang]?.text ?? '') || text === (future.text[lang]?.text ?? '')) {
           if (base.text[lang]) next.text[lang] = base.text[lang];
           else delete next.text[lang];
         } else
