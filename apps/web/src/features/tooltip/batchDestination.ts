@@ -15,6 +15,8 @@ export interface BatchEditing {
   drafts: Drafts;
   reason: string | null;
   saveControl?: ReactNode;
+  notice?: string;
+  sourceNotice?: ReactNode;
   english(
     hash: number,
     current: string | undefined,
@@ -33,8 +35,11 @@ export function useBatchEditing(
   load: BatchLoad | undefined,
   eligible: boolean,
   listFailed: boolean,
+  listed: boolean,
+  retry: () => void,
 ): BatchEditing | undefined {
   const auth = useAuthStore();
+  const [notice, setNotice] = useState({ batchId: '', text: '' });
   const [runtimeError, setRuntimeError] = useState<string>();
   const destinationId = destination?.batchId;
   const [runtime, setRuntime] = useState<typeof import('./batchDestination.live')>();
@@ -47,7 +52,9 @@ export function useBatchEditing(
   const state = useSyncExternalStore(runtime?.subscribe ?? noop, runtime?.snapshot ?? nothing);
   if (!destination) return undefined;
   const reason = !eligible
-    ? 'Read-only: this account has no batch access.'
+    ? auth.user
+      ? 'Read-only: this account has no batch access.'
+      : 'Read-only: sign in to edit this batch.'
     : runtimeError
       ? runtimeError
       : !runtime || !state?.hydrated
@@ -60,18 +67,36 @@ export function useBatchEditing(
               ? `Read-only: ${state.error}`
               : listFailed
                 ? 'Read-only: the batch listing did not load. Retry before editing.'
-                : !batch
-                  ? 'Read-only: this batch is no longer open. Your drafts are kept.'
-                  : batch.status === 'publishing'
-                    ? 'Read-only: this batch is publishing. Your drafts are kept.'
-                    : load?.state !== 'ready' || load.revision !== batch.revision
-                      ? 'Read-only: loading the latest batch revision.'
-                      : null;
+                : !listed
+                  ? 'Read-only: loading the batch listing.'
+                  : !batch
+                    ? 'Read-only: this batch is no longer open. Your drafts are kept.'
+                    : batch.status === 'publishing'
+                      ? 'Read-only: this batch is publishing. Your drafts are kept.'
+                      : load?.state === 'failed'
+                        ? `Read-only: ${load.error}. Your drafts are kept.`
+                        : load?.state !== 'ready' || load.revision !== batch.revision
+                          ? 'Read-only: loading the latest batch revision.'
+                          : null;
   const editing: BatchEditing = {
     destination,
+    notice: notice.batchId === destinationId ? notice.text : '',
+    sourceNotice: runtime
+      ? createElement(runtime.BatchSourceNotice, {
+          reason,
+          retry: eligible && (listFailed || load?.state === 'failed') ? retry : undefined,
+        })
+      : undefined,
     english: (hash, current, upcoming, globals) =>
       runtime && eligible
-        ? createElement(runtime.BatchEnglish, { hash, current, upcoming, globals })
+        ? createElement(runtime.BatchEnglish, {
+            hash,
+            current,
+            upcoming,
+            globals,
+            reason,
+            retry: eligible && (listFailed || load?.state === 'failed') ? retry : undefined,
+          })
         : null,
     drafts:
       runtime && state && eligible && state.owner === String(auth.user?.id)
@@ -89,6 +114,10 @@ export function useBatchEditing(
       if (!reason) runtime?.discard(destination.batchId, hash);
     },
   };
-  if (runtime && eligible) editing.saveControl = createElement(runtime.BatchSave, { editing });
+  if (runtime && eligible)
+    editing.saveControl = createElement(runtime.BatchSave, {
+      editing,
+      onNotice: (text: string) => setNotice({ batchId: destinationId!, text }),
+    });
   return editing;
 }

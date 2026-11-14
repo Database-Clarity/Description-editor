@@ -64,6 +64,7 @@ export function UpcomingEnglish({
   upcoming,
   globals,
   editor = false,
+  notice,
 }: {
   hash: number;
   /** The current saved English (undefined for a tooltip the batch creates). */
@@ -74,6 +75,7 @@ export function UpcomingEnglish({
   globals?: MarkupGlobals;
   /** Use the editor pane shell, including its English/Compendium/Reports tabs. */
   editor?: boolean;
+  notice?: ReactNode;
 }) {
   const data = useDataStore((state) => state.data);
   const overlay = upcomingStore()((state) => {
@@ -113,26 +115,29 @@ export function UpcomingEnglish({
       }
     >
       <ReadingGlobals.Provider value={sourceGlobals}>
-        {!showChanges ? (
-          <ReadingTooltip text={upcoming} hash={hash} />
-        ) : current === undefined ? (
-          <>
-            <p className={styles.note}>New in this batch: there is no current English.</p>
+        {notice}
+        <div className={editor ? editorStyles.englishContent : undefined}>
+          {!showChanges ? (
             <ReadingTooltip text={upcoming} hash={hash} />
-          </>
-        ) : current === upcoming ? (
-          <p className={styles.note}>The batch does not change the English.</p>
-        ) : isMarkupOnly(current, upcoming) ? (
-          <MarkupOnlyEnglish before={current} current={upcoming} hash={hash} />
-        ) : (
-          <div aria-label="English changes in the batch">
-            <p className={styles.note}>
-              Current English → upcoming English. Removed words are struck through; additions are
-              underlined.
-            </p>
-            <WordDiff before={current} after={upcoming} />
-          </div>
-        )}
+          ) : current === undefined ? (
+            <>
+              <p className={styles.note}>New in this batch: there is no current English.</p>
+              <ReadingTooltip text={upcoming} hash={hash} />
+            </>
+          ) : current === upcoming ? (
+            <p className={styles.note}>The batch does not change the English.</p>
+          ) : isMarkupOnly(current, upcoming) ? (
+            <MarkupOnlyEnglish before={current} current={upcoming} hash={hash} />
+          ) : (
+            <div aria-label="English changes in the batch">
+              <p className={styles.note}>
+                Current English → upcoming English. Removed words are struck through; additions are
+                underlined.
+              </p>
+              <WordDiff before={current} after={upcoming} />
+            </div>
+          )}
+        </div>
       </ReadingGlobals.Provider>
     </Pane>
   );

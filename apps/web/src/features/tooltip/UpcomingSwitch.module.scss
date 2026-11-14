@@ -231,3 +231,10 @@ span.badge {
     padding-inline: var(--page-x);
   }
 }
+
+// The queue is the primary destination label on desktop. Phones keep the badge.
+@media (min-width: 701px) {
+  span.destination {
+    display: none !important;
+  }
+}

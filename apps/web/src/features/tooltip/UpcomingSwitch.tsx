@@ -179,7 +179,7 @@ function DestinationBadge({
   return (
     <span
       ref={badge}
-      className={styles.badge}
+      className={`${styles.badge} ${destination ? styles.destination : ''}`}
       data-mode={mode}
       title={`In the open batch "${batch.name}" (${statusLabel[batch.status].toLowerCase()}). Edits here save to ${destination ? batch.name : 'Current'}.`}
     >
@@ -233,7 +233,22 @@ function useUpcomingLive(
   const setSource = useStore((state) => state.setSource);
   const batchLoad = useStore((state) => (batch ? state.loads[batch.id] : undefined));
   const listFailed = useStore((state) => state.listFailed);
-  const editing = useBatchEditing(destination, batch, batchLoad, eligible, listFailed);
+  const listed = useStore((state) => state.head !== null);
+  const editing = useBatchEditing(
+    destination,
+    batch,
+    batchLoad,
+    eligible,
+    listFailed,
+    listed,
+    () => {
+      if (!eligible || !destination) return;
+      void load().then(async (module) => {
+        await module.refreshBatches();
+        module.ensureBatch(destination.batchId);
+      });
+    },
+  );
   const wanted = batch !== undefined && (source === 'upcoming' || !!destination);
   const batchId = batch?.id;
   const revision = batch?.revision;
@@ -256,15 +271,8 @@ function useUpcomingLive(
     return {
       control: destination ? (
         <p className={styles.line}>
-          Destination: {batch.name} · {statusLabel[batch.status]}{' '}
-          {failed && (
-            <>
-              <span>{failed}</span>
-              <button type="button" onClick={retry}>
-                Retry
-              </button>
-            </>
-          )}
+          Batch: {statusLabel[batch.status]}
+          {batch.notBefore ? ` · ${zonedNotBefore(batch.notBefore)}` : ' · No time set'}
         </p>
       ) : (
         <UpcomingControl

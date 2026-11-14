@@ -492,3 +492,52 @@ it('routes an active batch queue into its own drafts and English, then leaves ba
     await page.dispose();
   }
 });
+
+it('keeps a batch-derived enhanced preview derived while its base translation is drafted', async () => {
+  vi.stubEnv('VITE_SCHEDULED_ENABLED', '1');
+  const batch = await seedBatch();
+  await call(`/batches/${batch.id}/save`, {
+    revision: batch.revision,
+    changes: [
+      { hash: 11, base: current[11], next: tooltip(11, 'Upcoming 10 import 13 from tooltip') },
+    ],
+  });
+  const { useWorkQueues } = await import('../queue/store');
+  const { useBatchDraftStore } = await import('../../services/scheduled/batchDrafts');
+  await useBatchDraftStore.getState().activate('1');
+  const key = `${batch.id}:10:de`;
+  useWorkQueues.getState().start({
+    version: 1,
+    id: 'batch-variants',
+    source: 'translations',
+    scope: 'shown',
+    origin: { path: '/translations', restore: {} },
+    items: [
+      {
+        key,
+        hash: 10,
+        lang: 'de',
+        name: 'A base',
+        detail: { path: '/t/10?lang=de', batchId: batch.id },
+      },
+    ],
+    skipped: [],
+    current: key,
+    finished: false,
+    createdAt: Date.now(),
+    destination: { kind: 'batch', batchId: batch.id, batchName: 'December patch' },
+  });
+  const page = await mount('translator', '/t/10?lang=de', {
+    workThrough: { id: 'batch-variants', key },
+  });
+  try {
+    await page.settle(() => !editorProps.current?.readOnly);
+    await act(async () => editorProps.current!.onChange('Batch German'));
+    await page.settle(() => page.preview().dataset.enhanced === 'Batch German');
+    expect(page.preview().dataset.enhanced).toBe('Batch German');
+    // Drafting changes no saved batch member or Current tooltip.
+    expect(fixture.members.get(batch.id)?.get(11)?.proposed.text.de).toBeUndefined();
+  } finally {
+    await page.dispose();
+  }
+});

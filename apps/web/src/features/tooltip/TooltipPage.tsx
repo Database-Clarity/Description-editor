@@ -72,6 +72,7 @@ import { LanguageSummary } from './LanguageSummary';
 import { EditorPaneHeader } from './EditorPaneHeader';
 import { useUpcoming } from './UpcomingSwitch';
 import type { BatchDestination } from './batchDestination';
+import batchStyles from './BatchDestination.module.scss';
 import { WorkThroughControl, leaveTarget } from '../queue/QueueControl';
 import { queueSources } from '../queue/sources';
 import { useWorkThrough } from '../queue/useQueue';
@@ -330,8 +331,8 @@ function TooltipWorkspace({
   // state, so a staged override renders. A version the batch leaves alone keeps its stored form, as
   // a draft on the base never turns a derived version into an override.
   const futureData = useMemo(
-    () => (future && data ? withFuture(data, future) : undefined),
-    [data, future],
+    () => (upcoming.overlay && data ? withFuture(data, upcoming.overlay) : undefined),
+    [data, upcoming.overlay],
   );
   const referenceSources = useMemo(
     () =>
@@ -780,6 +781,7 @@ function TooltipWorkspace({
           lang={lang}
           onLanguage={changeLanguage}
           draft={!readOnly && Boolean(drafts[activeHash])}
+          reserveDraft={!!batchEditing && !!batchAllowed}
           saving={saving}
           onDiscard={() => discard(activeHash)}
           reason={pausedOnPhone ? null : access.reason}
@@ -799,7 +801,12 @@ function TooltipWorkspace({
           onEditOverride={(variant) => setPicked({ hash, at: pickedAt, variant })}
           onBack={() => setPicked({ hash, at: pickedAt, variant: null })}
           grouped={grouped}
-          destination={upcoming.badge}
+          destination={
+            <>
+              {upcoming.badge}
+              {phone && batchEditing?.saveControl}
+            </>
+          }
           draftLoader={
             draft && (
               <DraftLoader
@@ -811,13 +818,22 @@ function TooltipWorkspace({
               />
             )
           }
-          queue={work && (!batchEditing || batchAllowed) && <WorkThroughControl work={work} />}
+          queue={
+            work &&
+            (!batchEditing || batchAllowed) && (
+              <WorkThroughControl
+                work={work}
+                actions={phone ? undefined : batchEditing?.saveControl}
+              />
+            )
+          }
           queueBack={
             work?.mode === 'active' && (!batchEditing || batchAllowed)
               ? {
                   ...leaveTarget(work.queue),
                   text: queueSources[work.queue.source].backText ?? 'Leave queue',
                   label:
+                    work.queue.destination?.batchName ??
                     (work.queue.origin.restore as { summary?: string }).summary ??
                     queueSources[work.queue.source].label,
                 }
@@ -851,7 +867,7 @@ function TooltipWorkspace({
                 globalsFor(activeHash, futureEnglishGlobals),
               )
             ) : (
-              <p role="status">Batch English is unavailable. Reload this batch before editing.</p>
+              batchEditing.sourceNotice
             )
           ) : (
             <TranslationSource
@@ -867,7 +883,11 @@ function TooltipWorkspace({
             aria-label={`${heading} editor (${languageLabel(lang)})`}
             className={styles.editorSection}
           >
-            {batchEditing?.saveControl}
+            {batchEditing?.notice && (
+              <p className={batchStyles.notice} role="status">
+                {batchEditing.notice}
+              </p>
+            )}
             {/* The base editor stays mounted while an override is open: caret and undo survive. */}
             <div className={styles.editorSlot} hidden={activeVariant !== null}>
               {editing(hash, primaryBase)}

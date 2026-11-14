@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RightPane, RightPaneHeader } from '../../ui/RightPane';
 import { UpcomingEnglish } from '../translations/upcomingEnglish';
 import styles from './BatchDestination.module.scss';
 import {
@@ -152,12 +153,17 @@ export async function saveBatchDrafts(batchId: string): Promise<string> {
   );
 }
 
-export function BatchSave({ editing }: { editing: BatchEditing }) {
+export function BatchSave({
+  editing,
+  onNotice,
+}: {
+  editing: BatchEditing;
+  onNotice(notice: string): void;
+}) {
   const [pending, setPending] = useState(false);
-  const [notice, setNotice] = useState('');
   const count = Object.keys(editing.drafts).length;
   return (
-    <div className={styles.save} role="group" aria-label="Batch draft save">
+    <span className={styles.save} role="group" aria-label="Batch draft save">
       <button
         type="button"
         title={`Save drafts to ${editing.destination.batchName}`}
@@ -165,20 +171,19 @@ export function BatchSave({ editing }: { editing: BatchEditing }) {
         disabled={pending || !!editing.reason || !count}
         onClick={async () => {
           setPending(true);
-          setNotice('');
+          onNotice('');
           try {
-            setNotice(await saveBatchDrafts(editing.destination.batchId));
+            onNotice(await saveBatchDrafts(editing.destination.batchId));
           } catch (error) {
-            setNotice(error instanceof Error ? error.message : String(error));
+            onNotice(error instanceof Error ? error.message : String(error));
           } finally {
             setPending(false);
           }
         }}
       >
-        {pending ? 'Saving…' : `Save batch${count ? ` (${count})` : ''}`}
+        {pending ? 'Saving…' : 'Save batch'}
       </button>
-      {notice && <p role="status">{notice}</p>}
-    </div>
+    </span>
   );
 }
 
@@ -188,6 +193,46 @@ export function BatchEnglish(props: {
   current: string | undefined;
   upcoming: string;
   globals: MarkupGlobals;
+  reason?: string | null;
+  retry?: () => void;
 }) {
-  return <UpcomingEnglish {...props} editor />;
+  return (
+    <UpcomingEnglish
+      {...props}
+      editor
+      notice={
+        props.reason ? (
+          <p className={styles.notice} role="status">
+            {props.reason}{' '}
+            {props.retry && (
+              <button type="button" onClick={props.retry}>
+                Retry batch
+              </button>
+            )}
+          </p>
+        ) : undefined
+      }
+    />
+  );
+}
+
+export function BatchSourceNotice({
+  reason,
+  retry,
+}: {
+  reason: string | null;
+  retry?: () => void;
+}) {
+  return (
+    <RightPane label="Upcoming English" header={<RightPaneHeader title="Upcoming English" />}>
+      <p className={styles.notice} role="status">
+        {reason ?? 'This tooltip is not in the destination batch.'}
+      </p>
+      {retry && (
+        <button type="button" className={styles.retry} onClick={retry}>
+          Retry batch
+        </button>
+      )}
+    </RightPane>
+  );
 }

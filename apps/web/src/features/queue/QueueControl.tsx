@@ -89,11 +89,13 @@ export function leaveTarget(queue: WorkQueue) {
  */
 export const WorkThroughControl = memo(function WorkThroughControl({
   work,
+  actions,
 }: {
   work: WorkThrough;
+  actions?: ReactNode;
 }) {
   return work.mode === 'active' ? (
-    <ActiveControl queue={work.queue} visit={work.visit} />
+    <ActiveControl queue={work.queue} visit={work.visit} actions={actions} />
   ) : (
     <PausedControl queue={work.queue} />
   );
@@ -117,7 +119,15 @@ function useStepKeys() {
   return { previous, next };
 }
 
-function ActiveControl({ queue, visit }: { queue: WorkQueue; visit: QueueVisit }) {
+function ActiveControl({
+  queue,
+  visit,
+  actions,
+}: {
+  queue: WorkQueue;
+  visit: QueueVisit;
+  actions?: ReactNode;
+}) {
   const isDone = useQueueDone(queue);
   const { pathname, key: entry } = useLocation();
   const phone = useMedia(phoneQuery);
@@ -316,6 +326,7 @@ function ActiveControl({ queue, visit }: { queue: WorkQueue; visit: QueueVisit }
           role="group"
           aria-label={name}
           data-queue
+          data-batch={queue.destination ? '' : undefined}
           data-finished={finished}
         >
           {place.finished ? (
@@ -350,6 +361,7 @@ function ActiveControl({ queue, visit }: { queue: WorkQueue; visit: QueueVisit }
         </>,
         `${header.queuePosition} ${styles.position}`,
       )}
+      {actions}
       {place.finished ? (
         revisitLink
       ) : (
