@@ -274,6 +274,7 @@ export function QueueList<Row extends ListRow = QueueRow>({
             <li
               key={row.key}
               className={styles.row}
+              data-extra={extra ? '' : undefined}
               data-index={index}
               aria-posinset={index + 1}
               aria-setsize={total}
@@ -311,9 +312,9 @@ export function QueueList<Row extends ListRow = QueueRow>({
                   title={shown.title}
                 >
                   {shown.text}
-                  {extra?.(row)}
                 </span>
               </Link>
+              {extra && <span className={styles.extra}>{extra(row)}</span>}
             </li>
           );
         })}

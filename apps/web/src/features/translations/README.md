@@ -18,6 +18,8 @@ debounce, with two worker jobs at most; leaving view cancels them. History parsi
 word comparison run in workers. Successful counts are cached per device, keyed by hash, source
 revision, and current English text; unavailable history has a retry action. `?sort=small` puts
 known counts first, ascending, and unknown/missing rows last. The sort is preserved on return.
+The displayed order stays fixed as counts arrive: use Refresh order to apply newly learned
+sizes. Failed size cells offer their own retry without adding a toolbar row.
 Category choices include fully translated categories with a zero work count. Unknown category
 URLs stay scoped to zero rather than showing unrelated totals.
 

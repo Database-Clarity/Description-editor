@@ -162,6 +162,7 @@ describe('TranslationsPage queue', () => {
     );
     await press(table, 'Escape');
     expect(host.querySelector('table')).toBeNull();
+    expect(document.activeElement?.textContent).toBe('Languages');
     await act(async () => toggle.click());
     await act(async () =>
       [...host.querySelectorAll('button')]

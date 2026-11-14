@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EditorData } from '../../stores/data';
 import { authorization, endpoint } from '../../services/apiAuth';
 import {
@@ -10,6 +10,23 @@ import {
 import type { QueueRow } from './queue';
 
 export type { ChangeSize } from './changeSize';
+
+/** Learning a size never moves a row or pulls another unsized row into the viewport. */
+export function useSizeOrder(
+  rows: readonly QueueRow[],
+  sizes: ReadonlyMap<string, ChangeSize>,
+  small: boolean,
+  refresh: number,
+) {
+  const latest = useRef(sizes);
+  latest.current = sizes;
+  return useMemo(
+    () => sortBySize(rows, latest.current, small),
+    // Refresh is an explicit user request, not a worker completion.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rows, small, refresh],
+  );
+}
 
 export function sortBySize(
   rows: readonly QueueRow[],
@@ -112,10 +129,14 @@ export function useChangeSizes(data: EditorData | null, enabled: boolean) {
     // Worker replies mutate the shared cache; revision invalidates this snapshot.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identities, revision]);
-  const retryFailed = useCallback(() => {
-    for (const [key, value] of memory) if ('error' in value) memory.delete(key);
-    setRevision((value) => value + 1);
-    setRetry((value) => value + 1);
-  }, []);
+  const retryFailed = useCallback(
+    (row?: string) => {
+      for (const [key, value] of memory)
+        if ('error' in value && (!row || identities.get(row) === key)) memory.delete(key);
+      setRevision((value) => value + 1);
+      setRetry((value) => value + 1);
+    },
+    [identities],
+  );
   return { sizes, onVisible: setVisible, retryFailed };
 }

@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, expect, it, vi } from 'vitest';
-import { useChangeSizes } from './useChangeSizes';
+import { useChangeSizes, useSizeOrder, type ChangeSize } from './useChangeSizes';
 import type { QueueRow } from './queue';
 import type { EditorData } from '../../stores/data';
 
@@ -25,6 +25,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
   jobs.length = 0;
+});
+
+it('keeps a stable visible order as sizes arrive and sorts only on explicit refresh', async () => {
+  const host = document.createElement('div');
+  const root = createRoot(host);
+  const rows = [{ key: 'first' }, { key: 'second' }] as QueueRow[];
+  function Probe({ sizes, refresh }: { sizes: ReadonlyMap<string, ChangeSize>; refresh: number }) {
+    const ordered = useSizeOrder(rows, sizes, true, refresh);
+    return <p>{ordered.map((row) => row.key).join(',')}</p>;
+  }
+  await act(async () => root.render(<Probe sizes={new Map()} refresh={0} />));
+  expect(host.textContent).toBe('first,second');
+  const learned = new Map<string, ChangeSize>([['second', { count: 0 }]]);
+  await act(async () => root.render(<Probe sizes={learned} refresh={0} />));
+  expect(host.textContent).toBe('first,second');
+  await act(async () => root.render(<Probe sizes={learned} refresh={1} />));
+  expect(host.textContent).toBe('second,first');
+  await act(async () => root.unmount());
 });
 
 it('debounces visibility, caps workers, cancels scroll-away, caches hits, and retries failures', async () => {

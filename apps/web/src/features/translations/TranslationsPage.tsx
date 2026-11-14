@@ -5,6 +5,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type KeyboardEvent,
   type ReactNode,
@@ -27,7 +28,6 @@ import {
   countRows,
   filterRows,
   parseStateFilter,
-  queueFor,
   translationIndex,
   type QueueFilters,
   type QueueRow,
@@ -42,14 +42,24 @@ import { returnedState } from '../queue/WorkThroughBar';
 import { phoneQuery, useMedia } from '../../ui/useMedia';
 import styles from './TranslationsPage.module.scss';
 import { useLeftQueue } from '../queue/useQueue';
-import { sortBySize, useChangeSizes, type ChangeSize } from './useChangeSizes';
+import { useSizeOrder, useChangeSizes, type ChangeSize } from './useChangeSizes';
 import { SkeletonBlock } from '../../ui/Skeleton';
 import skeletonStyles from '../../ui/Skeleton.module.scss';
 
 const searchDelayMs = 200;
 const noRows: readonly QueueRow[] = [];
 
-function ChangeCount({ value, identity }: { value: ChangeSize | undefined; identity: string }) {
+function ChangeCount({
+  value,
+  identity,
+  name,
+  onRetry,
+}: {
+  value: ChangeSize | undefined;
+  identity: string;
+  name: string;
+  onRetry(): void;
+}) {
   const loading = useSkeletonVisible(!value, identity, !!value);
   return (
     <span
@@ -73,7 +83,14 @@ function ChangeCount({ value, identity }: { value: ChangeSize | undefined; ident
       ) : value && 'count' in value ? (
         `${value.count} ${value.count === 1 ? 'word' : 'words'}`
       ) : (
-        'Unavailable'
+        <button
+          type="button"
+          className={styles.retrySize}
+          aria-label={`Retry English change size for ${name}`}
+          onClick={onRetry}
+        >
+          Unavailable
+        </button>
       )}
     </span>
   );
@@ -240,6 +257,7 @@ function Coverage({
   maintainer: boolean;
 }) {
   const [table, setTable] = useState(false);
+  const languagesButton = useRef<HTMLButtonElement>(null);
   const scopeLabel = scope ? `${scope.label} only` : 'All categories';
   return (
     <div
@@ -254,12 +272,21 @@ function Coverage({
       }
       data-table={table ? '' : undefined}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') setTable(false);
+        if (event.key === 'Escape' && table) {
+          event.stopPropagation();
+          setTable(false);
+          languagesButton.current?.focus();
+        }
       }}
     >
       {maintainer && (
         <div className={styles.coverageMode} role="group" aria-label="Coverage view">
-          <button type="button" aria-pressed={!table} onClick={() => setTable(false)}>
+          <button
+            ref={languagesButton}
+            type="button"
+            aria-pressed={!table}
+            onClick={() => setTable(false)}
+          >
             Languages
           </button>
           <button type="button" aria-pressed={table} onClick={() => setTable(true)}>
@@ -297,7 +324,9 @@ function Coverage({
                         key={lang}
                         title={`${category.label}, ${languageLabel(lang)}: ${translated} translated, ${outdated} outdated, ${missing} missing`}
                       >
-                        {translated} / {outdated} / {missing}
+                        <span data-zero={translated ? undefined : ''}>{translated}</span> /{' '}
+                        <span data-zero={outdated ? undefined : ''}>{outdated}</span> /{' '}
+                        <span data-zero={missing ? undefined : ''}>{missing}</span>
                       </td>
                     );
                   })}
@@ -358,6 +387,8 @@ export function TranslationsPage() {
   const [text, setText] = useState(query);
   const deferredText = useDeferredValue(text);
   const [coverageOpen, setCoverageOpen] = useState(false);
+  const coverageToggle = useRef<HTMLButtonElement>(null);
+  const [refreshOrder, setRefreshOrder] = useState(0);
   const phone = useMedia(phoneQuery);
   // Leave from the editor's queue brings the list's position and selected row back.
   const returned = returnedState<TranslationsRestore>(useLocation().state);
@@ -404,6 +435,7 @@ export function TranslationsPage() {
 
   const index = useMemo(() => (data ? translationIndex(data) : null), [data]);
   const rows = (index && language && index.queue(language)) || noRows;
+  const ordered = useSizeOrder(rows, sizes, small, refreshOrder);
   const categories = useMemo(
     () => (index ? categoryOptions(rows, index.categories) : []),
     [rows, index],
@@ -413,15 +445,7 @@ export function TranslationsPage() {
     () => ({ state, category, query: deferredText, sort: small ? ('small' as const) : undefined }),
     [state, category, deferredText, small],
   );
-  const shown = useMemo(
-    () =>
-      sortBySize(
-        index && language ? queueFor(index, language, shownFilters) : noRows,
-        sizes,
-        small,
-      ),
-    [index, language, shownFilters, sizes, small],
-  );
+  const shown = useMemo(() => filterRows(ordered, shownFilters), [ordered, shownFilters]);
   // A row opens the editor in queue mode for this view (an override opens on its base's page).
   const linkTo = useCallback(
     (row: QueueRow) => ({
@@ -481,7 +505,7 @@ export function TranslationsPage() {
   const openFirst = (event: KeyboardEvent) => {
     if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
     // The first match of what is typed now, not of the deferred list.
-    const sorted = sortBySize(filterRows(rows, { state, category, query: text }), sizes, small);
+    const sorted = filterRows(ordered, { state, category, query: text });
     const first = sorted[0];
     if (!first) return;
     // Back must return to this filter, so it is in the URL before the editor opens.
@@ -552,7 +576,10 @@ export function TranslationsPage() {
     if (text !== query) commitText();
   };
   const onFrameKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && coverageOpen) setCoverageOpen(false);
+    if (event.key === 'Escape' && coverageOpen) {
+      setCoverageOpen(false);
+      coverageToggle.current?.focus();
+    }
   };
 
   if (import.meta.env.VITE_SCHEDULED_ENABLED === '1' && source === 'upcoming')
@@ -659,15 +686,20 @@ export function TranslationsPage() {
                 <option value="small">Small changes first</option>
               </select>
             </label>
-            {[...sizes.values()].some((value) => 'error' in value) && (
-              <button type="button" onClick={retryFailed}>
-                Retry change sizes
+            {small && (
+              <button
+                type="button"
+                title="Sort again using the change sizes learned so far"
+                onClick={() => setRefreshOrder((value) => value + 1)}
+              >
+                Refresh order
               </button>
             )}
             {coverage && (
               <button
                 type="button"
                 className={styles.coverageToggle}
+                ref={coverageToggle}
                 aria-expanded={coverageOpen}
                 aria-controls="translation-coverage"
                 onClick={() => setCoverageOpen(!coverageOpen)}
@@ -724,7 +756,12 @@ export function TranslationsPage() {
               onVisible={onVisible}
               extra={(row) =>
                 row.state === 'outdated' ? (
-                  <ChangeCount value={sizes.get(row.key)} identity={row.key} />
+                  <ChangeCount
+                    value={sizes.get(row.key)}
+                    identity={row.key}
+                    name={row.name}
+                    onRetry={() => retryFailed(row.key)}
+                  />
                 ) : null
               }
               restored={
